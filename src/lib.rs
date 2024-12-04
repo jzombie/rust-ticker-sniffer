@@ -65,7 +65,7 @@ pub fn extract_tickers_from_company_names(
         .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()))
         .collect();
 
-    eprintln!("Debug: Input tokens: {:?}", input_tokens);
+    // eprintln!("Debug: Input tokens: {:?}", input_tokens);
 
     for (symbol, company_name) in symbols_map {
         if let Some(company_name) = company_name {
@@ -76,23 +76,23 @@ pub fn extract_tickers_from_company_names(
             let company_tokens: Vec<&str> = normalized_company.split_whitespace().collect();
 
             if company_tokens.is_empty() {
-                eprintln!("Debug: Skipping empty company name for symbol {}", symbol);
+                // eprintln!("Debug: Skipping empty company name for symbol {}", symbol);
                 continue; // Skip if the company name is empty
             }
 
-            eprintln!(
-                "Debug: Checking company: {} (tokens: {:?}) against input tokens: {:?}",
-                company_name, company_tokens, input_tokens
-            );
+            // eprintln!(
+            //     "Debug: Checking company: {} (tokens: {:?}) against input tokens: {:?}",
+            //     company_name, company_tokens, input_tokens
+            // );
 
             // Calculate the match score
             let match_score = calculate_match_score(&input_tokens, &company_tokens);
 
             // Debugging output
-            eprintln!(
-                "Debug: Input tokens: {:?}, Company tokens: {:?}, Match score: {}, Symbol: {}",
-                input_tokens, company_tokens, match_score, symbol
-            );
+            // eprintln!(
+            //     "Debug: Input tokens: {:?}, Company tokens: {:?}, Match score: {}, Symbol: {}",
+            //     input_tokens, company_tokens, match_score, symbol
+            // );
 
             // Add or update the score for this symbol if it meets the threshold
             if match_score >= 0.4 {
@@ -156,10 +156,10 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str]) -> f32 
     let final_score = 0.7 * continuity_score + 0.3 * coverage_score;
 
     // Debugging
-    eprintln!(
-        "Debug: Input tokens: {:?}, Company tokens: {:?}, Continuity score: {:.2}, Coverage score: {:.2}, Final score: {:.2}",
-        input_tokens, company_tokens, continuity_score, coverage_score, final_score
-    );
+    // eprintln!(
+    //     "Debug: Input tokens: {:?}, Company tokens: {:?}, Continuity score: {:.2}, Coverage score: {:.2}, Final score: {:.2}",
+    //     input_tokens, company_tokens, continuity_score, coverage_score, final_score
+    // );
 
     final_score
 }
