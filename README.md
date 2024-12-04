@@ -13,7 +13,7 @@ cargo bench --features csv-support
 ## Tuning Weights
 
 ```bash
-cargo run --bin tune --features csv-support
+cargo run --bin tune --features="csv-support rand-support"
 ```
 
 ## WASM Test Builds

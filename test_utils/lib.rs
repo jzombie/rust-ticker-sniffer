@@ -59,7 +59,7 @@ pub fn get_expected_failure(file_path: &Path) -> Option<String> {
 }
 
 // Helper function to run the test for each file in the directory
-pub fn run_test_for_file(test_file_path: &str) {
+pub fn run_test_for_file(test_file_path: &str) -> usize {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -99,6 +99,8 @@ pub fn run_test_for_file(test_file_path: &str) {
         .map(|(ticker, _)| *ticker)
         .collect();
 
+    let mut error_count = 0;
+
     if let Some(expected_failure_message) = expected_failure {
         eprintln!("Testing expected failure: {}", expected_failure_message);
 
@@ -125,6 +127,10 @@ pub fn run_test_for_file(test_file_path: &str) {
             "No discrepancies found, but a failure was expected.".to_string()
         };
 
+        if expected_failure_message != actual_failure_reason {
+            error_count += 1; // Increment error count for failure reason mismatch
+        }
+
         // Validate that the actual failure reason matches the expected failure message
         assert_eq!(
             expected_failure_message, actual_failure_reason,
@@ -133,10 +139,31 @@ pub fn run_test_for_file(test_file_path: &str) {
         );
 
         // Skip further checks since failure was validated
-        return;
+        return error_count; // Return early with errors
     }
 
     // Regular success case validation
+    if results.len() != expected_tickers.len() {
+        error_count += 1; // Increment error count for length mismatch
+    }
+
+    for ticker in &expected_tickers {
+        if !results.contains(ticker) {
+            error_count += 1; // Increment error count for missing expected tickers
+        }
+    }
+
+    if !duplicate_tickers.is_empty() {
+        error_count += duplicate_tickers.len(); // Increment for duplicate tickers
+    }
+
+    for ticker in &results {
+        if !expected_tickers.contains(ticker) {
+            error_count += 1; // Increment error count for unexpected tickers
+        }
+    }
+
+    // Keep all existing assertions intact
     assert_eq!(
         results.len(),
         expected_tickers.len(),
@@ -170,4 +197,6 @@ pub fn run_test_for_file(test_file_path: &str) {
             ticker
         );
     }
+
+    error_count // Return the total number of errors
 }
