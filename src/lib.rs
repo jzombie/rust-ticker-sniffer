@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
 /// Tokenizer function to split the text into individual tokens.
@@ -62,45 +63,61 @@ pub fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: &HashMap<String, Option<String>>, // Same map for symbols and names
 ) -> Vec<String> {
-    // Preprocess text: remove punctuation only at the end of tokens
-    let cleaned_text: String = text
-        .split_whitespace()
-        .map(|token| token.trim_end_matches(|c: char| !c.is_alphanumeric()))
-        .collect::<Vec<_>>()
-        .join(" ");
-
-    let mut matches: HashMap<String, f32> = HashMap::new();
-    let input_tokens: Vec<&str> = cleaned_text
-        .split_whitespace()
-        .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()))
+    // Step 1: Use regex to split text into sentences based on sentence-ending punctuation
+    let sentence_terminator = Regex::new(r"[.!?]\s+").unwrap(); // Match sentence-ending punctuation followed by whitespace
+    let sentences: Vec<&str> = sentence_terminator
+        .split(text) // Split based on the regex
+        .map(str::trim)
+        .filter(|s| !s.is_empty()) // Remove empty sentences
         .collect();
 
-    for (symbol, company_name) in symbols_map {
-        if let Some(company_name) = company_name {
-            // Normalize company name
-            let normalized_company = company_name
-                .replace(|c: char| !c.is_alphanumeric() && c != ' ', " ")
-                .to_lowercase();
-            let company_tokens: Vec<&str> = normalized_company.split_whitespace().collect();
+    let mut matches: HashMap<String, f32> = HashMap::new();
 
-            if company_tokens.is_empty() {
-                continue;
-            }
+    for sentence in sentences {
+        // Step 2: Normalize tokens within the sentence
+        let cleaned_sentence: String = sentence
+            .split_whitespace()
+            .map(|token| {
+                // Remove punctuation only from the ends of tokens, not mid-word
+                token.trim_end_matches(|c: char| !c.is_alphanumeric())
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
 
-            // Calculate match score
-            let match_score = calculate_match_score(&input_tokens, &company_tokens);
+        // Step 3: Extract uppercase tokens for matching
+        let input_tokens: Vec<&str> = cleaned_sentence
+            .split_whitespace()
+            .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()))
+            .collect();
 
-            // Only allow high-confidence matches
-            if match_score >= 0.7 {
-                matches
-                    .entry(symbol.clone())
-                    .and_modify(|existing_score| *existing_score = existing_score.max(match_score))
-                    .or_insert(match_score);
+        for (symbol, company_name) in symbols_map {
+            if let Some(company_name) = company_name {
+                // Normalize the company name
+                let normalized_company = company_name
+                    .replace(|c: char| !c.is_alphanumeric() && c != ' ', " ")
+                    .to_lowercase();
+                let company_tokens: Vec<&str> = normalized_company.split_whitespace().collect();
+
+                if company_tokens.is_empty() {
+                    continue;
+                }
+
+                // Step 4: Calculate match score
+                let match_score = calculate_match_score(&input_tokens, &company_tokens);
+
+                if match_score >= 0.9 {
+                    matches
+                        .entry(symbol.clone())
+                        .and_modify(|existing_score| {
+                            *existing_score = existing_score.max(match_score)
+                        })
+                        .or_insert(match_score);
+                }
             }
         }
     }
 
-    // Collect, sort, and return matches
+    // Step 5: Collect, sort, and return matches
     let mut result: Vec<_> = matches.into_iter().collect();
     result.sort_by(|(sym_a, score_a), (sym_b, score_b)| {
         score_b
