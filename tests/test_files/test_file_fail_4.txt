@@ -1,0 +1,4 @@
+AAPL, AAPL, AAPL
+
+EXPECTED_FAILURE: No discrepancies found, but a failure was expected.
+EXPECTED: AAPL

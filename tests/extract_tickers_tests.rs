@@ -49,10 +49,21 @@ mod tests {
             .expect("Failed to load symbols from CSV");
 
         // Read the content of the text file
-        let text = fs::read_to_string(test_file_path).expect("Failed to read test file");
+        let raw_text = fs::read_to_string(test_file_path).expect("Failed to read test file");
 
-        // Extract tickers from the text
-        let results = extract_tickers_from_text(&text, &symbols_map);
+        // Filter out lines starting with 'EXPECTED:' or 'EXPECTED_FAILURE:'
+        let filtered_text: String = raw_text
+            .lines()
+            .filter(|line| !line.trim_start().starts_with("EXPECTED:"))
+            .filter(|line| !line.trim_start().starts_with("EXPECTED_FAILURE:"))
+            .collect::<Vec<&str>>()
+            .join("\n");
+
+        // Log the filtered text
+        eprintln!("Filtered text: {}", filtered_text);
+
+        // Extract tickers from the filtered text
+        let results = extract_tickers_from_text(&filtered_text, &symbols_map);
 
         // Get the expected tickers and failure reason
         let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
@@ -60,6 +71,17 @@ mod tests {
 
         // Log the file being processed
         eprintln!("Testing file: {}", test_file_path);
+
+        // Check for duplicate tickers in the results
+        let mut ticker_counts = std::collections::HashMap::new();
+        for ticker in &results {
+            *ticker_counts.entry(ticker).or_insert(0) += 1;
+        }
+        let duplicate_tickers: Vec<&String> = ticker_counts
+            .iter()
+            .filter(|(_, &count)| count > 1)
+            .map(|(ticker, _)| *ticker)
+            .collect();
 
         if let Some(expected_failure_message) = expected_failure {
             eprintln!("Testing expected failure: {}", expected_failure_message);
@@ -81,6 +103,8 @@ mod tests {
                 format!("Unexpected tickers found: {:?}.", unexpected_tickers)
             } else if !missing_tickers.is_empty() {
                 format!("Missing expected tickers: {:?}.", missing_tickers)
+            } else if !duplicate_tickers.is_empty() {
+                format!("Duplicate tickers found: {:?}.", duplicate_tickers)
             } else {
                 "No discrepancies found, but a failure was expected.".to_string()
             };
@@ -114,6 +138,13 @@ mod tests {
                 ticker
             );
         }
+
+        assert!(
+            duplicate_tickers.is_empty(),
+            "{} - Duplicate tickers found in results: {:?}",
+            test_file_path,
+            duplicate_tickers
+        );
 
         for ticker in &results {
             assert!(

@@ -1,0 +1,5 @@
+AAPL, AAPL, AAPL
+
+EXPECTED_FAILURE: Missing expected tickers: ["MSFT"].
+EXPECTED: MSFT
+EXPECTED: AAPL
