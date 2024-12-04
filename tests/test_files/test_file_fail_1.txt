@@ -1,5 +1,5 @@
 BRK.B is a great stock, and so is MSFT.
 
-EXPECTED_FAILURE: This test is expected to fail because BRK.B should not match BRK-B.
+EXPECTED_FAILURE: Unexpected tickers found: ["BRK-B"].
 EXPECTED: BRK.B
 EXPECTED: MSFT

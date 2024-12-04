@@ -1,6 +1,6 @@
-BRK.B is a great stock, and so is MSFT.
+BRK-B is a great stock, and so is MSFT.
 
-EXPECTED_FAILURE: Mismatch in number of expected tickers.
+EXPECTED_FAILURE: Missing expected tickers: ["NOOP"].
 EXPECTED: BRK-B
 EXPECTED: MSFT
 EXPECTED: NOOP

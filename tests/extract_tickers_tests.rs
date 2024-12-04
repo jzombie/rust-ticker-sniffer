@@ -7,7 +7,6 @@ use ticker_sniffer::extract_tickers_from_text;
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use std::fs::read_dir;
 
     // Helper function to get the expected tickers from the text file
@@ -45,7 +44,7 @@ mod tests {
 
     // Helper function to run the test for each file in the directory
     fn run_test_for_file(test_file_path: &str) {
-        // Load symbols from a test CSV file and handle the Result
+        // Load symbols from a test CSV file
         let symbols_map = load_symbols_from_file("tests/test_symbols.csv")
             .expect("Failed to load symbols from CSV");
 
@@ -55,51 +54,73 @@ mod tests {
         // Extract tickers from the text
         let results = extract_tickers_from_text(&text, &symbols_map);
 
-        // Get the expected tickers from the same file
+        // Get the expected tickers and failure reason
         let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
         let expected_failure = get_expected_failure(&Path::new(test_file_path));
 
         // Log the file being processed
         eprintln!("Testing file: {}", test_file_path);
 
-        // If an expected failure is marked, then the test should fail deliberately
-        if let Some(reason) = expected_failure {
-            // We want to assert that 'BRK.B' does not match 'BRK-B' in the failure cases.
-            eprintln!("Testing expected failure: {}", reason);
-            assert!(
-                !results.contains(&"BRK-B".to_string()) || !results.contains(&"BRK.B".to_string()),
-                "Expected failure: {}, but tickers matched: {:?}",
-                reason,
-                results
+        if let Some(expected_failure_message) = expected_failure {
+            eprintln!("Testing expected failure: {}", expected_failure_message);
+
+            // Determine actual failure reason dynamically
+            let unexpected_tickers: Vec<String> = results
+                .iter()
+                .filter(|ticker| !expected_tickers.contains(ticker))
+                .cloned()
+                .collect();
+
+            let missing_tickers: Vec<String> = expected_tickers
+                .iter()
+                .filter(|ticker| !results.contains(ticker))
+                .cloned()
+                .collect();
+
+            let actual_failure_reason = if !unexpected_tickers.is_empty() {
+                format!("Unexpected tickers found: {:?}.", unexpected_tickers)
+            } else if !missing_tickers.is_empty() {
+                format!("Missing expected tickers: {:?}.", missing_tickers)
+            } else {
+                "No discrepancies found, but a failure was expected.".to_string()
+            };
+
+            // Validate that the actual failure reason matches the expected failure message
+            assert_eq!(
+                expected_failure_message, actual_failure_reason,
+                "{} - Failure reason mismatch. Expected: '{}', but got: '{}'.",
+                test_file_path, expected_failure_message, actual_failure_reason
             );
-            return; // Skip further checks since we expect a failure
+
+            // Skip further checks since failure was validated
+            return;
         }
 
-        // Ensure that the correct number of tickers are matched
+        // Regular success case validation
         assert_eq!(
             results.len(),
             expected_tickers.len(),
-            "Mismatch in the number of extracted tickers in file: {}",
-            test_file_path
+            "{} - Expected: {:?}, but got: {:?}",
+            test_file_path,
+            expected_tickers,
+            results
         );
 
-        // Ensure that all expected tickers are found in the extracted results
         for ticker in &expected_tickers {
             assert!(
                 results.contains(ticker),
-                "Missing expected ticker: {} in file: {}",
-                ticker,
-                test_file_path
+                "{} - Expected ticker {:?} was not found in results.",
+                test_file_path,
+                ticker
             );
         }
 
-        // Ensure that there are no unexpected tickers in the results
         for ticker in &results {
             assert!(
                 expected_tickers.contains(ticker),
-                "Unexpected ticker found: {} in file: {}",
-                ticker,
-                test_file_path
+                "{} - Unexpected ticker {:?} found in results.",
+                test_file_path,
+                ticker
             );
         }
     }
