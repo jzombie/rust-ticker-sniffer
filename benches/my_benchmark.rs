@@ -1,4 +1,4 @@
-#[path = "../tests/test_utils.rs"]
+#[path = "../test_utils/lib.rs"]
 mod test_utils;
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
