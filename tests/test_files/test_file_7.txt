@@ -1,0 +1,5 @@
+Nvidia, Tesla, and MicroStrategy.
+
+EXPECTED: NVDA
+EXPECTED: TSLA
+EXPECTED: MSTR
