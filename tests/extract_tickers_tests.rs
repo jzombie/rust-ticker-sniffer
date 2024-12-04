@@ -5,12 +5,16 @@ use ticker_sniffer::extract_tickers_from_text;
 
 #[test]
 fn test_extract_tickers_with_file() {
-    // Load symbols from a test CSV file
-    let symbols_map = load_symbols_from_file("tests/test_symbols.csv");
+    // Load symbols from a test CSV file and handle the Result
+    let symbols_map =
+        load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
 
     let text = "AAPL is performing well, but MSFT is also a strong contender.";
 
     let results = extract_tickers_from_text(text, &symbols_map);
+
+    // Print the results to check what's being extracted
+    println!("{:?}", results);
 
     // Check that the correct tickers are matched
     assert_eq!(results.len(), 2);

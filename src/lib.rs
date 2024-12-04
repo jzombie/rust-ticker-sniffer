@@ -9,12 +9,15 @@ pub fn extract_tickers_from_text(
     let tokens: Vec<&str> = text.split_whitespace().collect();
 
     for token in tokens {
-        let normalized = token
-            .trim_matches(|c: char| !c.is_alphanumeric())
-            .to_uppercase();
+        // Only process tokens that are already upper-case
+        if token == token.to_uppercase() {
+            let normalized = token
+                .trim_matches(|c: char| !c.is_alphanumeric())
+                .to_uppercase();
 
-        if symbols_map.contains_key(&normalized) {
-            matches.push(normalized);
+            if symbols_map.contains_key(&normalized) {
+                matches.push(normalized);
+            }
         }
     }
 

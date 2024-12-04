@@ -1,22 +1,24 @@
+use csv::Reader;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::error::Error;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
-pub fn load_symbols_from_file(file_path: &str) -> HashMap<String, Option<String>> {
+pub fn load_symbols_from_file(
+    file_path: &str,
+) -> Result<HashMap<String, Option<String>>, Box<dyn Error>> {
     let mut symbols_map = HashMap::new();
-    let file = File::open(file_path).expect("Failed to open test symbols file");
-    let reader = BufReader::new(file);
+    let mut reader = Reader::from_path(file_path)?;
 
-    for line in reader.lines() {
-        let line = line.expect("Failed to read line");
-        let parts: Vec<&str> = line.splitn(2, ',').collect();
-        if parts.len() == 2 {
-            symbols_map.insert(parts[0].to_uppercase(), Some(parts[1].to_string()));
+    for record in reader.records() {
+        let record = record?;
+        if record.len() == 2 {
+            let symbol = record.get(0).unwrap().to_uppercase();
+            let company_name = record.get(1).map(|name| name.to_string());
+            symbols_map.insert(symbol, company_name);
         } else {
-            symbols_map.insert(parts[0].to_uppercase(), None);
+            eprintln!("Skipping invalid row: {:?}", record);
         }
     }
 
-    symbols_map
+    Ok(symbols_map)
 }
