@@ -1,0 +1,3 @@
+Nvidia is a hardware company.
+
+EXPECTED: NVDA

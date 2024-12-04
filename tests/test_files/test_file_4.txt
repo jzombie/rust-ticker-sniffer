@@ -1,0 +1,3 @@
+Microsoft is a software company.
+
+EXPECTED: MSFT
