@@ -7,8 +7,8 @@ use ticker_sniffer::extract_tickers_from_text;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::read_dir;
 
+    use std::fs::read_dir;
     // Helper function to get the expected tickers from the text file
     fn get_expected_tickers(file_path: &Path) -> Vec<String> {
         // Read the content of the text file
@@ -28,6 +28,20 @@ mod tests {
             .collect()
     }
 
+    // Helper function to check if the file has an EXPECTED_FAILURE line
+    fn get_expected_failure(file_path: &Path) -> Option<String> {
+        let content = fs::read_to_string(file_path).expect("Failed to read test file");
+
+        content.lines().find_map(|line| {
+            let line = line.trim();
+            if line.starts_with("EXPECTED_FAILURE:") {
+                Some(line.replace("EXPECTED_FAILURE:", "").trim().to_string())
+            } else {
+                None
+            }
+        })
+    }
+
     // Helper function to run the test for each file in the directory
     fn run_test_for_file(test_file_path: &str) {
         // Load symbols from a test CSV file and handle the Result
@@ -40,11 +54,22 @@ mod tests {
         // Extract tickers from the text
         let results = extract_tickers_from_text(&text, &symbols_map);
 
-        // Print the results to check what's being extracted
-        println!("{:?}", results);
-
         // Get the expected tickers from the same file
         let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
+        let expected_failure = get_expected_failure(&Path::new(test_file_path));
+
+        // If an expected failure is marked, then the test should fail deliberately
+        if let Some(reason) = expected_failure {
+            // We want to assert that 'BRK.B' does not match 'BRK-B' in the failure cases.
+            println!("Testing expected failure: {}", reason);
+            assert!(
+                !results.contains(&"BRK-B".to_string()) || !results.contains(&"BRK.B".to_string()),
+                "Expected failure: {}, but tickers matched: {:?}",
+                reason,
+                results
+            );
+            return; // Skip further checks since we expect a failure
+        }
 
         // Ensure that the correct number of tickers are matched
         assert_eq!(
@@ -80,15 +105,16 @@ mod tests {
         // Directory containing the test files
         let test_dir = "tests/test_files";
 
-        // Read all files in the test directory
-        let entries = read_dir(test_dir).expect("Failed to read test directory");
+        // Read all files in the directory
+        let files = read_dir(test_dir).expect("Failed to read test files directory");
 
-        // Iterate over each file and run the test
-        for entry in entries {
-            let entry = entry.expect("Failed to read entry in test directory");
-            let path = entry.path();
-            if path.is_file() && path.extension().map(|e| e == "txt").unwrap_or(false) {
-                run_test_for_file(path.to_str().unwrap());
+        for file in files {
+            let file = file.expect("Failed to read file");
+            let file_path = file.path();
+
+            // Run the test for each file (if it is a file)
+            if file_path.is_file() {
+                run_test_for_file(file_path.to_str().unwrap());
             }
         }
     }
