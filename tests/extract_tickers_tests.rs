@@ -9,6 +9,7 @@ mod tests {
     use super::*;
 
     use std::fs::read_dir;
+
     // Helper function to get the expected tickers from the text file
     fn get_expected_tickers(file_path: &Path) -> Vec<String> {
         // Read the content of the text file
@@ -58,10 +59,13 @@ mod tests {
         let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
         let expected_failure = get_expected_failure(&Path::new(test_file_path));
 
+        // Log the file being processed
+        eprintln!("Testing file: {}", test_file_path);
+
         // If an expected failure is marked, then the test should fail deliberately
         if let Some(reason) = expected_failure {
             // We want to assert that 'BRK.B' does not match 'BRK-B' in the failure cases.
-            println!("Testing expected failure: {}", reason);
+            eprintln!("Testing expected failure: {}", reason);
             assert!(
                 !results.contains(&"BRK-B".to_string()) || !results.contains(&"BRK.B".to_string()),
                 "Expected failure: {}, but tickers matched: {:?}",

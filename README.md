@@ -1,3 +1,9 @@
+## Test with Filename Capturing in Output
+
+```bash
+cargo test -- --nocapture
+```
+
 ## WASM Test Builds
 
 ```bash
