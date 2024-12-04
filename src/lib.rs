@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Tokenizer function to split the text into individual tokens.
 pub fn tokenize(text: &str) -> Vec<&str> {
@@ -10,7 +10,7 @@ pub fn extract_tickers_from_text(
     text: &str,
     symbols_map: &HashMap<String, Option<String>>,
 ) -> Vec<String> {
-    let mut matches = vec![];
+    let mut matches = HashSet::new(); // Use a HashSet to eliminate duplicates
     let tokens = tokenize(text); // Use the tokenizer function
 
     for token in tokens {
@@ -24,14 +24,15 @@ pub fn extract_tickers_from_text(
             let alternatives = generate_alternative_symbols(&normalized);
             for alt in alternatives {
                 if symbols_map.contains_key(&alt) {
-                    matches.push(alt);
+                    matches.insert(alt); // Use `insert` to ensure uniqueness
                     break; // No need to check other alternatives once a match is found
                 }
             }
         }
     }
 
-    matches
+    // Convert the HashSet to a Vec to return the result
+    matches.into_iter().collect()
 }
 
 pub fn generate_alternative_symbols(query: &str) -> Vec<String> {
