@@ -152,17 +152,18 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str]) -> f32 
     let mut total_matches = 0;
     let mut max_continuous_matches = 0;
 
-    // Filter out the common words from company_tokens
-    let filtered_company_tokens: Vec<&str> = company_tokens
-        .iter()
-        .filter(|&&token| !COMMON_WORDS.contains(&token))
-        .cloned()
-        .collect();
+    // TODO: Weigh these instead
+    // // Filter out the common words from company_tokens
+    // let filtered_company_tokens: Vec<&str> = company_tokens
+    //     .iter()
+    //     .filter(|&&token| !COMMON_WORDS.contains(&token))
+    //     .cloned()
+    //     .collect();
 
     let mut i = 0;
     while i < input_tokens.len() {
         let mut current_match = 0;
-        for (j, company_token) in filtered_company_tokens.iter().enumerate() {
+        for (j, company_token) in company_tokens.iter().enumerate() {
             if i + j < input_tokens.len() {
                 let input_token = input_tokens[i + j].to_lowercase();
                 let company_token = company_token.to_lowercase();
