@@ -1,14 +1,12 @@
+#[path = "../tests/test_utils.rs"]
+mod test_utils;
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use std::collections::HashMap;
+use test_utils::load_symbols_from_file;
 use ticker_sniffer::extract_tickers_from_text;
 
 fn benchmark_extract_tickers(c: &mut Criterion) {
-    let mut symbols_map = HashMap::new();
-    symbols_map.insert("AAPL".to_string(), Some("Apple Inc.".to_string()));
-    symbols_map.insert(
-        "MSFT".to_string(),
-        Some("Microsoft Corporation".to_string()),
-    );
+    let symbols_map = load_symbols_from_file("tests/test_symbols.csv");
 
     let text = "AAPL is performing well, but MSFT is also a strong contender.";
 

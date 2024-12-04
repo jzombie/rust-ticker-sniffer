@@ -1,26 +1,7 @@
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+mod test_utils;
+
+use test_utils::load_symbols_from_file;
 use ticker_sniffer::extract_tickers_from_text;
-
-/// Loads symbols from a file for testing purposes.
-fn load_symbols_from_file(file_path: &str) -> HashMap<String, Option<String>> {
-    let mut symbols_map = HashMap::new();
-    let file = File::open(file_path).expect("Failed to open test symbols file");
-    let reader = BufReader::new(file);
-
-    for line in reader.lines() {
-        let line = line.expect("Failed to read line");
-        let parts: Vec<&str> = line.splitn(2, ',').collect();
-        if parts.len() == 2 {
-            symbols_map.insert(parts[0].to_uppercase(), Some(parts[1].to_string()));
-        } else {
-            symbols_map.insert(parts[0].to_uppercase(), None);
-        }
-    }
-
-    symbols_map
-}
 
 #[test]
 fn test_extract_tickers_with_file() {
