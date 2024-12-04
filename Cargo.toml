@@ -8,11 +8,16 @@ license = "MIT"
 
 [dependencies]
 regex = "1.11.1"
+csv = { version = "1.3.1", optional = true } 
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
-csv = "1.3.1"
 
-[[bench]]
-name = "my_benchmark"
-harness = false
+[[bin]]
+name = "tune"
+path = "src/bin/tune.rs"
+required-features = ["csv-support"]
+
+[features]
+default = []
+csv-support = ["dep:csv"]

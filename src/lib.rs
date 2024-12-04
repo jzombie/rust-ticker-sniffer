@@ -3,17 +3,18 @@ use std::collections::{HashMap, HashSet};
 
 const MATCH_SCORE_THRESHOLD: f32 = 0.9;
 
-const COMMON_WORDS: &[&str] = &[
-    "the",
-    "corporation",
-    "enterprise",
-    "inc",
-    "company",
-    "limited",
-    "llc",
-    "group",
-    "technologies",
-];
+// TODO: Reimplement
+// const COMMON_WORDS: &[&str] = &[
+//     "the",
+//     "corporation",
+//     "enterprise",
+//     "inc",
+//     "company",
+//     "limited",
+//     "llc",
+//     "group",
+//     "technologies",
+// ];
 
 /// Tokenizer function to split the text into individual tokens.
 pub fn tokenize(text: &str) -> Vec<&str> {

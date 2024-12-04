@@ -1,7 +1,19 @@
 ## Test with Filename Capturing in Output
 
 ```bash
-cargo test -- --nocapture
+cargo test --features csv-support  -- --nocapture
+```
+
+## Benching
+
+```bash
+cargo bench --features csv-support
+```
+
+## Tuning Weights
+
+```bash
+cargo run --bin tune --features csv-support
 ```
 
 ## WASM Test Builds
