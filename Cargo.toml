@@ -7,3 +7,10 @@ description = "A library for extracting multiple stock ticker symbols from a tex
 license = "MIT"
 
 [dependencies]
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "my_benchmark"
+harness = false
