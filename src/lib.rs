@@ -262,14 +262,19 @@ fn extract_tickers_from_company_names(
         eprintln!("Matched Symbol: {}, Score: {:.2}", symbol, score);
     }
 
-    // Extract just the keys (symbols) and collect them into a Vec<String>
-    let result_keys: Vec<String> = sorted_results
+    // Compute result keys and total weight in a single iteration
+    let (result_keys, total_score): (Vec<String>, f32) = sorted_results
         .into_iter()
-        .map(|(symbol, _)| symbol)
-        .collect();
+        .map(|(symbol, score)| (symbol, score))
+        .fold((vec![], 0.0), |(mut keys, total), (symbol, score)| {
+            keys.push(symbol);
+            (keys, total + score)
+        });
+
+    eprintln!("Total score: {:.2}", total_score);
 
     // Return only the keys and the total score
-    (result_keys, 0.0)
+    (result_keys, total_score)
 }
 
 // fn extract_tickers_from_company_names(
