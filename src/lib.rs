@@ -251,12 +251,25 @@ fn extract_tickers_from_company_names(
             .unwrap_or(std::cmp::Ordering::Equal)
     });
 
-    let result = sorted_results
+    let results: Vec<(String, f32)> = sorted_results
+        .clone()
+        .into_iter()
+        .map(|(symbol, score)| (symbol, score))
+        .collect();
+
+    // Iterate over each result and print them
+    for (symbol, score) in &results {
+        eprintln!("Matched Symbol: {}, Score: {:.2}", symbol, score);
+    }
+
+    // Extract just the keys (symbols) and collect them into a Vec<String>
+    let result_keys: Vec<String> = sorted_results
         .into_iter()
         .map(|(symbol, _)| symbol)
         .collect();
 
-    (result, 0.0)
+    // Return only the keys and the total score
+    (result_keys, 0.0)
 }
 
 // fn extract_tickers_from_company_names(
