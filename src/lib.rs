@@ -465,6 +465,7 @@ fn extract_tickers_from_company_names(
     //         .cloned() // Collect values directly as f32
     //         .collect::<Vec<f32>>(),
     // );
+    // TODO: Remove?
     let slope = 1.0;
 
     for (symbol, original_score) in intermediate_scores {
@@ -513,23 +514,23 @@ fn extract_tickers_from_company_names(
     (result_keys, total_score, tokenized_filter)
 }
 
-fn calculate_slope(scores: &[f32]) -> f32 {
-    if scores.is_empty() {
-        return 0.0; // No points to calculate a slope
-    }
+// fn calculate_slope(scores: &[f32]) -> f32 {
+//     if scores.is_empty() {
+//         return 0.0; // No points to calculate a slope
+//     }
 
-    if scores.len() == 1 {
-        return 1.0;
-    }
+//     if scores.len() == 1 {
+//         return 1.0;
+//     }
 
-    let min_score = scores.iter().cloned().fold(f32::INFINITY, f32::min);
-    let max_score = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
+//     let min_score = scores.iter().cloned().fold(f32::INFINITY, f32::min);
+//     let max_score = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
 
-    let n = scores.len() as f32;
+//     let n = scores.len() as f32;
 
-    // Slope based on min and max scores
-    (max_score - min_score) / (n - 1.0)
-}
+//     // Slope based on min and max scores
+//     (max_score - min_score) / (n - 1.0)
+// }
 
 // fn extract_tickers_from_company_names(
 //     text: &str,
