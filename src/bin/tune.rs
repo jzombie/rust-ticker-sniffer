@@ -22,6 +22,8 @@ fn tune_weights() {
     let momentum = 0.9; // Momentum factor
     let regularization_lambda = 0.01; // Regularization strength
     let tolerance = 1e-5; // Convergence criterion
+
+    let min_epochs = 2; // Minimum number of epochs to run
     let max_epochs = 100; // Maximum number of iterations
 
     for epoch in 1..=max_epochs {
@@ -81,7 +83,11 @@ fn tune_weights() {
         );
 
         // Check for convergence; early stopping mechanism
-        if grad_w1.abs() < tolerance && grad_w2.abs() < tolerance && grad_w3.abs() < tolerance {
+        if epoch >= min_epochs
+            && grad_w1.abs() < tolerance
+            && grad_w2.abs() < tolerance
+            && grad_w3.abs() < tolerance
+        {
             println!("Converged after {} epochs.", epoch);
             break;
         }
