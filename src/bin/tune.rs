@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
+use ticker_sniffer::Weights;
 
 #[path = "../../test_utils/lib.rs"] // Adjusted to match your directory structure
 mod test_utils;
@@ -20,14 +21,14 @@ fn tune_weights() {
     let mut rng = rand::thread_rng();
 
     // Initialize randomly
-    let mut weights = (
-        0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
-        0.5 + rng.gen_range(-0.1..0.1),
-        0.5 + rng.gen_range(-0.1..0.1),
-    );
+    let mut weights = Weights {
+        continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
+        coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
+        coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
+    };
 
     let mut velocity = (0.0, 0.0, 0.0);
-    let mut best_weights = weights;
+    let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
     let learning_rate = 0.1;
@@ -43,9 +44,7 @@ fn tune_weights() {
         println!("Epoch {}/{}", epoch, max_epochs);
 
         let current_loss = evaluate_loss_with_regularization(
-            weights.0,
-            weights.1,
-            weights.2,
+            weights.clone(),
             symbols_map.clone(),
             test_dir,
             regularization_lambda,
@@ -54,38 +53,35 @@ fn tune_weights() {
         // Update best weights if current loss is lower
         if current_loss < best_loss - tolerance {
             best_loss = current_loss;
-            best_weights = weights;
+            best_weights = weights.clone();
             no_improvement_count = 0; // Reset patience counter
             println!(
                 "New best weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
-                best_weights.0, best_weights.1, best_weights.2, best_loss
+                best_weights.continuity,
+                best_weights.coverage_input,
+                best_weights.coverage_company,
+                best_loss
             );
         } else {
             no_improvement_count += 1; // Increment patience counter
         }
 
         let grad_w1 = compute_gradient_with_regularization(
-            weights.0,
-            weights.1,
-            weights.2,
+            weights.clone(),
             &symbols_map,
             test_dir,
             0,
             regularization_lambda,
         );
         let grad_w2 = compute_gradient_with_regularization(
-            weights.0,
-            weights.1,
-            weights.2,
+            weights.clone(),
             &symbols_map,
             test_dir,
             1,
             regularization_lambda,
         );
         let grad_w3 = compute_gradient_with_regularization(
-            weights.0,
-            weights.1,
-            weights.2,
+            weights,
             &symbols_map,
             test_dir,
             2,
@@ -96,13 +92,13 @@ fn tune_weights() {
         velocity.1 = momentum * velocity.1 + learning_rate * grad_w2;
         velocity.2 = momentum * velocity.2 + learning_rate * grad_w3;
 
-        weights.0 -= velocity.0;
-        weights.1 -= velocity.1;
-        weights.2 -= velocity.2;
+        weights.continuity -= velocity.0;
+        weights.coverage_input -= velocity.1;
+        weights.coverage_company -= velocity.2;
 
         println!(
             "Weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
-            weights.0, weights.1, weights.2, current_loss
+            weights.continuity, weights.coverage_input, weights.coverage_company, current_loss
         );
 
         println!(
@@ -122,44 +118,41 @@ fn tune_weights() {
 
     println!(
         "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}), Best loss: {:.4}",
-        best_weights.0, best_weights.1, best_weights.2, best_loss
+        best_weights.continuity,
+        best_weights.coverage_input,
+        best_weights.coverage_company,
+        best_loss
     );
 }
 
 /// Compute the gradient for a specific weight with regularization
 fn compute_gradient_with_regularization(
-    w1: f32,
-    w2: f32,
-    w3: f32,
+    weights: Weights,
     symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
     weight_index: usize,
     regularization_lambda: f32,
 ) -> f32 {
     let delta = 1e-5; // Small perturbation for finite differences
-    let mut perturbed_weights = (w1, w2, w3);
+    let mut perturbed_weights = weights.clone();
 
     // Perturb the specific weight
     match weight_index {
-        0 => perturbed_weights.0 += delta,
-        1 => perturbed_weights.1 += delta,
-        2 => perturbed_weights.2 += delta,
+        0 => perturbed_weights.continuity += delta,
+        1 => perturbed_weights.coverage_input += delta,
+        2 => perturbed_weights.coverage_company += delta,
         _ => unreachable!(),
     }
 
     // Calculate the loss difference with regularization
     let loss_original = evaluate_loss_with_regularization(
-        w1,
-        w2,
-        w3,
+        weights,
         symbols_map.clone(),
         test_dir,
         regularization_lambda,
     );
     let loss_perturbed = evaluate_loss_with_regularization(
-        perturbed_weights.0,
-        perturbed_weights.1,
-        perturbed_weights.2,
+        perturbed_weights,
         symbols_map.clone(),
         test_dir,
         regularization_lambda,
@@ -171,26 +164,25 @@ fn compute_gradient_with_regularization(
 
 /// Evaluate the loss with L2 regularization
 fn evaluate_loss_with_regularization(
-    weight1: f32,
-    weight2: f32,
-    weight3: f32,
+    weights: Weights,
     symbols_map: HashMap<String, Option<String>>,
     test_dir: &str,
     regularization_lambda: f32,
 ) -> f32 {
     // Evaluate the original loss
-    let base_loss = evaluate_loss(weight1, weight2, weight3, &symbols_map, test_dir);
+    let base_loss = evaluate_loss(weights.clone(), &symbols_map, test_dir);
 
     // Add L2 regularization penalty
-    let l2_penalty = regularization_lambda * (weight1.powi(2) + weight2.powi(2) + weight3.powi(2));
+    let l2_penalty = regularization_lambda
+        * (weights.continuity.powi(2)
+            + weights.coverage_input.powi(2)
+            + weights.coverage_company.powi(2));
     base_loss + l2_penalty
 }
 
 /// Evaluate the loss for given weights
 fn evaluate_loss(
-    weight1: f32,
-    weight2: f32,
-    weight3: f32,
+    weights: Weights,
     _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
 ) -> f32 {
@@ -204,8 +196,9 @@ fn evaluate_loss(
 
         if file_path.is_file() {
             // Wrap `run_test_for_file` to suppress output
-            total_errors +=
-                suppress_output(|| run_test_for_file(file_path.to_str().unwrap(), false));
+            total_errors += suppress_output(|| {
+                run_test_for_file(file_path.to_str().unwrap(), false, weights.clone())
+            });
         }
     }
 
@@ -213,7 +206,7 @@ fn evaluate_loss(
     let total_loss = total_errors as f32;
     println!(
         "Loss for weights ({:.4}, {:.4}, {:.4}): {:.4}",
-        weight1, weight2, weight3, total_loss
+        weights.continuity, weights.coverage_input, weights.coverage_company, total_loss
     );
 
     total_loss

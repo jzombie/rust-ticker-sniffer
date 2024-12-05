@@ -3,6 +3,57 @@ use std::collections::{HashMap, HashSet};
 
 pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
 
+#[derive(Debug, Clone, Copy)]
+pub struct Weights {
+    pub continuity: f32,
+    pub coverage_input: f32,
+    pub coverage_company: f32,
+}
+
+impl Weights {
+    /// Creates a new `Weights` instance with specified values.
+    pub fn new(continuity: f32, coverage_input: f32, coverage_company: f32) -> Self {
+        Self {
+            continuity,
+            coverage_input,
+            coverage_company,
+        }
+    }
+
+    /// Creates a new `Weights` instance with random values around a given base.
+    // pub fn random(base: f32, range: f32) -> Self {
+    //     use rand::Rng;
+    //     let mut rng = rand::thread_rng();
+    //     Self {
+    //         continuity: base + rng.gen_range(-range..range),
+    //         coverage_input: base + rng.gen_range(-range..range),
+    //         coverage_company: base + rng.gen_range(-range..range),
+    //     }
+    // }
+
+    /// Normalizes the weights so that they sum up to 1.
+    pub fn normalize(&mut self) {
+        let sum = self.continuity + self.coverage_input + self.coverage_company;
+        if sum > 0.0 {
+            self.continuity /= sum;
+            self.coverage_input /= sum;
+            self.coverage_company /= sum;
+        }
+    }
+
+    /// Applies the weights to the scoring formula.
+    pub fn calculate_score(
+        &self,
+        continuity_score: f32,
+        coverage_input: f32,
+        coverage_company: f32,
+    ) -> f32 {
+        (self.continuity * continuity_score)
+            + (self.coverage_input * coverage_input)
+            + (self.coverage_company * coverage_company)
+    }
+}
+
 const MATCH_SCORE_THRESHOLD: f32 = 0.9;
 
 // TODO: Reimplement
@@ -23,7 +74,11 @@ pub fn tokenize(text: &str) -> Vec<&str> {
     text.split_whitespace().collect()
 }
 
-pub fn extract_tickers_from_text(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
+pub fn extract_tickers_from_text(
+    text: &str,
+    symbols_map: SymbolsMap,
+    weights: Weights,
+) -> Vec<String> {
     let mut matches = HashSet::new();
 
     // Extract tickers by symbol
@@ -31,7 +86,7 @@ pub fn extract_tickers_from_text(text: &str, symbols_map: SymbolsMap) -> Vec<Str
     matches.extend(symbol_matches);
 
     // Extract tickers by company name
-    let company_name_matches = extract_tickers_from_company_names(text, symbols_map);
+    let company_name_matches = extract_tickers_from_company_names(text, symbols_map, weights);
     matches.extend(company_name_matches);
 
     // Convert HashSet to Vec and return sorted for consistency
@@ -70,7 +125,11 @@ pub fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<
     matches.into_iter().collect()
 }
 
-pub fn extract_tickers_from_company_names(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
+pub fn extract_tickers_from_company_names(
+    text: &str,
+    symbols_map: SymbolsMap,
+    weights: Weights,
+) -> Vec<String> {
     // Step 1: Use regex to split text into sentences based on sentence-ending punctuation
     let sentence_terminator = Regex::new(r"[.!?]\s+").unwrap(); // Match sentence-ending punctuation followed by whitespace
     let sentences: Vec<&str> = sentence_terminator
@@ -111,7 +170,7 @@ pub fn extract_tickers_from_company_names(text: &str, symbols_map: SymbolsMap) -
                 }
 
                 // Step 4: Calculate match score
-                let match_score = calculate_match_score(&input_tokens, &company_tokens);
+                let match_score = calculate_match_score(&input_tokens, &company_tokens, &weights);
 
                 if match_score >= MATCH_SCORE_THRESHOLD {
                     matches
@@ -139,7 +198,7 @@ pub fn extract_tickers_from_company_names(text: &str, symbols_map: SymbolsMap) -
 
 /// Match scoring algorithm based on token overlap and continuity.
 /// Calculate the match score based on token overlap and continuity.
-fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str]) -> f32 {
+fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights: &Weights) -> f32 {
     let total_input_tokens = input_tokens.len() as f32;
     let total_company_tokens = company_tokens.len() as f32;
 
@@ -189,8 +248,9 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str]) -> f32 
     let continuity_score = max_continuous_matches as f32 / total_company_tokens;
 
     // Combine scores with balanced weighting
-    let match_score =
-        (0.5 * continuity_score) + (0.25 * coverage_input) + (0.25 * coverage_company);
+    let match_score = (weights.continuity * continuity_score)
+        + (weights.coverage_input * coverage_input)
+        + (weights.coverage_company * coverage_company);
 
     if match_score > 0.0 {
         // Log all metrics for debugging

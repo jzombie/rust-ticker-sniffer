@@ -3,6 +3,7 @@ mod test_utils;
 
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
+use ticker_sniffer::Weights;
 
 #[cfg(test)]
 mod tests {
@@ -10,6 +11,12 @@ mod tests {
 
     #[test]
     fn test_extract_tickers_from_multiple_files() {
+        const WEIGHTS: Weights = Weights {
+            continuity: 0.5,
+            coverage_input: 0.25,
+            coverage_company: 0.25,
+        };
+
         // Directory containing the test files
         let test_dir = "tests/test_files";
 
@@ -22,7 +29,7 @@ mod tests {
 
             // Run the test for each file (if it is a file)
             if file_path.is_file() {
-                run_test_for_file(file_path.to_str().unwrap(), true);
+                run_test_for_file(file_path.to_str().unwrap(), true, WEIGHTS);
             }
         }
     }
