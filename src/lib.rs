@@ -100,7 +100,7 @@ pub fn extract_tickers_from_text(
     results
 }
 
-pub fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
+fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
     let mut matches = HashSet::new();
     let tokens = tokenize(text);
 
@@ -130,7 +130,7 @@ pub fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<
     matches.into_iter().collect()
 }
 
-pub fn extract_tickers_from_company_names(
+fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: SymbolsMap,
     weights: Weights,
