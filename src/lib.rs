@@ -201,7 +201,7 @@ fn extract_tickers_from_company_names(
             // Attempt to match consecutive tokens
             while token_index < input_tokens_capitalized.len() {
                 let mut consecutive_match_count = 0;
-                let mut start_index: Option<usize> = None; // Explicitly specify the type
+                // let mut start_index: Option<usize> = None; // Explicitly specify the type
 
                 // Iterate over the company tokens
                 // for (company_index, company_token) in company_tokens.iter().enumerate() {
@@ -226,14 +226,14 @@ fn extract_tickers_from_company_names(
 
                 for (company_index, company_token) in company_tokens.iter().enumerate() {
                     // Find the position of the company_token in input_tokens_capitalized
-                    if let Some(index) = input_tokens_capitalized
+                    if let Some(start_index) = input_tokens_capitalized
                         .iter()
                         .position(|input_token| input_token == company_token)
                     {
-                        start_index = Some(index);
+                        // start_index = Some(index);
 
                         let mut consecutive_match_count = 1;
-                        let mut token_index = index + 1; // Start checking from the next position
+                        let mut token_index = start_index + 1; // Start checking from the next position
 
                         // Check for consecutive matches
                         while token_index < input_tokens_capitalized.len()
