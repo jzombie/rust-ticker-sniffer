@@ -319,10 +319,7 @@ fn extract_tickers_from_company_names(
         // .to_lowercase()
         .replace(|c: char| !c.is_alphanumeric() && c != ' ', " "); // Normalize input
 
-    let input_tokens: Vec<&str> = normalized_text
-        .split_whitespace()
-        .filter(|token| !COMMON_WORDS.contains(token))
-        .collect();
+    let input_tokens: Vec<&str> = normalized_text.split_whitespace().collect();
 
     let mut scored_results: HashMap<String, f32> = HashMap::new();
 
