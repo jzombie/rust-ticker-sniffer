@@ -1,0 +1,35 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install additional dependencies
+        run: |
+          rustup component add clippy
+          rustup component add rustfmt
+
+      - name: Run tests with filename capturing
+        run: cargo test --features csv-support -- --nocapture
+
+      - name: Build WASM test builds
+        run: docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
