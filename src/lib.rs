@@ -328,12 +328,12 @@ fn extract_tickers_from_company_names(
 
     if !input_tokens.is_empty() {
         // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length
-        let input_tokens_capitalized: Vec<String> = input_tokens
+        let input_tokens_capitalized: Vec<&str> = input_tokens
             .iter()
             .filter(|token| {
                 token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1
             }) // Min length > 1
-            .map(|token| token.to_lowercase()) // Normalize to lowercase for matching
+            .cloned()
             .collect();
 
         for (symbol, company_name) in symbols_map {
@@ -363,11 +363,13 @@ fn extract_tickers_from_company_names(
                 let mut company_index = 0;
 
                 for input_token in &input_tokens_capitalized {
-                    if COMMON_WORDS.contains(&input_token.as_str()) {
+                    let lc_input_token = input_token.to_lowercase();
+
+                    if COMMON_WORDS.contains(&lc_input_token.as_str()) {
                         continue;
                     }
 
-                    if input_token == &company_tokens[company_index] {
+                    if &lc_input_token == &company_tokens[company_index] {
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
                         company_index += 1;
