@@ -12,11 +12,10 @@ mod tests {
     #[test]
     fn test_extract_tickers_from_multiple_files() {
         const WEIGHTS: Weights = Weights {
-            continuity: 0.5,
-            coverage_input: 0.25,
-            coverage_company: 0.25,
-            match_score_threshold: 0.9,
-            common_word_penalty: 1.0,
+            mismatched_letter_penalty: 1.0,
+            mismatched_word_penalty: 1.0,
+            match_score_threshold: 1.0,
+            bias: 1.0,
             // continuity: 0.3688305957567424,
             // coverage_input: 0.026040188967873246,
             // coverage_company: 0.5971237581795172,

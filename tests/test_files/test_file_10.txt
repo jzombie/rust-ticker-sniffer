@@ -1,0 +1,8 @@
+Apple Manzana Nvidia Microsoft Alphabet Apple.  The people, some say that Apple Hospitability REIT is something.
+
+EXPECTED: AAPL
+EXPECTED: APLE
+EXPECTED: GOOG
+EXPECTED: GOOGL
+EXPECTED: MSFT
+EXPECTED: NVDA
