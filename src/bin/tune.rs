@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-use std::fs;
+use std::fs::{read_dir, File};
+use std::io;
+use std::os::unix::io::AsRawFd;
 
 #[path = "../../test_utils/lib.rs"] // Adjusted to match your directory structure
 mod test_utils;
@@ -94,6 +96,11 @@ fn tune_weights() {
             weights.0, weights.1, weights.2, current_loss
         );
 
+        println!(
+            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}",
+            grad_w1, grad_w2, grad_w3
+        );
+
         // Check for convergence with patience
         if no_improvement_count >= patience {
             println!(
@@ -175,24 +182,67 @@ fn evaluate_loss(
     weight1: f32,
     weight2: f32,
     weight3: f32,
-    symbols_map: &HashMap<String, Option<String>>,
+    _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
 ) -> f32 {
     let mut total_errors = 0;
 
     // Read test files
-    let files = fs::read_dir(test_dir).expect("Failed to read test files directory");
+    let files = read_dir(test_dir).expect("Failed to read test files directory");
     for file in files {
         let file = file.expect("Failed to read file");
         let file_path = file.path();
 
         if file_path.is_file() {
-            total_errors += run_test_for_file(file_path.to_str().unwrap(), false);
+            // Wrap `run_test_for_file` to suppress output
+            total_errors +=
+                suppress_output(|| run_test_for_file(file_path.to_str().unwrap(), false));
         }
     }
 
-    // Return total errors as the loss
-    total_errors as f32
+    // Log the total loss in the console
+    let total_loss = total_errors as f32;
+    println!(
+        "Loss for weights ({:.4}, {:.4}, {:.4}): {:.4}",
+        weight1, weight2, weight3, total_loss
+    );
+
+    total_loss
+}
+
+/// Suppress output of a given closure
+fn suppress_output<F, T>(f: F) -> T
+where
+    F: FnOnce() -> T,
+{
+    let dev_null = File::open("/dev/null").expect("Failed to open /dev/null");
+    let null_fd = dev_null.as_raw_fd();
+
+    // Backup stdout and stderr using `dup`
+    let stdout_backup = unsafe { libc::dup(io::stdout().as_raw_fd()) };
+    let stderr_backup = unsafe { libc::dup(io::stderr().as_raw_fd()) };
+
+    if stdout_backup < 0 || stderr_backup < 0 {
+        panic!("Failed to backup stdout or stderr");
+    }
+
+    // Redirect stdout and stderr to /dev/null
+    unsafe {
+        libc::dup2(null_fd, io::stdout().as_raw_fd());
+        libc::dup2(null_fd, io::stderr().as_raw_fd());
+    }
+
+    let result = f(); // Run the closure
+
+    // Restore original stdout and stderr
+    unsafe {
+        libc::dup2(stdout_backup, io::stdout().as_raw_fd());
+        libc::dup2(stderr_backup, io::stderr().as_raw_fd());
+        libc::close(stdout_backup); // Close the backup descriptors
+        libc::close(stderr_backup);
+    }
+
+    result
 }
 
 fn main() {
