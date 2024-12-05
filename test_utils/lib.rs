@@ -59,7 +59,11 @@ pub fn get_expected_failure(file_path: &Path) -> Option<String> {
 }
 
 // Helper function to run the test for each file in the directory
-pub fn run_test_for_file(test_file_path: &str, use_assertions: bool, weights: Weights) -> usize {
+pub fn run_test_for_file(
+    test_file_path: &str,
+    use_assertions: bool,
+    weights: Weights,
+) -> (usize, f32) {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -82,7 +86,7 @@ pub fn run_test_for_file(test_file_path: &str, use_assertions: bool, weights: We
     eprintln!("Filtered text: {}", filtered_text);
 
     // Extract tickers from the filtered text
-    let results = extract_tickers_from_text(&filtered_text, &symbols_map, weights);
+    let (results, total_score) = extract_tickers_from_text(&filtered_text, &symbols_map, weights);
 
     // Get the expected tickers and failure reason
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
@@ -144,7 +148,8 @@ pub fn run_test_for_file(test_file_path: &str, use_assertions: bool, weights: We
         }
 
         // Skip further checks since failure was validated
-        return error_count; // Return early with errors
+        // return error_count; // Return early with errors
+        return (error_count, total_score);
     }
 
     // Regular success case validation
@@ -205,5 +210,5 @@ pub fn run_test_for_file(test_file_path: &str, use_assertions: bool, weights: We
         }
     }
 
-    error_count // Return the total number of errors
+    (error_count, total_score)
 }

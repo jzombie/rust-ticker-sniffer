@@ -32,8 +32,8 @@ fn tune_weights() {
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
-    let learning_rate = 0.1;
-    let momentum = 0.9;
+    let learning_rate = 0.01;
+    let momentum = 0.01;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
     let max_epochs = 100; // Maximum number of epochs
@@ -57,10 +57,11 @@ fn tune_weights() {
             best_weights = weights.clone();
             no_improvement_count = 0; // Reset patience counter
             println!(
-                "New best weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
+                "New best weights: ({:.4}, {:.4}, {:.4}, {:.4}), Loss: {:.4}",
                 best_weights.continuity,
                 best_weights.coverage_input,
                 best_weights.coverage_company,
+                best_weights.match_score_threshold,
                 best_loss
             );
         } else {
@@ -107,7 +108,7 @@ fn tune_weights() {
         weights.match_score_threshold -= velocity.3;
 
         println!(
-            "Weights: ({:.4}, {:.4}, {:.4}), {:.4} Loss: {:.4}",
+            "Weights: ({:.4}, {:.4}, {:.4}, {:.4}), Loss: {:.4}",
             weights.continuity,
             weights.coverage_input,
             weights.coverage_company,
@@ -148,8 +149,8 @@ fn compute_gradient_with_regularization(
     weight_index: usize,
     regularization_lambda: f32,
 ) -> f32 {
-    // let delta = 1e-5; // Small perturbation for finite differences
-    let delta = 0.1;
+    let delta = 1e-5; // Small perturbation for finite differences
+
     let mut perturbed_weights = weights.clone();
 
     // Perturb the specific weight
@@ -176,7 +177,19 @@ fn compute_gradient_with_regularization(
     );
 
     // Compute gradient as finite difference
-    (loss_perturbed - loss_original) / delta
+    let gradient = (loss_perturbed - loss_original) / delta;
+
+    // Log the difference between the losses
+    println!(
+        "Weight index: {}, Loss Original: {:.6}, Loss Perturbed: {:.6}, Difference: {:.6}, Gradient: {:.6}",
+        weight_index,
+        loss_original,
+        loss_perturbed,
+        loss_perturbed - loss_original,
+        gradient
+    );
+
+    gradient
 }
 
 /// Evaluate the loss with L2 regularization
@@ -205,6 +218,7 @@ fn evaluate_loss(
     test_dir: &str,
 ) -> f32 {
     let mut total_errors = 0;
+    let mut total_score: f32 = 0.0;
 
     // Read test files
     let files = read_dir(test_dir).expect("Failed to read test files directory");
@@ -214,14 +228,29 @@ fn evaluate_loss(
 
         if file_path.is_file() {
             // Wrap `run_test_for_file` to suppress output
-            total_errors += suppress_output(|| {
+            let (next_errors, next_score) = suppress_output(|| {
                 run_test_for_file(file_path.to_str().unwrap(), false, weights.clone())
             });
+
+            total_errors += next_errors;
+            total_score += next_score;
         }
     }
 
     // Log the total loss in the console
-    let total_loss = total_errors as f32;
+    // let total_loss = total_errors as f32 - total_score;
+
+    let weight_sum = weights.continuity
+        + weights.coverage_input
+        + weights.coverage_company
+        + weights.match_score_threshold;
+
+    // Regularization term to penalize large weights
+    let weight_penalty = 0.1 * weight_sum.powi(2); // Adjust coefficient as needed
+
+    // Updated loss function
+    let total_loss = total_errors as f32 - total_score + weight_penalty;
+
     println!(
         "Loss for weights ({:.4}, {:.4}, {:.4}, {:.4}): {:.4}",
         weights.continuity,

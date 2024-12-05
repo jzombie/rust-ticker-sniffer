@@ -83,7 +83,7 @@ pub fn extract_tickers_from_text(
     text: &str,
     symbols_map: SymbolsMap,
     weights: Weights,
-) -> Vec<String> {
+) -> (Vec<String>, f32) {
     let mut matches = HashSet::new();
 
     // Extract tickers by symbol
@@ -91,13 +91,15 @@ pub fn extract_tickers_from_text(
     matches.extend(symbol_matches);
 
     // Extract tickers by company name
-    let company_name_matches = extract_tickers_from_company_names(text, symbols_map, weights);
+    let (company_name_matches, total_score) =
+        extract_tickers_from_company_names(text, symbols_map, weights);
     matches.extend(company_name_matches);
 
     // Convert HashSet to Vec and return sorted for consistency
     let mut results: Vec<String> = matches.into_iter().collect();
     results.sort();
-    results
+
+    (results, total_score)
 }
 
 fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
@@ -134,7 +136,9 @@ fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: SymbolsMap,
     weights: Weights,
-) -> Vec<String> {
+) -> (Vec<String>, f32) {
+    let mut total_score: f32 = 0.0;
+
     // Step 1: Use regex to split text into sentences based on sentence-ending punctuation
     let sentence_terminator = Regex::new(r"[.!?]\s+").unwrap(); // Match sentence-ending punctuation followed by whitespace
     let sentences: Vec<&str> = sentence_terminator
@@ -178,6 +182,8 @@ fn extract_tickers_from_company_names(
                 let match_score = calculate_match_score(&input_tokens, &company_tokens, &weights);
 
                 if match_score >= weights.match_score_threshold {
+                    total_score += match_score;
+
                     matches
                         .entry(symbol.clone())
                         .and_modify(|existing_score| {
@@ -198,7 +204,10 @@ fn extract_tickers_from_company_names(
             .then_with(|| sym_a.cmp(sym_b))
     });
 
-    result.into_iter().map(|(symbol, _)| symbol).collect()
+    (
+        result.into_iter().map(|(symbol, _)| symbol).collect(),
+        total_score,
+    )
 }
 
 /// Match scoring algorithm based on token overlap and continuity.
@@ -252,7 +261,7 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights
     // Weighted continuity score
     let continuity_score = max_continuous_matches as f32 / total_company_tokens;
 
-    // Combine scores with balanced weighting
+    // Combine scores
     let match_score = (weights.continuity * continuity_score)
         + (weights.coverage_input * coverage_input)
         + (weights.coverage_company * coverage_company);
