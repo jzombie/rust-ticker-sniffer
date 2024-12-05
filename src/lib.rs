@@ -352,6 +352,8 @@ fn extract_tickers_from_company_names(
                     continue;
                 }
 
+                let company_name_char_count = company_name.len();
+
                 // Normalize and tokenize the company name
                 let company_tokens: Vec<String> = company_name
                     .to_lowercase()
@@ -375,27 +377,33 @@ fn extract_tickers_from_company_names(
 
                 for input_token in &input_tokens_capitalized {
                     let lc_input_token = input_token.to_lowercase();
+                    let input_token_char_count = input_token.len();
+                    let mut consecutive_input_token_char_count = 0;
 
                     if STOP_WORDS.contains(&lc_input_token.as_str()) {
                         continue;
                     }
 
                     if &lc_input_token == &company_tokens[company_index] {
+                        consecutive_input_token_char_count += input_token_char_count;
+
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
                         company_index += 1;
 
                         // Prevent double-counting of tokens but still handle their consecutive scoring
                         if !seen_tokens.contains(&lc_input_token.to_string()) {
+                            // Score with penalty added
+                            // match_score += consecutive_input_token_char_count as f32
+                            //     / company_name_char_count as f32;
                             match_score +=
                                 consecutive_match_count as f32 / total_company_words as f32;
+
                             seen_tokens.insert(lc_input_token.to_string());
                         }
 
                         // If we've matched the entire company_tokens, score it
                         if company_index == total_company_words {
-                            // let consecutive_score =
-                            //     consecutive_match_count as f32 / total_company_words as f32;
                             // match_score += consecutive_score;
 
                             // Reset for further potential matches in input tokens
@@ -412,11 +420,6 @@ fn extract_tickers_from_company_names(
                         consecutive_match_count = 0;
                     }
                 }
-
-                // Penalize unmatched tokens in the company name
-                // let unmatched_penalty = (total_company_words - consecutive_match_count) as f32
-                //     / total_company_words as f32;
-                // match_score -= unmatched_penalty;
 
                 // Skip if the match score is insignificant
                 if match_score > 0.0 {
