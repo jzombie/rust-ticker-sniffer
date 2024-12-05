@@ -52,7 +52,7 @@ fn tune_weights() {
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
-        weights.normalize();
+        weights.normalize(2.50);
 
         let current_loss = evaluate_loss_with_regularization(
             weights,

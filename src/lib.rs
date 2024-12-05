@@ -41,19 +41,23 @@ impl Weights {
     //     }
     // }
 
-    /// Normalizes the weights so that they sum up to 1.
-    pub fn normalize(&mut self) {
+    /// Normalizes the weights so that they sum up to the specified `target_sum`.
+    pub fn normalize(&mut self, target_sum: f32) {
+        // Calculate the current sum of weights
         let sum = self.continuity
             + self.coverage_input
             + self.coverage_company
             + self.match_score_threshold
             + self.common_word_penalty;
+
+        // Scale weights to achieve the target sum
         if sum > 0.0 {
-            self.continuity /= sum;
-            self.coverage_input /= sum;
-            self.coverage_company /= sum;
-            self.match_score_threshold /= sum;
-            self.common_word_penalty /= sum;
+            let scale = target_sum / sum;
+            self.continuity *= scale;
+            self.coverage_input *= scale;
+            self.coverage_company *= scale;
+            self.match_score_threshold *= scale;
+            self.common_word_penalty *= scale;
         }
     }
 
