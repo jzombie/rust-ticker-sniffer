@@ -225,13 +225,19 @@ fn extract_tickers_from_company_names(
                 // }
 
                 for (company_index, company_token) in company_tokens.iter().enumerate() {
-                    // Find the position of the company_token in input_tokens_capitalized
-                    if let Some(start_index) = input_tokens_capitalized
-                        .iter()
-                        .position(|input_token| input_token == company_token)
-                    {
-                        // start_index = Some(index);
+                    if COMMON_WORDS.contains(&company_token.as_str()) {
+                        continue;
+                    }
 
+                    // Find all positions of the company_token in input_tokens_capitalized
+                    let matching_positions: Vec<usize> = input_tokens_capitalized
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, input_token)| *input_token == company_token)
+                        .map(|(index, _)| index)
+                        .collect();
+
+                    for start_index in matching_positions {
                         let mut consecutive_match_count = 1;
                         let mut token_index = start_index + 1; // Start checking from the next position
 
@@ -253,6 +259,12 @@ fn extract_tickers_from_company_names(
                         let consecutive_score =
                             consecutive_match_count as f32 / company_tokens.len() as f32;
                         match_score += consecutive_score;
+
+                        // // Debug print
+                        // println!(
+                        //     "Start Index: {}, Consecutive Match Count: {}, Consecutive Score: {:.2}, Match Score: {:.2}",
+                        //     start_index, consecutive_match_count, consecutive_score, match_score
+                        // );
                     }
                 }
 
