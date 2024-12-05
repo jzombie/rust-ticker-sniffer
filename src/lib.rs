@@ -201,27 +201,93 @@ fn extract_tickers_from_company_names(
             // Attempt to match consecutive tokens
             while token_index < input_tokens_capitalized.len() {
                 let mut consecutive_match_count = 0;
-                let mut start_index = None;
+                let mut start_index: Option<usize> = None; // Explicitly specify the type
+
+                // Iterate over the company tokens
+                // for (company_index, company_token) in company_tokens.iter().enumerate() {
+                //     // Search for the company token in the input tokens
+                //     if let Some(input_index) = input_tokens_capitalized
+                //         .iter()
+                //         .position(|input_token| input_token == company_token)
+                //     {
+                //         if start_index.is_none() {
+                //             start_index = Some(company_index);
+                //         }
+
+                //         consecutive_match_count += 1;
+
+                //         // Remove matched token from the input tokens to avoid reusing it
+                //         // input_tokens_capitalized.remove(input_index);
+                //     } else if start_index.is_some() {
+                //         // End of consecutive match
+                //         break;
+                //     }
+                // }
 
                 for (company_index, company_token) in company_tokens.iter().enumerate() {
-                    if input_tokens_capitalized[token_index] == *company_token {
-                        if start_index.is_none() {
-                            start_index = Some(company_index);
+                    // Find the position of the company_token in input_tokens_capitalized
+                    if let Some(index) = input_tokens_capitalized
+                        .iter()
+                        .position(|input_token| input_token == company_token)
+                    {
+                        start_index = Some(index);
+
+                        let mut consecutive_match_count = 1;
+                        let mut token_index = index + 1; // Start checking from the next position
+
+                        // Check for consecutive matches
+                        while token_index < input_tokens_capitalized.len()
+                            && company_index + consecutive_match_count < company_tokens.len()
+                        {
+                            if input_tokens_capitalized[token_index]
+                                == company_tokens[company_index + consecutive_match_count]
+                            {
+                                consecutive_match_count += 1;
+                                token_index += 1;
+                            } else {
+                                break; // No longer consecutive
+                            }
                         }
-                        consecutive_match_count += 1;
-                        token_index += 1;
-                        if token_index == input_tokens_capitalized.len() {
-                            break; // No more tokens to match
-                        }
-                    } else if start_index.is_some() {
-                        break; // End of consecutive match
+
+                        // Calculate and accumulate the score based on the consecutive match count
+                        let consecutive_score =
+                            consecutive_match_count as f32 / company_tokens.len() as f32;
+                        match_score += consecutive_score;
                     }
                 }
 
                 if consecutive_match_count > 0 {
+                    // Reward high coverage of input tokens
+                    let coverage_score =
+                        consecutive_match_count as f32 / input_tokens_capitalized.len() as f32;
+
+                    let unmatched_tokens = input_tokens_capitalized.len() - consecutive_match_count;
+
+                    eprintln!(
+                        "Company name: {:?}, Consecutive Matches: {}, Coverage: {:.2}, Unmatched Tokens: {}",
+                        company_name, consecutive_match_count, coverage_score, unmatched_tokens
+                    );
+
                     let consecutive_score =
                         consecutive_match_count as f32 / total_company_words as f32;
-                    match_score += consecutive_score;
+                    match_score += consecutive_score
+
+                    // Penalize extra unmatched tokens in the input
+                    // let unmatched_tokens = input_tokens_capitalized.len() - consecutive_match_count;
+                    // let unmatched_penalty =
+                    //     unmatched_tokens as f32 / input_tokens_capitalized.len() as f32;
+
+                    // Penalize extra words in the company name
+                    // let extra_words = total_company_words - consecutive_match_count;
+                    // let extra_word_penalty = extra_words as f32 / total_company_words as f32;
+
+                    // Apply position-based weight for matches occurring earlier in the name
+                    // let position_weight = 1.0 / (1.0 + start_index.unwrap_or(0) as f32);
+
+                    // Combine all factors into the match score
+                    // match_score += (coverage_score * 2.0 + char_difference_score) * position_weight;
+                    // match_score -= weights.common_word_penalty * unmatched_penalty;
+                    // match_score -= extra_word_penalty * 0.5; // Adjust penalty weight as needed
                 } else {
                     token_index += 1; // Move to the next token if no match was found
                 }
