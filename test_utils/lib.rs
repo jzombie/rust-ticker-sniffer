@@ -67,11 +67,14 @@ pub fn run_test_for_file(test_file_path: &str, use_assertions: bool) -> usize {
     // Read the content of the text file
     let raw_text = fs::read_to_string(test_file_path).expect("Failed to read test file");
 
-    // Filter out lines starting with 'EXPECTED:' or 'EXPECTED_FAILURE:'
+    // Filter out lines starting with 'EXPECTED:', 'EXPECTED_FAILURE:', or 'COMMENT:'
     let filtered_text: String = raw_text
         .lines()
-        .filter(|line| !line.trim_start().starts_with("EXPECTED:"))
-        .filter(|line| !line.trim_start().starts_with("EXPECTED_FAILURE:"))
+        .filter(|line| {
+            !line.trim_start().starts_with("EXPECTED:")
+                && !line.trim_start().starts_with("EXPECTED_FAILURE:")
+                && !line.trim_start().starts_with("COMMENT:")
+        })
         .collect::<Vec<&str>>()
         .join("\n");
 

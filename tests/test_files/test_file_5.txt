@@ -1,3 +1,5 @@
 Nvidia is a hardware company.
 
 EXPECTED: NVDA
+
+COMMENT: Basic extraction using single company name (the casing of the company name differs from what's stored in the dataset).

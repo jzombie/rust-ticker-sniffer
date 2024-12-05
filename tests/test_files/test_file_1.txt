@@ -2,3 +2,5 @@ AAPL is performing well, but MSFT is also a strong contender.
 
 EXPECTED: AAPL
 EXPECTED: MSFT
+
+COMMENT: This is basic symbol extraction, without company names.

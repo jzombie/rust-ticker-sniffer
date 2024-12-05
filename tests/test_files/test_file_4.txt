@@ -1,3 +1,5 @@
 Microsoft is a software company.
 
 EXPECTED: MSFT
+
+COMMENT: Basic extraction using single company name (the full name of the company is not specified).

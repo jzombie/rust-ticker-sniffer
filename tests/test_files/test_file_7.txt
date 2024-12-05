@@ -3,3 +3,5 @@ Nvidia, Tesla, and MicroStrategy.
 EXPECTED: NVDA
 EXPECTED: TSLA
 EXPECTED: MSTR
+
+COMMENT: Company name test, using punctuation symbols for separators.

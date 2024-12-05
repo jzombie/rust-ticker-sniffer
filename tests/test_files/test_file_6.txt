@@ -3,3 +3,5 @@ Microsoft is a software company. Nvidia is a hardware company. Apple does a bit 
 EXPECTED: MSFT
 EXPECTED: NVDA
 EXPECTED: AAPL
+
+COMMENT: Company name test using multiple company names.

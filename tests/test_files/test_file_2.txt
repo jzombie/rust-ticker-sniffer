@@ -2,3 +2,5 @@ BRK.B is a great stock, and so is MSFT.
 
 EXPECTED: BRK-B
 EXPECTED: MSFT
+
+COMMENT: This ensures that alternate matches work as expected; notice hyphens vs. periods.
