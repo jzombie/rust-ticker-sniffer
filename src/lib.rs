@@ -259,7 +259,10 @@ fn extract_tickers_from_company_names(
 
     // Iterate over each result and print them
     for (symbol, score) in &results {
-        eprintln!("Matched Symbol: {}, Score: {:.2}", symbol, score);
+        eprintln!(
+            "Matched Symbol: {}, Score: {:.2}, Company Name: {:?}",
+            symbol, score, symbols_map[symbol]
+        );
     }
 
     // Compute result keys and total weight in a single iteration
