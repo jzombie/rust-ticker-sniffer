@@ -440,8 +440,6 @@ fn extract_tickers_from_company_names(
                     // should not be treated as a standalone symbol.
                     let tokenized_company_name = tokenize(&company_name);
                     for word in tokenized_company_name {
-                        eprintln!("{}", word);
-
                         tokenized_filter.insert(word.to_string());
                     }
 
@@ -496,17 +494,17 @@ fn extract_tickers_from_company_names(
     (result_keys, total_score, tokenized_filter)
 }
 
-fn calculate_slope(scores: &[f32]) -> f32 {
-    if scores.len() < 2 {
-        return 0.0; // Not enough points to calculate a slope
-    }
+// fn calculate_slope(scores: &[f32]) -> f32 {
+//     if scores.len() < 2 {
+//         return 0.0; // Not enough points to calculate a slope
+//     }
 
-    let first_score = scores[0];
-    let last_score = scores[scores.len() - 1];
-    let n = scores.len() as f32;
+//     let first_score = scores[0];
+//     let last_score = scores[scores.len() - 1];
+//     let n = scores.len() as f32;
 
-    (last_score - first_score) / (n - 1.0)
-}
+//     (last_score - first_score) / (n - 1.0)
+// }
 
 // fn extract_tickers_from_company_names(
 //     text: &str,
