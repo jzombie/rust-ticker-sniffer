@@ -74,7 +74,7 @@ impl Weights {
     // }
 }
 
-const COMMON_WORDS: &[&str] = &[
+const STOP_WORDS: &[&str] = &[
     "a",
     "about",
     "above",
@@ -362,11 +362,14 @@ fn extract_tickers_from_company_names(
                 for input_token in &input_tokens_capitalized {
                     let lc_input_token = input_token.to_lowercase();
 
-                    if COMMON_WORDS.contains(&lc_input_token.as_str()) {
+                    if STOP_WORDS.contains(&lc_input_token.as_str()) {
                         continue;
                     }
 
                     if &lc_input_token == &company_tokens[company_index] {
+                        // TODO: Remove
+                        eprintln!("{}", input_token);
+
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
                         company_index += 1;
