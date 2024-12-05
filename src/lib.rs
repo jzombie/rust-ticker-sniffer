@@ -11,7 +11,6 @@ pub struct Weights {
     pub mismatched_letter_penalty: f32,
     pub mismatched_word_penalty: f32,
     pub match_score_threshold: f32,
-    pub bias: f32,
     // pub continuity: f32,
     // pub coverage_input: f32,
     // pub coverage_company: f32,
@@ -25,7 +24,6 @@ impl Weights {
         mismatched_letter_penalty: f32,
         mismatched_word_penalty: f32,
         match_score_threshold: f32,
-        bias: f32,
         // continuity: f32,
         // coverage_input: f32,
         // coverage_company: f32,
@@ -36,7 +34,6 @@ impl Weights {
             mismatched_letter_penalty,
             mismatched_word_penalty,
             match_score_threshold,
-            bias,
             // continuity,
             // coverage_input,
             // coverage_company,
@@ -57,22 +54,24 @@ impl Weights {
     // }
 
     // Normalizes the weights so that they sum up to the specified `target_sum`.
-    pub fn normalize(&mut self, target_sum: f32) {
-        // Calculate the current sum of weights
-        let sum = self.mismatched_letter_penalty
-            + self.mismatched_word_penalty
-            + self.match_score_threshold
-            + self.bias;
+    // pub fn normalize(&mut self, target_sum: f32) {
+    //     // Calculate the current sum of weights
+    //     let sum = self.continuity
+    //         + self.coverage_input
+    //         + self.coverage_company
+    //         + self.match_score_threshold
+    //         + self.common_word_penalty;
 
-        // Scale weights to achieve the target sum
-        if sum > 0.0 {
-            let scale = target_sum / sum;
-            self.mismatched_letter_penalty *= scale;
-            self.mismatched_word_penalty *= scale;
-            self.match_score_threshold *= scale;
-            self.bias *= scale;
-        }
-    }
+    //     // Scale weights to achieve the target sum
+    //     if sum > 0.0 {
+    //         let scale = target_sum / sum;
+    //         self.continuity *= scale;
+    //         self.coverage_input *= scale;
+    //         self.coverage_company *= scale;
+    //         self.match_score_threshold *= scale;
+    //         self.common_word_penalty *= scale;
+    //     }
+    // }
 
     // Applies the weights to the scoring formula.
     // pub fn calculate_score(
@@ -342,9 +341,7 @@ fn extract_tickers_from_company_names(
 
     let input_tokens = tokenize(&normalized_text);
 
-    let mut intermediate_scores: HashMap<String, f32> = HashMap::new();
     let mut scored_results: HashMap<String, f32> = HashMap::new();
-
     let mut tokenized_filter: HashSet<String> = HashSet::new();
 
     if !input_tokens.is_empty() {
@@ -408,11 +405,11 @@ fn extract_tickers_from_company_names(
                             // Score with penalty added
                             match_score += (consecutive_input_token_char_count as f32
                                 / company_name_char_count as f32)
-                                * weights.mismatched_letter_penalty;
+                                * (1.0 - weights.mismatched_letter_penalty);
 
                             match_score += (consecutive_match_count as f32
                                 / total_company_words as f32)
-                                * weights.mismatched_word_penalty;
+                                * (1.0 - weights.mismatched_word_penalty);
 
                             seen_tokens.insert(lc_input_token.to_string());
                         }
@@ -437,44 +434,28 @@ fn extract_tickers_from_company_names(
                 }
 
                 // Skip if the match score is insignificant
-                if match_score > 0.0 {
-                    // TODO: Move after bias weighting
+                if match_score > weights.match_score_threshold {
                     // Add company name tokens to the filter to prevent basic symbol queries from considering them.
                     // For example, if a company match is for "Apple Hospitality REIT, Inc.," the token "REIT"
                     // should not be treated as a standalone symbol.
-                    // let tokenized_company_name = tokenize(&company_name);
-                    // for word in tokenized_company_name {
-                    //     eprintln!("{}", word);
+                    let tokenized_company_name = tokenize(&company_name);
+                    for word in tokenized_company_name {
+                        eprintln!("{}", word);
 
-                    //     tokenized_filter.insert(word.to_string());
-                    // }
+                        tokenized_filter.insert(word.to_string());
+                    }
 
-                    intermediate_scores
+                    scored_results
                         .entry(symbol.to_string())
                         .and_modify(|e| *e += match_score)
                         .or_insert(match_score);
+                } else if match_score > 0.0 {
+                    eprintln!(
+                        "Discarded symbol: {}; Match Score: {:.4}",
+                        symbol, match_score
+                    );
                 }
             }
-        }
-    }
-
-    // Compute bias-adjusted scores
-    // let slope = calculate_slope(
-    //     &intermediate_scores
-    //         .values()
-    //         .cloned() // Collect values directly as f32
-    //         .collect::<Vec<f32>>(),
-    // );
-    // TODO: Remove?
-    let slope = 1.0;
-
-    for (symbol, original_score) in intermediate_scores {
-        let biased_score = original_score * (1.0 + slope * weights.bias);
-
-        eprintln!("Biased score: {}, Slope: {}", biased_score, slope);
-
-        if biased_score > weights.match_score_threshold {
-            scored_results.insert(symbol, biased_score);
         }
     }
 
@@ -492,15 +473,15 @@ fn extract_tickers_from_company_names(
         .map(|(symbol, score)| (symbol, score))
         .collect();
 
-    // Print the sorted results
+    // Iterate over each result and print them
     for (symbol, score) in &results {
         eprintln!(
-            "Matched Symbol: {}, Score: {:.2}, Company Name: {:?}",
+            "Matched Symbol: {}, Score: {:.4}, Company Name: {:?}",
             symbol, score, symbols_map[symbol]
         );
     }
 
-    // Compute result keys and total weight
+    // Compute result keys and total weight in a single iteration
     let (result_keys, total_score): (Vec<String>, f32) = sorted_results
         .into_iter()
         .map(|(symbol, score)| (symbol, score))
@@ -511,26 +492,21 @@ fn extract_tickers_from_company_names(
 
     eprintln!("Total score: {:.2}", total_score);
 
+    // Return only the keys and the total score
     (result_keys, total_score, tokenized_filter)
 }
 
-// fn calculate_slope(scores: &[f32]) -> f32 {
-//     if scores.is_empty() {
-//         return 0.0; // No points to calculate a slope
-//     }
+fn calculate_slope(scores: &[f32]) -> f32 {
+    if scores.len() < 2 {
+        return 0.0; // Not enough points to calculate a slope
+    }
 
-//     if scores.len() == 1 {
-//         return 1.0;
-//     }
+    let first_score = scores[0];
+    let last_score = scores[scores.len() - 1];
+    let n = scores.len() as f32;
 
-//     let min_score = scores.iter().cloned().fold(f32::INFINITY, f32::min);
-//     let max_score = scores.iter().cloned().fold(f32::NEG_INFINITY, f32::max);
-
-//     let n = scores.len() as f32;
-
-//     // Slope based on min and max scores
-//     (max_score - min_score) / (n - 1.0)
-// }
+    (last_score - first_score) / (n - 1.0)
+}
 
 // fn extract_tickers_from_company_names(
 //     text: &str,
