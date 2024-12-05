@@ -1,5 +1,8 @@
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+};
 
 pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
 
@@ -368,6 +371,8 @@ fn extract_tickers_from_company_names(
                 // Single pass through input tokens
                 let mut company_index = 0;
 
+                let mut seen_tokens: HashSet<String> = HashSet::new();
+
                 for input_token in &input_tokens_capitalized {
                     let lc_input_token = input_token.to_lowercase();
 
@@ -380,7 +385,12 @@ fn extract_tickers_from_company_names(
                         consecutive_match_count += 1;
                         company_index += 1;
 
-                        match_score += consecutive_match_count as f32;
+                        // Prevent double-counting of tokens but still handle their consecutive scoring
+                        if !seen_tokens.contains(&lc_input_token.to_string()) {
+                            match_score +=
+                                consecutive_match_count as f32 / total_company_words as f32;
+                            seen_tokens.insert(lc_input_token.to_string());
+                        }
 
                         // If we've matched the entire company_tokens, score it
                         if company_index == total_company_words {
@@ -393,6 +403,10 @@ fn extract_tickers_from_company_names(
                             company_index = 0;
                         }
                     } else if company_index > 0 {
+                        // eprintln!("Mismatch:, {}", input_token);
+
+                        // match_score -= 1.0 / total_company_words as f32;
+
                         // Sequence broken, reset company pointer
                         company_index = 0;
                         consecutive_match_count = 0;
