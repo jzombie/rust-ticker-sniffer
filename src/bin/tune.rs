@@ -69,7 +69,7 @@ fn evaluate_weights(
         let file_path = file.path();
 
         if file_path.is_file() {
-            total_errors += run_test_for_file(file_path.to_str().unwrap());
+            total_errors += run_test_for_file(file_path.to_str().unwrap(), false);
         }
     }
 

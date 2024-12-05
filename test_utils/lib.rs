@@ -59,7 +59,7 @@ pub fn get_expected_failure(file_path: &Path) -> Option<String> {
 }
 
 // Helper function to run the test for each file in the directory
-pub fn run_test_for_file(test_file_path: &str) -> usize {
+pub fn run_test_for_file(test_file_path: &str, use_assertions: bool) -> usize {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -131,12 +131,14 @@ pub fn run_test_for_file(test_file_path: &str) -> usize {
             error_count += 1; // Increment error count for failure reason mismatch
         }
 
-        // Validate that the actual failure reason matches the expected failure message
-        assert_eq!(
-            expected_failure_message, actual_failure_reason,
-            "{} - Failure reason mismatch. Expected: '{}', but got: '{}'.",
-            test_file_path, expected_failure_message, actual_failure_reason
-        );
+        if use_assertions {
+            // Validate that the actual failure reason matches the expected failure message
+            assert_eq!(
+                expected_failure_message, actual_failure_reason,
+                "{} - Failure reason mismatch. Expected: '{}', but got: '{}'.",
+                test_file_path, expected_failure_message, actual_failure_reason
+            );
+        }
 
         // Skip further checks since failure was validated
         return error_count; // Return early with errors
@@ -163,39 +165,41 @@ pub fn run_test_for_file(test_file_path: &str) -> usize {
         }
     }
 
-    // Keep all existing assertions intact
-    assert_eq!(
-        results.len(),
-        expected_tickers.len(),
-        "{} - Expected: {:?}, but got: {:?}",
-        test_file_path,
-        expected_tickers,
-        results
-    );
-
-    for ticker in &expected_tickers {
-        assert!(
-            results.contains(ticker),
-            "{} - Expected ticker {:?} was not found in results.",
+    if use_assertions {
+        // Keep all existing assertions intact
+        assert_eq!(
+            results.len(),
+            expected_tickers.len(),
+            "{} - Expected: {:?}, but got: {:?}",
             test_file_path,
-            ticker
+            expected_tickers,
+            results
         );
-    }
 
-    assert!(
-        duplicate_tickers.is_empty(),
-        "{} - Duplicate tickers found in results: {:?}",
-        test_file_path,
-        duplicate_tickers
-    );
+        for ticker in &expected_tickers {
+            assert!(
+                results.contains(ticker),
+                "{} - Expected ticker {:?} was not found in results.",
+                test_file_path,
+                ticker
+            );
+        }
 
-    for ticker in &results {
         assert!(
-            expected_tickers.contains(ticker),
-            "{} - Unexpected ticker {:?} found in results.",
+            duplicate_tickers.is_empty(),
+            "{} - Duplicate tickers found in results: {:?}",
             test_file_path,
-            ticker
+            duplicate_tickers
         );
+
+        for ticker in &results {
+            assert!(
+                expected_tickers.contains(ticker),
+                "{} - Unexpected ticker {:?} found in results.",
+                test_file_path,
+                ticker
+            );
+        }
     }
 
     error_count // Return the total number of errors

@@ -22,7 +22,7 @@ mod tests {
 
             // Run the test for each file (if it is a file)
             if file_path.is_file() {
-                run_test_for_file(file_path.to_str().unwrap());
+                run_test_for_file(file_path.to_str().unwrap(), true);
             }
         }
     }
