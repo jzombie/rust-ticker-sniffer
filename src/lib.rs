@@ -9,6 +9,7 @@ pub struct Weights {
     pub coverage_input: f32,
     pub coverage_company: f32,
     pub match_score_threshold: f32,
+    pub common_word_penalty: f32,
 }
 
 impl Weights {
@@ -18,12 +19,14 @@ impl Weights {
         coverage_input: f32,
         coverage_company: f32,
         match_score_threshold: f32,
+        common_word_penalty: f32,
     ) -> Self {
         Self {
             continuity,
             coverage_input,
             coverage_company,
             match_score_threshold,
+            common_word_penalty,
         }
     }
 
@@ -40,39 +43,44 @@ impl Weights {
 
     /// Normalizes the weights so that they sum up to 1.
     pub fn normalize(&mut self) {
-        let sum = self.continuity + self.coverage_input + self.coverage_company;
+        let sum = self.continuity
+            + self.coverage_input
+            + self.coverage_company
+            + self.match_score_threshold
+            + self.common_word_penalty;
         if sum > 0.0 {
             self.continuity /= sum;
             self.coverage_input /= sum;
             self.coverage_company /= sum;
+            self.match_score_threshold /= sum;
+            self.common_word_penalty /= sum;
         }
     }
 
-    /// Applies the weights to the scoring formula.
-    pub fn calculate_score(
-        &self,
-        continuity_score: f32,
-        coverage_input: f32,
-        coverage_company: f32,
-    ) -> f32 {
-        (self.continuity * continuity_score)
-            + (self.coverage_input * coverage_input)
-            + (self.coverage_company * coverage_company)
-    }
+    // Applies the weights to the scoring formula.
+    // pub fn calculate_score(
+    //     &self,
+    //     continuity_score: f32,
+    //     coverage_input: f32,
+    //     coverage_company: f32,
+    // ) -> f32 {
+    //     (self.continuity * continuity_score)
+    //         + (self.coverage_input * coverage_input)
+    //         + (self.coverage_company * coverage_company)
+    // }
 }
 
-// TODO: Reimplement
-// const COMMON_WORDS: &[&str] = &[
-//     "the",
-//     "corporation",
-//     "enterprise",
-//     "inc",
-//     "company",
-//     "limited",
-//     "llc",
-//     "group",
-//     "technologies",
-// ];
+const COMMON_WORDS: &[&str] = &[
+    "the",
+    "corporation",
+    "enterprise",
+    "inc",
+    "company",
+    "limited",
+    "llc",
+    "group",
+    "technologies",
+];
 
 /// Tokenizer function to split the text into individual tokens.
 pub fn tokenize(text: &str) -> Vec<&str> {
@@ -218,14 +226,7 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights
 
     let mut total_matches = 0;
     let mut max_continuous_matches = 0;
-
-    // TODO: Weigh these instead
-    // // Filter out the common words from company_tokens
-    // let filtered_company_tokens: Vec<&str> = company_tokens
-    //     .iter()
-    //     .filter(|&&token| !COMMON_WORDS.contains(&token))
-    //     .cloned()
-    //     .collect();
+    let mut common_word_matches = 0;
 
     let mut i = 0;
     while i < input_tokens.len() {
@@ -235,13 +236,17 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights
                 let input_token = input_tokens[i + j].to_lowercase();
                 let company_token = company_token.to_lowercase();
 
-                // Exact or partial match (relaxed for company names)
                 if input_token == company_token {
                     current_match += 2; // Exact match
                 } else if company_token.starts_with(&input_token) && input_token.len() > 2 {
                     current_match += 1; // Partial match with prefix
                 } else {
                     break;
+                }
+
+                // Check if the token is a common word and count it
+                if COMMON_WORDS.contains(&company_token.as_str()) {
+                    common_word_matches += 1;
                 }
             }
         }
@@ -261,10 +266,14 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights
     // Weighted continuity score
     let continuity_score = max_continuous_matches as f32 / total_company_tokens;
 
+    // Calculate penalty for common word matches
+    let common_word_penalty = weights.common_word_penalty * common_word_matches as f32;
+
     // Combine scores
     let match_score = (weights.continuity * continuity_score)
         + (weights.coverage_input * coverage_input)
-        + (weights.coverage_company * coverage_company);
+        + (weights.coverage_company * coverage_company)
+        - common_word_penalty;
 
     if match_score > 0.0 {
         // Log all metrics for debugging
@@ -273,8 +282,8 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights
             input_tokens, company_tokens
         );
         eprintln!(
-            "Coverage Input: {:.2}, Coverage Company: {:.2}, Continuity Score: {:.2}, Match Score: {:.2}, Match Score Threshold: {:.2}",
-            coverage_input, coverage_company, continuity_score, match_score, weights.match_score_threshold
+            "Coverage Input: {:.2}, Coverage Company: {:.2}, Continuity Score: {:.2}, Common Word Penalty: {:.2}, Match Score: {:.2}, Match Score Threshold: {:.2}",
+            coverage_input, coverage_company, continuity_score, common_word_penalty, match_score, weights.match_score_threshold
         );
         eprintln!("------");
     }

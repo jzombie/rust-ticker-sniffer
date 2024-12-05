@@ -22,13 +22,19 @@ fn tune_weights() {
 
     // Initialize randomly
     let mut weights = Weights {
-        continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
-        coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
-        coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
-        match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
+        // continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
+        // coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
+        // coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
+        // match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
+        // common_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
+        continuity: 0.5,
+        coverage_input: 0.5,
+        coverage_company: 0.5,
+        match_score_threshold: 0.5,
+        common_word_penalty: 0.5,
     };
 
-    let mut velocity = (0.0, 0.0, 0.0, 0.0);
+    let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0);
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
@@ -39,13 +45,17 @@ fn tune_weights() {
     let max_epochs = 100; // Maximum number of epochs
     let patience = 5; // Number of epochs to wait for improvement
 
+    let max_gradient_norm = 1.0; // Define a maximum gradient norm to prevent explosion
+
     let mut no_improvement_count = 0; // Tracks consecutive epochs without improvement
 
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
+        weights.normalize();
+
         let current_loss = evaluate_loss_with_regularization(
-            weights.clone(),
+            weights,
             symbols_map.clone(),
             test_dir,
             regularization_lambda,
@@ -57,11 +67,12 @@ fn tune_weights() {
             best_weights = weights.clone();
             no_improvement_count = 0; // Reset patience counter
             println!(
-                "New best weights: ({:.4}, {:.4}, {:.4}, {:.4}), Loss: {:.4}",
+                "New best weights: ({:.4}, {:.4}, {:.4}, {:.4}, {:.4}), Loss: {:.4}",
                 best_weights.continuity,
                 best_weights.coverage_input,
                 best_weights.coverage_company,
                 best_weights.match_score_threshold,
+                best_weights.common_word_penalty,
                 best_loss
             );
         } else {
@@ -69,18 +80,20 @@ fn tune_weights() {
         }
 
         let grad_w1 = compute_gradient_with_regularization(
-            weights.clone(),
+            weights,
             &symbols_map,
             test_dir,
             0,
             regularization_lambda,
+            max_gradient_norm,
         );
         let grad_w2 = compute_gradient_with_regularization(
-            weights.clone(),
+            weights,
             &symbols_map,
             test_dir,
             1,
             regularization_lambda,
+            max_gradient_norm,
         );
         let grad_w3 = compute_gradient_with_regularization(
             weights,
@@ -88,6 +101,7 @@ fn tune_weights() {
             test_dir,
             2,
             regularization_lambda,
+            max_gradient_norm,
         );
         let grad_w4 = compute_gradient_with_regularization(
             weights,
@@ -95,30 +109,47 @@ fn tune_weights() {
             test_dir,
             3,
             regularization_lambda,
+            max_gradient_norm,
+        );
+        let grad_w5 = compute_gradient_with_regularization(
+            weights,
+            &symbols_map,
+            test_dir,
+            4,
+            regularization_lambda,
+            max_gradient_norm,
         );
 
-        velocity.0 = momentum * velocity.0 + learning_rate * grad_w1;
-        velocity.1 = momentum * velocity.1 + learning_rate * grad_w2;
-        velocity.2 = momentum * velocity.2 + learning_rate * grad_w3;
-        velocity.3 = momentum * velocity.3 + learning_rate * grad_w4;
+        velocity.0 = (momentum * velocity.0 + learning_rate * grad_w1)
+            .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.1 = (momentum * velocity.1 + learning_rate * grad_w2)
+            .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.2 = (momentum * velocity.2 + learning_rate * grad_w3)
+            .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.3 = (momentum * velocity.3 + learning_rate * grad_w4)
+            .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
+            .clamp(-max_gradient_norm, max_gradient_norm);
 
         weights.continuity -= velocity.0;
         weights.coverage_input -= velocity.1;
         weights.coverage_company -= velocity.2;
         weights.match_score_threshold -= velocity.3;
+        weights.common_word_penalty -= velocity.4;
 
         println!(
-            "Weights: ({:.4}, {:.4}, {:.4}, {:.4}), Loss: {:.4}",
+            "Weights: ({:.4}, {:.4}, {:.4}, {:.4}, {:.4}), Loss: {:.4}",
             weights.continuity,
             weights.coverage_input,
             weights.coverage_company,
             weights.match_score_threshold,
+            weights.common_word_penalty,
             current_loss
         );
 
         println!(
-            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}",
-            grad_w1, grad_w2, grad_w3, grad_w4
+            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}, grad_w5 = {:.5}",
+            grad_w1, grad_w2, grad_w3, grad_w4, grad_w5
         );
 
         // Check for convergence with patience
@@ -132,11 +163,12 @@ fn tune_weights() {
     }
 
     println!(
-        "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}, {:.4}), Best loss: {:.4}",
+        "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}, {:.4}, {:.4}), Best loss: {:.4}",
         best_weights.continuity,
         best_weights.coverage_input,
         best_weights.coverage_company,
         best_weights.match_score_threshold,
+        best_weights.common_word_penalty,
         best_loss
     );
 }
@@ -148,6 +180,7 @@ fn compute_gradient_with_regularization(
     test_dir: &str,
     weight_index: usize,
     regularization_lambda: f32,
+    max_gradient_norm: f32,
 ) -> f32 {
     let delta = 1e-5; // Small perturbation for finite differences
 
@@ -159,6 +192,7 @@ fn compute_gradient_with_regularization(
         1 => perturbed_weights.coverage_input += delta,
         2 => perturbed_weights.coverage_company += delta,
         3 => perturbed_weights.match_score_threshold += delta,
+        4 => perturbed_weights.common_word_penalty += delta,
         _ => unreachable!(),
     }
 
@@ -177,7 +211,12 @@ fn compute_gradient_with_regularization(
     );
 
     // Compute gradient as finite difference
-    let gradient = (loss_perturbed - loss_original) / delta;
+    let mut gradient = (loss_perturbed - loss_original) / delta;
+
+    // Clip the gradient to prevent explosion
+    if gradient.abs() > max_gradient_norm {
+        gradient = gradient.signum() * max_gradient_norm;
+    }
 
     // Log the difference between the losses
     println!(
@@ -207,7 +246,8 @@ fn evaluate_loss_with_regularization(
         * (weights.continuity.powi(2)
             + weights.coverage_input.powi(2)
             + weights.coverage_company.powi(2)
-            + weights.match_score_threshold.powi(2));
+            + weights.match_score_threshold.powi(2)
+            + weights.common_word_penalty.powi(2));
     base_loss + l2_penalty
 }
 
@@ -243,7 +283,8 @@ fn evaluate_loss(
     let weight_sum = weights.continuity
         + weights.coverage_input
         + weights.coverage_company
-        + weights.match_score_threshold;
+        + weights.match_score_threshold
+        + weights.common_word_penalty;
 
     // Regularization term to penalize large weights
     let weight_penalty = 0.1 * weight_sum.powi(2); // Adjust coefficient as needed
@@ -252,12 +293,14 @@ fn evaluate_loss(
     let total_loss = total_errors as f32 - total_score + weight_penalty;
 
     println!(
-        "Loss for weights ({:.4}, {:.4}, {:.4}, {:.4}): {:.4}",
+        "Loss for weights ({:.4}, {:.4}, {:.4}, {:.4}, {:.4}): {:.4} (errors: {})",
         weights.continuity,
         weights.coverage_input,
         weights.coverage_company,
         weights.match_score_threshold,
-        total_loss
+        weights.common_word_penalty,
+        total_loss,
+        total_errors
     );
 
     total_loss
