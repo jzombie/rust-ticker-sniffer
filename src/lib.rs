@@ -1,6 +1,8 @@
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
+pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
+
 const MATCH_SCORE_THRESHOLD: f32 = 0.9;
 
 // TODO: Reimplement
@@ -21,10 +23,7 @@ pub fn tokenize(text: &str) -> Vec<&str> {
     text.split_whitespace().collect()
 }
 
-pub fn extract_tickers_from_text(
-    text: &str,
-    symbols_map: &HashMap<String, Option<String>>, // Same map for both symbols and company names
-) -> Vec<String> {
+pub fn extract_tickers_from_text(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
     let mut matches = HashSet::new();
 
     // Extract tickers by symbol
@@ -41,10 +40,7 @@ pub fn extract_tickers_from_text(
     results
 }
 
-pub fn extract_tickers_from_symbols(
-    text: &str,
-    symbols_map: &HashMap<String, Option<String>>,
-) -> Vec<String> {
+pub fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
     let mut matches = HashSet::new();
     let tokens = tokenize(text);
 
@@ -74,10 +70,7 @@ pub fn extract_tickers_from_symbols(
     matches.into_iter().collect()
 }
 
-pub fn extract_tickers_from_company_names(
-    text: &str,
-    symbols_map: &HashMap<String, Option<String>>, // Same map for symbols and names
-) -> Vec<String> {
+pub fn extract_tickers_from_company_names(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
     // Step 1: Use regex to split text into sentences based on sentence-ending punctuation
     let sentence_terminator = Regex::new(r"[.!?]\s+").unwrap(); // Match sentence-ending punctuation followed by whitespace
     let sentences: Vec<&str> = sentence_terminator
