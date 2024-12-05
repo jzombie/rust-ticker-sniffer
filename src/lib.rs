@@ -406,6 +406,9 @@ fn extract_tickers_from_company_names(
 
                 // Skip if the match score is insignificant
                 if match_score > 0.0 {
+                    // Add company name tokens to the filter to prevent basic symbol queries from considering them.
+                    // For example, if a company match is for "Apple Hospitality REIT, Inc.," the token "REIT"
+                    // should not be treated as a standalone symbol.
                     let tokenized_company_name = tokenize(&company_name);
                     for word in tokenized_company_name {
                         eprintln!("{}", word);
