@@ -459,15 +459,18 @@ fn extract_tickers_from_company_names(
     }
 
     // Compute bias-adjusted scores
-    let slope = calculate_slope(
-        &intermediate_scores
-            .values()
-            .cloned() // Collect values directly as f32
-            .collect::<Vec<f32>>(),
-    );
+    // let slope = calculate_slope(
+    //     &intermediate_scores
+    //         .values()
+    //         .cloned() // Collect values directly as f32
+    //         .collect::<Vec<f32>>(),
+    // );
+    let slope = 1.0;
 
     for (symbol, original_score) in intermediate_scores {
         let biased_score = original_score * (1.0 + slope * weights.bias);
+
+        eprintln!("Biased score: {}, Slope: {}", biased_score, slope);
 
         if biased_score > weights.match_score_threshold {
             scored_results.insert(symbol, biased_score);
@@ -513,6 +516,10 @@ fn extract_tickers_from_company_names(
 fn calculate_slope(scores: &[f32]) -> f32 {
     if scores.is_empty() {
         return 0.0; // No points to calculate a slope
+    }
+
+    if scores.len() == 1 {
+        return 1.0;
     }
 
     let min_score = scores.iter().cloned().fold(f32::INFINITY, f32::min);

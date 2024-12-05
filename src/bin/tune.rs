@@ -22,14 +22,13 @@ fn tune_weights() {
 
     // Initialize randomly
     let mut weights = Weights {
-        // continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
-        // coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
-        // coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
+        // mismatched_letter_penalty: 0.5 + rng.gen_range(-0.1..0.1),
+        // mismatched_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
         // match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
-        // common_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
-        mismatched_letter_penalty: 1.0,
+        // bias: 0.5 + rng.gen_range(-0.1..0.1),
+        mismatched_letter_penalty: 0.0,
         mismatched_word_penalty: 1.0,
-        match_score_threshold: 1.0,
+        match_score_threshold: 0.5,
         bias: 1.0,
     };
 
@@ -44,14 +43,14 @@ fn tune_weights() {
     let max_epochs = 2000; // Maximum number of epochs
     let patience = 5; // Number of epochs to wait for improvement
 
-    let max_gradient_norm = 4.0; // Define a maximum gradient norm to prevent explosion
+    let max_gradient_norm = 10.0; // Define a maximum gradient norm to prevent explosion
 
     let mut no_improvement_count = 0; // Tracks consecutive epochs without improvement
 
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
-        weights.normalize(1.0);
+        // weights.normalize(1.0);
 
         let current_loss = evaluate_loss_with_regularization(
             weights,
