@@ -11,25 +11,26 @@ fn tune_weights() {
 
     println!("Initializing tuning process...");
 
-    // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
 
-    // Initialize weights and hyperparameters
-    let mut weights = (0.5, 0.5, 0.5); // Start with default weights
-    let mut velocity = (0.0, 0.0, 0.0); // Initialize momentum terms
-    let learning_rate = 0.1; // Step size for weight updates
-    let momentum = 0.9; // Momentum factor
-    let regularization_lambda = 0.01; // Regularization strength
-    let tolerance = 1e-5; // Convergence criterion
+    let mut weights = (0.5, 0.5, 0.5);
+    let mut velocity = (0.0, 0.0, 0.0);
+    let mut best_weights = weights;
+    let mut best_loss = f32::MAX;
 
-    let min_epochs = 2; // Minimum number of epochs to run
-    let max_epochs = 100; // Maximum number of iterations
+    let learning_rate = 0.1;
+    let momentum = 0.9;
+    let regularization_lambda = 0.01;
+    let tolerance = 1e-5; // Minimum loss improvement to reset patience
+    let max_epochs = 100; // Maximum number of epochs
+    let patience = 5; // Number of epochs to wait for improvement
+
+    let mut no_improvement_count = 0; // Tracks consecutive epochs without improvement
 
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
-        // Evaluate loss for current weights
         let current_loss = evaluate_loss_with_regularization(
             weights.0,
             weights.1,
@@ -39,7 +40,19 @@ fn tune_weights() {
             regularization_lambda,
         );
 
-        // Compute gradients (finite differences)
+        // Update best weights if current loss is lower
+        if current_loss < best_loss - tolerance {
+            best_loss = current_loss;
+            best_weights = weights;
+            no_improvement_count = 0; // Reset patience counter
+            println!(
+                "New best weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
+                best_weights.0, best_weights.1, best_weights.2, best_loss
+            );
+        } else {
+            no_improvement_count += 1; // Increment patience counter
+        }
+
         let grad_w1 = compute_gradient_with_regularization(
             weights.0,
             weights.1,
@@ -68,7 +81,6 @@ fn tune_weights() {
             regularization_lambda,
         );
 
-        // Update weights using gradient descent with momentum
         velocity.0 = momentum * velocity.0 + learning_rate * grad_w1;
         velocity.1 = momentum * velocity.1 + learning_rate * grad_w2;
         velocity.2 = momentum * velocity.2 + learning_rate * grad_w3;
@@ -82,20 +94,19 @@ fn tune_weights() {
             weights.0, weights.1, weights.2, current_loss
         );
 
-        // Check for convergence; early stopping mechanism
-        if epoch >= min_epochs
-            && grad_w1.abs() < tolerance
-            && grad_w2.abs() < tolerance
-            && grad_w3.abs() < tolerance
-        {
-            println!("Converged after {} epochs.", epoch);
+        // Check for convergence with patience
+        if no_improvement_count >= patience {
+            println!(
+                "Stopping early due to lack of improvement for {} epochs.",
+                no_improvement_count
+            );
             break;
         }
     }
 
     println!(
-        "Tuning process completed. Final weights: ({:.4}, {:.4}, {:.4})",
-        weights.0, weights.1, weights.2
+        "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}), Best loss: {:.4}",
+        best_weights.0, best_weights.1, best_weights.2, best_loss
     );
 }
 
