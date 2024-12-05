@@ -36,14 +36,14 @@ fn tune_weights() {
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
-    let learning_rate = 0.1;
+    let learning_rate = 0.01;
     let momentum = 0.05;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
     let max_epochs = 2000; // Maximum number of epochs
     let patience = 5; // Number of epochs to wait for improvement
 
-    let max_gradient_norm = 10.0; // Define a maximum gradient norm to prevent explosion
+    let max_gradient_norm = 4.0; // Define a maximum gradient norm to prevent explosion
 
     let mut no_improvement_count = 0; // Tracks consecutive epochs without improvement
 
@@ -262,17 +262,19 @@ fn evaluate_loss(
     // Log the total loss in the console
     // let total_loss = total_errors as f32 - total_score;
 
-    let weight_sum = weights.mismatched_letter_penalty
-        + weights.mismatched_word_penalty
-        + weights.match_score_threshold
-        + weights.bias;
+    // let weight_sum = weights.mismatched_letter_penalty
+    //     + weights.mismatched_word_penalty
+    //     + weights.match_score_threshold
+    //     + weights.bias;
 
-    // Regularization term to penalize large weights
-    let weight_penalty = 0.1 * weight_sum.powi(2); // Adjust coefficient as needed
+    // // Regularization term to penalize large weights
+    // let weight_penalty = 0.1 * weight_sum.powi(2); // Adjust coefficient as needed
 
     // Updated loss function
     // let total_loss = (total_errors.pow(2)) as f32 - total_score + weight_penalty;
-    let total_loss = (1.0 - total_score) + weight_penalty;
+    let total_loss = (total_errors.pow(2)) as f32 - total_score;
+    // let total_loss = (1.0 - total_score) + weight_penalty;
+    // let total_loss = 1.0 - total_score;
 
     println!(
         "Loss for weights ({:.4}, {:.4}, {:.4}, {:.4}): {:.4} (errors: {})",
