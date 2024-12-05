@@ -256,7 +256,9 @@ const STOP_WORDS: &[&str] = &[
 ///
 /// Note: This explcitly does not modify the case of the text.
 pub fn tokenize(text: &str) -> Vec<&str> {
-    text.split_whitespace().collect()
+    text.split_whitespace()
+        .map(|word| word.trim_end_matches(|c: char| !c.is_alphanumeric()))
+        .collect()
 }
 
 pub fn extract_tickers_from_text(
@@ -266,14 +268,20 @@ pub fn extract_tickers_from_text(
 ) -> (Vec<String>, f32) {
     let mut matches = HashSet::new();
 
-    // Extract tickers by symbol
-    let symbol_matches = extract_tickers_from_symbols(text, symbols_map);
-    matches.extend(symbol_matches);
-
     // Extract tickers by company name
-    let (company_name_matches, total_score) =
+    let (company_name_matches, total_score, tokenized_filter) =
         extract_tickers_from_company_names(text, symbols_map, weights);
     matches.extend(company_name_matches);
+
+    let filtered_text: String = text
+        .split_whitespace()
+        .filter(|word| !tokenized_filter.contains(&word.to_string()))
+        .collect::<Vec<&str>>()
+        .join(" ");
+
+    // Extract tickers by symbol
+    let symbol_matches = extract_tickers_from_symbols(&filtered_text, symbols_map);
+    matches.extend(symbol_matches);
 
     // Convert HashSet to Vec and return sorted for consistency
     let mut results: Vec<String> = matches.into_iter().collect();
@@ -289,9 +297,7 @@ fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<Stri
     for token in tokens {
         // Normalize token to match symbol patterns
         if token == token.to_uppercase() {
-            let normalized = token
-                .trim_end_matches(|c: char| !c.is_alphanumeric())
-                .to_uppercase();
+            let normalized = token.to_uppercase();
 
             // Check if the normalized token directly matches any symbol
             if symbols_map.contains_key(&normalized) {
@@ -316,7 +322,7 @@ fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: SymbolsMap,
     weights: Weights,
-) -> (Vec<String>, f32) {
+) -> (Vec<String>, f32, HashSet<String>) {
     let normalized_text = text
         // .to_lowercase()
         .replace(|c: char| !c.is_alphanumeric() && c != ' ', " "); // Normalize input
@@ -324,6 +330,7 @@ fn extract_tickers_from_company_names(
     let input_tokens = tokenize(&normalized_text);
 
     let mut scored_results: HashMap<String, f32> = HashMap::new();
+    let mut tokenized_filter: HashSet<String> = HashSet::new();
 
     if !input_tokens.is_empty() {
         // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length
@@ -369,9 +376,6 @@ fn extract_tickers_from_company_names(
                     }
 
                     if &lc_input_token == &company_tokens[company_index] {
-                        // TODO: Remove
-                        eprintln!("{}", input_token);
-
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
                         company_index += 1;
@@ -402,6 +406,13 @@ fn extract_tickers_from_company_names(
 
                 // Skip if the match score is insignificant
                 if match_score > 0.0 {
+                    let tokenized_company_name = tokenize(&company_name);
+                    for word in tokenized_company_name {
+                        eprintln!("{}", word);
+
+                        tokenized_filter.insert(word.to_string());
+                    }
+
                     scored_results
                         .entry(symbol.to_string())
                         .and_modify(|e| *e += match_score)
@@ -445,7 +456,7 @@ fn extract_tickers_from_company_names(
     eprintln!("Total score: {:.2}", total_score);
 
     // Return only the keys and the total score
-    (result_keys, total_score)
+    (result_keys, total_score, tokenized_filter)
 }
 
 // fn extract_tickers_from_company_names(

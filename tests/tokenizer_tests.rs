@@ -64,4 +64,21 @@ mod tokenizer_tests {
         let tokens = tokenize(text);
         assert_eq!(tokens, vec!["This", "is", "a", "test", "string"]);
     }
+
+    #[test]
+    fn test_tokenize_removing_end_puncutation() {
+        let text = "This\n\tis\t\na  test\n\t  string!!";
+        let tokens = tokenize(text);
+        assert_eq!(tokens, vec!["This", "is", "a", "test", "string"]);
+    }
+
+    #[test]
+    fn test_tokenize_maintining_mid_word_symbols() {
+        let text = "BRK.A and BRK-B are both valid!";
+        let tokens = tokenize(text);
+        assert_eq!(
+            tokens,
+            vec!["BRK.A", "and", "BRK-B", "are", "both", "valid"]
+        );
+    }
 }

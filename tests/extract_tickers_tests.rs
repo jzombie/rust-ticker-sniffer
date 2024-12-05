@@ -16,6 +16,7 @@ mod tests {
             coverage_input: 0.25,
             coverage_company: 0.25,
             match_score_threshold: 0.9,
+            common_word_penalty: 1.0,
             // continuity: 0.3688305957567424,
             // coverage_input: 0.026040188967873246,
             // coverage_company: 0.5971237581795172,
