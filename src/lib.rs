@@ -253,6 +253,8 @@ const STOP_WORDS: &[&str] = &[
 ];
 
 /// Tokenizer function to split the text into individual tokens.
+///
+/// Note: This explcitly does not modify the case of the text.
 pub fn tokenize(text: &str) -> Vec<&str> {
     text.split_whitespace().collect()
 }
