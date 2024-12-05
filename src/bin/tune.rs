@@ -25,9 +25,10 @@ fn tune_weights() {
         continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
         coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
         coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
+        match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
     };
 
-    let mut velocity = (0.0, 0.0, 0.0);
+    let mut velocity = (0.0, 0.0, 0.0, 0.0);
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
@@ -87,23 +88,36 @@ fn tune_weights() {
             2,
             regularization_lambda,
         );
+        let grad_w4 = compute_gradient_with_regularization(
+            weights,
+            &symbols_map,
+            test_dir,
+            3,
+            regularization_lambda,
+        );
 
         velocity.0 = momentum * velocity.0 + learning_rate * grad_w1;
         velocity.1 = momentum * velocity.1 + learning_rate * grad_w2;
         velocity.2 = momentum * velocity.2 + learning_rate * grad_w3;
+        velocity.3 = momentum * velocity.3 + learning_rate * grad_w4;
 
         weights.continuity -= velocity.0;
         weights.coverage_input -= velocity.1;
         weights.coverage_company -= velocity.2;
+        weights.match_score_threshold -= velocity.3;
 
         println!(
-            "Weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
-            weights.continuity, weights.coverage_input, weights.coverage_company, current_loss
+            "Weights: ({:.4}, {:.4}, {:.4}), {:.4} Loss: {:.4}",
+            weights.continuity,
+            weights.coverage_input,
+            weights.coverage_company,
+            weights.match_score_threshold,
+            current_loss
         );
 
         println!(
-            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}",
-            grad_w1, grad_w2, grad_w3
+            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}",
+            grad_w1, grad_w2, grad_w3, grad_w4
         );
 
         // Check for convergence with patience
@@ -117,10 +131,11 @@ fn tune_weights() {
     }
 
     println!(
-        "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}), Best loss: {:.4}",
+        "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}, {:.4}), Best loss: {:.4}",
         best_weights.continuity,
         best_weights.coverage_input,
         best_weights.coverage_company,
+        best_weights.match_score_threshold,
         best_loss
     );
 }
@@ -133,7 +148,8 @@ fn compute_gradient_with_regularization(
     weight_index: usize,
     regularization_lambda: f32,
 ) -> f32 {
-    let delta = 1e-5; // Small perturbation for finite differences
+    // let delta = 1e-5; // Small perturbation for finite differences
+    let delta = 0.1;
     let mut perturbed_weights = weights.clone();
 
     // Perturb the specific weight
@@ -141,6 +157,7 @@ fn compute_gradient_with_regularization(
         0 => perturbed_weights.continuity += delta,
         1 => perturbed_weights.coverage_input += delta,
         2 => perturbed_weights.coverage_company += delta,
+        3 => perturbed_weights.match_score_threshold += delta,
         _ => unreachable!(),
     }
 
@@ -176,7 +193,8 @@ fn evaluate_loss_with_regularization(
     let l2_penalty = regularization_lambda
         * (weights.continuity.powi(2)
             + weights.coverage_input.powi(2)
-            + weights.coverage_company.powi(2));
+            + weights.coverage_company.powi(2)
+            + weights.match_score_threshold.powi(2));
     base_loss + l2_penalty
 }
 
@@ -205,8 +223,12 @@ fn evaluate_loss(
     // Log the total loss in the console
     let total_loss = total_errors as f32;
     println!(
-        "Loss for weights ({:.4}, {:.4}, {:.4}): {:.4}",
-        weights.continuity, weights.coverage_input, weights.coverage_company, total_loss
+        "Loss for weights ({:.4}, {:.4}, {:.4}, {:.4}): {:.4}",
+        weights.continuity,
+        weights.coverage_input,
+        weights.coverage_company,
+        weights.match_score_threshold,
+        total_loss
     );
 
     total_loss

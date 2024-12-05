@@ -8,15 +8,22 @@ pub struct Weights {
     pub continuity: f32,
     pub coverage_input: f32,
     pub coverage_company: f32,
+    pub match_score_threshold: f32,
 }
 
 impl Weights {
     /// Creates a new `Weights` instance with specified values.
-    pub fn new(continuity: f32, coverage_input: f32, coverage_company: f32) -> Self {
+    pub fn new(
+        continuity: f32,
+        coverage_input: f32,
+        coverage_company: f32,
+        match_score_threshold: f32,
+    ) -> Self {
         Self {
             continuity,
             coverage_input,
             coverage_company,
+            match_score_threshold,
         }
     }
 
@@ -53,8 +60,6 @@ impl Weights {
             + (self.coverage_company * coverage_company)
     }
 }
-
-const MATCH_SCORE_THRESHOLD: f32 = 0.9;
 
 // TODO: Reimplement
 // const COMMON_WORDS: &[&str] = &[
@@ -172,7 +177,7 @@ pub fn extract_tickers_from_company_names(
                 // Step 4: Calculate match score
                 let match_score = calculate_match_score(&input_tokens, &company_tokens, &weights);
 
-                if match_score >= MATCH_SCORE_THRESHOLD {
+                if match_score >= weights.match_score_threshold {
                     matches
                         .entry(symbol.clone())
                         .and_modify(|existing_score| {
@@ -259,8 +264,8 @@ fn calculate_match_score(input_tokens: &[&str], company_tokens: &[&str], weights
             input_tokens, company_tokens
         );
         eprintln!(
-            "Coverage Input: {:.2}, Coverage Company: {:.2}, Continuity Score: {:.2}, Match Score: {:.2}",
-            coverage_input, coverage_company, continuity_score, match_score
+            "Coverage Input: {:.2}, Coverage Company: {:.2}, Continuity Score: {:.2}, Match Score: {:.2}, Match Score Threshold: {:.2}",
+            coverage_input, coverage_company, continuity_score, match_score, weights.match_score_threshold
         );
         eprintln!("------");
     }
