@@ -51,7 +51,7 @@ fn tune_weights() {
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
-        // weights.normalize(2.50);
+        weights.normalize(1.0);
 
         let current_loss = evaluate_loss_with_regularization(
             weights,
@@ -272,7 +272,8 @@ fn evaluate_loss(
     let weight_penalty = 0.1 * weight_sum.powi(2); // Adjust coefficient as needed
 
     // Updated loss function
-    let total_loss = (total_errors.pow(2)) as f32 - total_score + weight_penalty;
+    // let total_loss = (total_errors.pow(2)) as f32 - total_score + weight_penalty;
+    let total_loss = (1.0 - total_score) + weight_penalty;
 
     println!(
         "Loss for weights ({:.4}, {:.4}, {:.4}, {:.4}): {:.4} (errors: {})",

@@ -57,24 +57,22 @@ impl Weights {
     // }
 
     // Normalizes the weights so that they sum up to the specified `target_sum`.
-    // pub fn normalize(&mut self, target_sum: f32) {
-    //     // Calculate the current sum of weights
-    //     let sum = self.continuity
-    //         + self.coverage_input
-    //         + self.coverage_company
-    //         + self.match_score_threshold
-    //         + self.common_word_penalty;
+    pub fn normalize(&mut self, target_sum: f32) {
+        // Calculate the current sum of weights
+        let sum = self.mismatched_letter_penalty
+            + self.mismatched_word_penalty
+            + self.match_score_threshold
+            + self.bias;
 
-    //     // Scale weights to achieve the target sum
-    //     if sum > 0.0 {
-    //         let scale = target_sum / sum;
-    //         self.continuity *= scale;
-    //         self.coverage_input *= scale;
-    //         self.coverage_company *= scale;
-    //         self.match_score_threshold *= scale;
-    //         self.common_word_penalty *= scale;
-    //     }
-    // }
+        // Scale weights to achieve the target sum
+        if sum > 0.0 {
+            let scale = target_sum / sum;
+            self.mismatched_letter_penalty *= scale;
+            self.mismatched_word_penalty *= scale;
+            self.match_score_threshold *= scale;
+            self.bias *= scale;
+        }
+    }
 
     // Applies the weights to the scoring formula.
     // pub fn calculate_score(
