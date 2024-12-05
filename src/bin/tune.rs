@@ -1,3 +1,4 @@
+use rand::Rng;
 use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io;
@@ -16,7 +17,15 @@ fn tune_weights() {
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
 
-    let mut weights = (0.5, 0.5, 0.5);
+    let mut rng = rand::thread_rng();
+
+    // Initialize randomly
+    let mut weights = (
+        0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
+        0.5 + rng.gen_range(-0.1..0.1),
+        0.5 + rng.gen_range(-0.1..0.1),
+    );
+
     let mut velocity = (0.0, 0.0, 0.0);
     let mut best_weights = weights;
     let mut best_loss = f32::MAX;
