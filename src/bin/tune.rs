@@ -22,23 +22,23 @@ fn tune_weights() {
 
     // Initialize randomly
     let mut weights = Weights {
-        // continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
-        // coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
-        // coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
-        // match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
-        // common_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
-        continuity: 0.5,
-        coverage_input: 0.5,
-        coverage_company: 0.5,
-        match_score_threshold: 0.5,
-        common_word_penalty: 0.5,
+        continuity: 0.5 + rng.gen_range(-0.1..0.1), // Random value near 0.5
+        coverage_input: 0.5 + rng.gen_range(-0.1..0.1),
+        coverage_company: 0.5 + rng.gen_range(-0.1..0.1),
+        match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
+        common_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
+        // continuity: 0.5,
+        // coverage_input: 0.5,
+        // coverage_company: 0.5,
+        // match_score_threshold: 0.5,
+        // common_word_penalty: 0.5,
     };
 
     let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0);
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
-    let learning_rate = 0.01;
+    let learning_rate = 0.1;
     let momentum = 0.01;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
