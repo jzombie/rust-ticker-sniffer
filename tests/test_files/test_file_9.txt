@@ -1,0 +1,3 @@
+An apple is a fruit, but an Nvidia is a manzana.
+
+EXPECTED: NVDA
