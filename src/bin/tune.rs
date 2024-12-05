@@ -42,7 +42,7 @@ fn tune_weights() {
     let momentum = 0.01;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
-    let max_epochs = 100; // Maximum number of epochs
+    let max_epochs = 2000; // Maximum number of epochs
     let patience = 5; // Number of epochs to wait for improvement
 
     let max_gradient_norm = 1.0; // Define a maximum gradient norm to prevent explosion
