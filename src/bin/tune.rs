@@ -232,7 +232,7 @@ fn compute_gradient_with_regularization(
         1 => perturbed_weights.mismatched_letter_penalty += delta,
         2 => perturbed_weights.mismatched_word_penalty += delta,
         3 => perturbed_weights.match_score_threshold += delta,
-        4 => perturbed_weights.symbol_abbr_threshold += delta,
+        4 => perturbed_weights.stop_word_match_ratio += delta,
         _ => unreachable!(),
     }
 
