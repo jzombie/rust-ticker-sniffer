@@ -219,6 +219,8 @@ pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
     // Get the universe of all unique tickers
     let all_tickers: HashSet<_> = expected_tickers.iter().chain(results.iter()).collect();
 
+    // TODO: Make these configurable as hyperparameters
+    //
     // Assign weights to false negatives and false positives
     let false_negative_weight = 2.0; // Higher penalty for missing tickers
     let false_positive_weight = 1.0; // Lower penalty for unexpected tickers
