@@ -152,14 +152,14 @@ fn tune_weights() {
             .clamp(-max_gradient_norm, max_gradient_norm);
         velocity.3 = (momentum * velocity.3 + learning_rate * grad_w4)
             .clamp(-max_gradient_norm, max_gradient_norm);
-        velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
-            .clamp(-max_gradient_norm, max_gradient_norm);
+        // velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
+        //     .clamp(-max_gradient_norm, max_gradient_norm);
 
         weights.continuity -= velocity.0;
         weights.mismatched_letter_penalty -= velocity.1;
         weights.mismatched_word_penalty -= velocity.2;
         weights.match_score_threshold -= velocity.3;
-        weights.symbol_abbr_threshold -= velocity.4;
+        // weights.symbol_abbr_threshold -= velocity.4;
 
         println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
@@ -212,7 +212,7 @@ fn compute_gradient_with_regularization(
         1 => perturbed_weights.mismatched_letter_penalty += delta,
         2 => perturbed_weights.mismatched_word_penalty += delta,
         3 => perturbed_weights.match_score_threshold += delta,
-        4 => perturbed_weights.symbol_abbr_threshold += delta,
+        // 4 => perturbed_weights.symbol_abbr_threshold += delta,
         _ => unreachable!(),
     }
 
@@ -263,11 +263,13 @@ fn evaluate_loss_with_regularization(
 
     // Add L2 regularization penalty
     let l2_penalty = regularization_lambda
-        * (weights.continuity.powi(2)
-            + weights.mismatched_letter_penalty.powi(2)
-            + weights.mismatched_word_penalty.powi(2)
-            + weights.match_score_threshold.powi(2)
-            + weights.symbol_abbr_threshold.powi(2));
+        * (
+            weights.continuity.powi(2)
+                + weights.mismatched_letter_penalty.powi(2)
+                + weights.mismatched_word_penalty.powi(2)
+                + weights.match_score_threshold.powi(2)
+            // + weights.symbol_abbr_threshold.powi(2)
+        );
     base_loss + l2_penalty
 }
 
