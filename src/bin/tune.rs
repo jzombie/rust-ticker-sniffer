@@ -48,6 +48,10 @@ fn tune_weights() {
     let mut best_loss = f32::MAX;
 
     let learning_rate = 0.05;
+
+    // TODO: Use an adaptive learning rate, e.g., decreasing over epochs
+    // let learning_rate = initial_learning_rate / (1.0 + decay * epoch as f32);
+
     let momentum = 0.05;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
@@ -206,6 +210,9 @@ fn compute_gradient_with_regularization(
 ) -> f32 {
     // let delta = 1e-3;
     let delta = 0.0005;
+
+    // TODO: Scale based on magnitude
+    // let delta = 0.01 * weights.get_weight_by_index(weight_index);
 
     let mut perturbed_weights = weights.clone();
 
