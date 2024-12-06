@@ -14,6 +14,8 @@ Texas Pacific Land
 Tapestry
 : Known for several luxury retail brands including Coach, Kate Spade and Stuart Weitzman, Tapestry’s stock has climbed since the Federal Trade Commission blocked its acquisition of peer company Capri. Wall Street had begun to doubt the merger, with some saying Tapestry would pay too much for Capri. Cramer dubbed Tapestry a “rebounding apparel company.”
 
+Google: Testing abbreviation here.
+
 EXPECTED: PLTR
 EXPECTED: AXON
 EXPECTED: TSLA
@@ -21,6 +23,7 @@ EXPECTED: PBT
 EXPECTED: TPR
 EXPECTED: TPL
 EXPECTED: CPRI
+EXPECTED: GOOGL
 
 COMMENT: False positives below
 COMMENT: EXPECTED: WAFD
