@@ -202,7 +202,7 @@ fn compute_gradient_with_regularization(
     max_gradient_norm: f32,
 ) -> f32 {
     // let delta = 1e-3;
-    let delta = 0.05;
+    let delta = 0.005;
 
     let mut perturbed_weights = weights.clone();
 
