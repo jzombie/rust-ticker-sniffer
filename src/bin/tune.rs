@@ -176,7 +176,7 @@ fn tune_weights() {
         weights.mismatched_letter_penalty -= velocity.1;
         weights.mismatched_word_penalty -= velocity.2;
         weights.match_score_threshold -= velocity.3;
-        weights.symbol_abbr_threshold -= velocity.4;
+        weights.stop_word_match_ratio -= velocity.4;
 
         println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
