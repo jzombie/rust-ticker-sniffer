@@ -40,6 +40,20 @@ pub fn tokenize(text: &str) -> Vec<&str> {
         .collect()
 }
 
+pub fn tokenize_company_name_query(text: &str) -> Vec<&str> {
+    tokenize(text)
+        .iter()
+        // Only accept first letters that are capitalized
+        .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1) // Min length > 1
+        // Remove stop words
+        .filter(|token| {
+            let lowercased = token.to_lowercase();
+            !STOP_WORDS.contains(&lowercased.as_str())
+        })
+        .cloned()
+        .collect()
+}
+
 pub fn extract_tickers_from_text(
     text: &str,
     symbols_map: SymbolsMap,
@@ -107,17 +121,8 @@ fn extract_tickers_from_abbreviations(
     weights: Weights,
 ) -> Vec<String> {
     let mut matches = HashSet::new();
-    let input_tokens = tokenize(text);
 
-    let input_tokens_capitalized: Vec<&str> = input_tokens
-        .iter()
-        .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1) // Min length > 1
-        .filter(|token| {
-            let lowercased = token.to_lowercase();
-            !STOP_WORDS.contains(&lowercased.as_str())
-        })
-        .cloned()
-        .collect();
+    let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
 
     for token in input_tokens_capitalized {
         // Normalize the token to lowercase
@@ -149,28 +154,13 @@ fn extract_tickers_from_company_names(
     symbols_map: SymbolsMap,
     weights: Weights,
 ) -> (Vec<String>, f32, HashSet<String>) {
-    let normalized_text = text
-        // .to_lowercase()
-        .replace(|c: char| !c.is_alphanumeric() && c != ' ', " "); // Normalize input
-
-    let input_tokens = tokenize(&normalized_text);
-
     let mut scored_results: HashMap<String, f32> = HashMap::new();
     let mut tokenized_filter: HashSet<String> = HashSet::new();
 
-    if !input_tokens.is_empty() {
+    let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
+
+    if !input_tokens_capitalized.is_empty() {
         // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length, then remove stop words
-        let input_tokens_capitalized: Vec<&str> = input_tokens
-            .iter()
-            .filter(|token| {
-                token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1
-            }) // Min length > 1
-            .filter(|token| {
-                let lowercased = token.to_lowercase();
-                !STOP_WORDS.contains(&lowercased.as_str())
-            })
-            .cloned()
-            .collect();
 
         for (symbol, company_name) in symbols_map {
             // Skip entries without a valid company name
