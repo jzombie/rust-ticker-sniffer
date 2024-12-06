@@ -1,0 +1,5 @@
+A
+
+EXPECTED: A
+
+COMMENT: Tests that a symbol can be extracted even if it is a stop word.

@@ -1,0 +1,5 @@
+Agilent
+
+EXPECTED: A
+
+COMMENT: Tests that a company name can be used even if its symbol is a stop word.

@@ -11,12 +11,20 @@ pub fn load_symbols_from_file(
     let mut symbols_map = HashMap::new();
     let mut reader = Reader::from_path(file_path)?;
 
+    // Use headers to extract columns
+    let headers = reader.headers()?.clone();
+
     for record in reader.records() {
         let record = record?;
-        if record.len() == 2 {
-            let symbol = record.get(0).unwrap().to_uppercase();
-            let company_name = record.get(1).map(|name| name.to_string());
-            symbols_map.insert(symbol, company_name);
+        // Extract values based on header names
+        let symbol = record.get(headers.iter().position(|h| h == "Symbol").unwrap());
+        let company_name = record.get(headers.iter().position(|h| h == "Company Name").unwrap());
+
+        if let Some(symbol) = symbol {
+            symbols_map.insert(
+                symbol.to_uppercase(),
+                company_name.map(|name| name.to_string()),
+            );
         } else {
             eprintln!("Skipping invalid row: {:?}", record);
         }
