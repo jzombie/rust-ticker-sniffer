@@ -219,6 +219,10 @@ pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
     // Get the universe of all unique tickers
     let all_tickers: HashSet<_> = expected_tickers.iter().chain(results.iter()).collect();
 
+    // Assign weights to false negatives and false positives
+    let false_negative_weight = 2.0; // Higher penalty for missing tickers
+    let false_positive_weight = 1.0; // Lower penalty for unexpected tickers
+
     // Create binary arrays for expected and actual results
     let expected_binary: Vec<f32> = all_tickers
         .iter()
@@ -236,13 +240,24 @@ pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
         .map(|ticker| if results.contains(ticker) { 1.0 } else { 0.0 })
         .collect();
 
-    // Compute the squared differences
-    let squared_differences: f32 = expected_binary
+    // Compute weighted squared differences
+    let weighted_squared_differences: f32 = expected_binary
         .iter()
         .zip(results_binary.iter())
-        .map(|(expected, result)| (expected - result).powi(2))
+        .map(|(expected, result)| {
+            if *expected == 1.0 && *result == 0.0 {
+                // False negative: missing an expected ticker
+                false_negative_weight * (expected - result).powi(2)
+            } else if *expected == 0.0 && *result == 1.0 {
+                // False positive: unexpected ticker included
+                false_positive_weight * (expected - result).powi(2)
+            } else {
+                // True positive or true negative
+                (expected - result).powi(2)
+            }
+        })
         .sum();
 
     // Calculate the mean squared error
-    squared_differences / all_tickers.len() as f32
+    weighted_squared_differences / all_tickers.len() as f32
 }

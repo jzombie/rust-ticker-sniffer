@@ -48,6 +48,8 @@ fn tune_weights() {
 
     let mut no_improvement_count = 0; // Tracks consecutive epochs without improvement
 
+    let mut initial_loss = None; // To track the loss in the first epoch
+
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
@@ -59,6 +61,24 @@ fn tune_weights() {
             test_dir,
             regularization_lambda,
         );
+
+        if initial_loss.is_none() {
+            initial_loss = Some(current_loss); // Store the first loss
+        }
+
+        // Calculate the percentage improvement over the initial loss
+        if let Some(init_loss) = initial_loss {
+            let improvement = ((init_loss - current_loss) / init_loss) * 100.0;
+            println!(
+                "Epoch {}/{} - Current Loss: {:.4}, Improvement: {:.2}%",
+                epoch, max_epochs, current_loss, improvement
+            );
+        } else {
+            println!(
+                "Epoch {}/{} - Current Loss: {:.4}",
+                epoch, max_epochs, current_loss
+            );
+        }
 
         // Update best weights if current loss is lower
         if current_loss < best_loss - tolerance {
@@ -152,6 +172,14 @@ fn tune_weights() {
         "Tuning process completed. Best weights: ({}), Best loss: {:.4}",
         best_weights, best_loss
     );
+
+    if let Some(init_loss) = initial_loss {
+        let total_improvement = ((init_loss - best_loss) / init_loss) * 100.0;
+        println!(
+            "Tuning completed. Best weights: ({}), Best loss: {:.4} (Improvement: {:.2}%)",
+            best_weights, best_loss, total_improvement
+        );
+    }
 }
 
 /// Compute the gradient for a specific weight with regularization
@@ -264,7 +292,7 @@ fn evaluate_loss(
         0.0 // Handle edge case where no test files are found
     };
 
-    println!("Average MSE for weights ({}): {:.4}", weights, average_mse);
+    // println!("Average MSE for weights ({}): {:.4}", weights, average_mse);
 
     average_mse
 }
