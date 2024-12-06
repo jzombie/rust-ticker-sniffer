@@ -155,7 +155,7 @@ struct CompanyNameTokenRanking {
     company_name: String,
     input_token_indices: Vec<usize>,
     consecutive_match_count: usize,
-    consecutive_input_char_count: usize,
+    consecutive_jaccard_similarity: f32,
     match_score: f32,
 }
 
@@ -185,8 +185,6 @@ fn extract_tickers_from_company_names(
                     continue;
                 }
 
-                let company_name_char_count = company_name.len();
-
                 // Normalize, filter stop words, and tokenize the company name
                 let company_tokens: Vec<String> = company_name
                     .to_lowercase()
@@ -203,9 +201,6 @@ fn extract_tickers_from_company_names(
                 let total_company_words = company_tokens.len();
                 let mut consecutive_match_count = 0;
                 let mut top_consecutive_match_count = 0;
-
-                let mut consecutive_input_token_char_count = 0;
-                let mut top_consecutive_input_token_char_count = 0;
 
                 let mut match_score = 0.0;
 
@@ -238,7 +233,6 @@ fn extract_tickers_from_company_names(
                         // Previously, the consecutive match mechanism would get out of sync and identify
                         // `Apple Hospitality REIT` with a low score.
                         consecutive_match_count = 0;
-                        consecutive_input_token_char_count = 0;
 
                         company_index = 0;
 
@@ -260,9 +254,6 @@ fn extract_tickers_from_company_names(
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
 
-                        // TODO: Switch to Jaccard or Levenshstein?
-                        consecutive_input_token_char_count += input_token.len();
-
                         company_index += 1;
 
                         if consecutive_match_count > top_consecutive_match_count {
@@ -270,13 +261,6 @@ fn extract_tickers_from_company_names(
 
                             top_company_index_token_index_map =
                                 company_index_token_index_map.clone();
-                        }
-
-                        if consecutive_input_token_char_count
-                            > top_consecutive_input_token_char_count
-                        {
-                            top_consecutive_input_token_char_count =
-                                consecutive_input_token_char_count;
                         }
 
                         // If we've matched the entire company_tokens, score it
@@ -290,12 +274,30 @@ fn extract_tickers_from_company_names(
                     }
                 }
 
+                let mut consecutive_jaccard_similarity: f32 = 0.0;
+
                 if top_consecutive_match_count > 0 {
                     match_score += top_consecutive_match_count as f32 * weights.continuity;
 
-                    match_score += (consecutive_input_token_char_count as f32
-                        / company_name_char_count as f32)
-                        * (1.0 - weights.mismatched_letter_penalty);
+                    let input_string: String = top_company_index_token_index_map
+                        .values()
+                        .map(|&index| input_tokens_capitalized[index])
+                        .collect::<Vec<&str>>()
+                        .join(" ")
+                        .to_lowercase();
+
+                    let company_string: String = company_tokens.join(" ");
+
+                    consecutive_jaccard_similarity =
+                        jaccard_similarity_chars(&input_string, &company_string);
+
+                    match_score +=
+                        consecutive_jaccard_similarity * (1.0 - weights.mismatched_letter_penalty);
+
+                    // eprintln!(
+                    //     "{}, {}, {}",
+                    //     input_string, company_string, consecutive_jaccard_similarity
+                    // );
 
                     match_score += (top_consecutive_match_count as f32
                         / total_company_words as f32)
@@ -311,15 +313,15 @@ fn extract_tickers_from_company_names(
                             .cloned()
                             .collect(),
                         consecutive_match_count: top_consecutive_match_count,
-                        consecutive_input_char_count: top_consecutive_input_token_char_count,
+                        consecutive_jaccard_similarity,
                         match_score,
                     };
 
                     company_rankings.push(company_ranking);
                 } else if match_score > 0.0 {
                     eprintln!(
-                        "Discarded symbol: {}; Match Score: {:.4}, Consecutive Matches: {}",
-                        symbol, match_score, top_consecutive_match_count
+                        "Discarded symbol: {}; Match Score: {:.4}, Consecutive Matches: {}, Jaccard: {}",
+                        symbol, match_score, top_consecutive_match_count, consecutive_jaccard_similarity
                     );
                 }
             }
@@ -329,10 +331,11 @@ fn extract_tickers_from_company_names(
     for company_ranking in company_rankings {
         if company_ranking.match_score > 0.0 {
             eprintln!(
-                "Company name: {}; Match Score: {}; Input Token Positions: {:?}",
+                "Company name: {}; Match Score: {}; Input Token Positions: {:?}; Jaccard: {}",
                 company_ranking.company_name,
                 company_ranking.match_score,
-                company_ranking.input_token_indices
+                company_ranking.input_token_indices,
+                company_ranking.consecutive_jaccard_similarity
             );
 
             for input_token_index in company_ranking.input_token_indices.iter() {
@@ -424,4 +427,19 @@ pub fn generate_alternative_symbols(query: &str) -> Vec<String> {
         alternatives.push(query.replace('-', ".").to_uppercase());
     }
     alternatives
+}
+
+/// Compute the Jaccard similarity between two strings by treating characters as sets.
+pub fn jaccard_similarity_chars(s1: &str, s2: &str) -> f32 {
+    let set1: HashSet<_> = s1.chars().collect();
+    let set2: HashSet<_> = s2.chars().collect();
+
+    let intersection_size = set1.intersection(&set2).count();
+    let union_size = set1.union(&set2).count();
+
+    if union_size == 0 {
+        0.0 // Avoid division by zero if both sets are empty
+    } else {
+        intersection_size as f32 / union_size as f32
+    }
 }
