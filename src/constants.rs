@@ -1,10 +1,15 @@
 use crate::models::weights::Weights;
 
 pub const DEFAULT_WEIGHTS: Weights = Weights {
-    continuity: 0.025,
-    mismatched_letter_penalty: 1.0,
-    mismatched_word_penalty: 0.3,
-    match_score_threshold: 0.25,
+    // continuity: 0.021446686,
+    // mismatched_letter_penalty: 0.85928243,
+    // mismatched_word_penalty: 0.25776097,
+    // match_score_threshold: 0.21479446,
+    // symbol_abbr_threshold: 0.8,
+    continuity: 0.021310013,
+    mismatched_letter_penalty: 0.85386753,
+    mismatched_word_penalty: 0.2561357,
+    match_score_threshold: 0.21343957,
     symbol_abbr_threshold: 0.8,
 };
 

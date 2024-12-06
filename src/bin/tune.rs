@@ -58,7 +58,7 @@ fn tune_weights() {
     let max_epochs = 2000; // Maximum number of epochs
     let patience = 5; // Number of epochs to wait for improvement
 
-    let max_gradient_norm = 4.0; // Define a maximum gradient norm to prevent explosion
+    let max_gradient_norm = 0.8; // Define a maximum gradient norm to prevent explosion
 
     let mut no_improvement_count = 0; // Tracks consecutive epochs without improvement
 
