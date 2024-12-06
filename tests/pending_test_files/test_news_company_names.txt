@@ -1,0 +1,21 @@
+Palantir
+: Cramer praised the software company’s management and said the company’s third quarter, which sent shares surging 20%, was one of the best of the year. He also said he liked the company’s defense business, noting Palantir’s work for the Pentagon.
+
+Axon
+: Axon largely makes equipment for law enforcement, and Cramer suggested it is poised to do well as a GOP trifecta in Washington likely means police will receive more funding. The company also reported better-than-expected quarterly results, and it has new software that includes artificial intelligence, he added.
+
+Tesla
+: Tesla CEO Elon Musk is a close ally of President-elect Donald Trump, and Cramer said his loyalty will probably lead to rewards for the company and its automated vehicle business.
+
+Texas Pacific Land
+: A new addition to the S&P 500
+, this landowner has a large chunk of acreage in the Permian Basin. While businesses related to oil are expected to succeed under Trump, Cramer warned that during his last term, oil stocks actually underperformed after excessive drilling.
+
+EXPECTED: PLTR
+EXPECTED: AXON
+EXPECTED: WAFD
+EXPECTED: WAFDP
+EXPECTED: TSLA
+
+COMMENT: Source: https://www.cnbc.com/2024/12/02/jim-cramer-lists-10-stocks-likely-to-perform-well-in-december.html
+COMMENT: WAFD and WAFDP are actually false positives but it will be very difficult to isolate these without hardcoding them.

@@ -1,0 +1,5 @@
+Apple Hospitality REIT
+
+EXPECTED: APLE
+
+COMMENT: It should not falsely identify Apple as being the company.
