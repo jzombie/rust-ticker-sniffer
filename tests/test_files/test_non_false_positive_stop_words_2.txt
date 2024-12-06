@@ -1,0 +1,6 @@
+A company and GOOG company are interesting.
+
+EXPECTED: A
+EXPECTED: GOOG
+
+COMMENT: "A" symbol should be recognized as a symbol, even though it's a stop word.

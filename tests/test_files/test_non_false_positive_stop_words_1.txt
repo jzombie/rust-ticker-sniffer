@@ -1,0 +1,7 @@
+A company named Apple produces some pretty good computers. They are in competition with Microsoft and Google.
+
+EXPECTED: AAPL
+EXPECTED: MSFT
+EXPECTED: GOOGL
+
+COMMENT: "A" symbol should not be recognized as a symbol due to the ratio of company names without symbols.

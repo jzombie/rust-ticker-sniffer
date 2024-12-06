@@ -22,6 +22,8 @@ pub fn extract_tickers_from_text(
     // Extract tickers by company name
     let (company_name_matches, total_score, tokenized_filter) =
         extract_tickers_from_company_names(text, symbols_map, weights);
+    let company_name_match_count = company_name_matches.len();
+
     matches.extend(company_name_matches);
 
     let filtered_text: String = text
@@ -31,8 +33,33 @@ pub fn extract_tickers_from_text(
         .join(" ");
 
     // Extract tickers by symbol
-    let symbol_matches = extract_tickers_from_symbols(&filtered_text, symbols_map);
-    matches.extend(symbol_matches);
+    let mut symbol_matches = extract_tickers_from_symbols(&filtered_text, symbols_map);
+    let symbol_match_count = symbol_matches.len();
+
+    // Calculate the ratio of symbol matches to company name matches
+    let match_ratio = if company_name_match_count > 0 {
+        symbol_match_count as f32 / company_name_match_count as f32
+    } else {
+        f32::MAX
+    };
+
+    // eprintln!(
+    //     "Symbol match ratio: {:4} {:4}, Symbol match count: {}, Company name match count: {}",
+    //     match_ratio, weights.stop_word_match_ratio, symbol_match_count, company_name_match_count
+    // );
+
+    // Decide whether to prune symbol matches based on the ratio and weight
+    if match_ratio < weights.stop_word_match_ratio {
+        symbol_matches.retain(|symbol| {
+            if STOP_WORDS.contains(&symbol.to_lowercase().as_str()) {
+                false // Remove stop words entirely
+            } else {
+                true // Keep non-stop words
+            }
+        });
+    }
+
+    matches.extend(symbol_matches.clone());
 
     let abbreviation_matches =
         extract_tickers_from_abbreviations(&filtered_text, symbols_map, weights);
@@ -86,15 +113,16 @@ fn extract_tickers_from_abbreviations(
         // Normalize the token to lowercase
         let lc_token = token.to_lowercase();
 
+        let token_length = token.len();
+
         for (symbol, _company_name) in symbols_map {
+            let symbol_length = symbol.len();
+
             // let lc_company_name = company_name.to_lowercase();
             let lc_symbol = symbol.to_lowercase();
 
             // Check if the token starts with part of the company name
             if lc_token.starts_with(&lc_symbol) {
-                let token_length = token.len();
-                let symbol_length = symbol.len();
-
                 let abbr_perc = symbol_length as f32 / token_length as f32;
 
                 if abbr_perc > weights.symbol_abbr_threshold {
