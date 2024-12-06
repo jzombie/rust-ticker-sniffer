@@ -365,6 +365,8 @@ fn extract_tickers_from_company_names(
                     continue;
                 }
 
+                let company_name_char_count = company_name.len();
+
                 // Normalize, filter stop words, and tokenize the company name
                 let company_tokens: Vec<String> = company_name
                     .to_lowercase()
@@ -382,6 +384,9 @@ fn extract_tickers_from_company_names(
                 let mut consecutive_match_count = 0;
                 let mut top_consecutive_match_count = 0;
 
+                let mut consecutive_input_token_char_count = 0;
+                let mut top_consecutive_input_token_char_count = 0;
+
                 let mut match_score = 0.0;
 
                 // Single pass through input tokens
@@ -397,7 +402,7 @@ fn extract_tickers_from_company_names(
 
                     let lc_input_token = input_token.to_lowercase();
                     // let input_token_char_count = input_token.len();
-                    // let mut consecutive_input_token_char_count = 0;
+                    //
 
                     // eprintln!("Input token: {}", input_token);
 
@@ -407,6 +412,8 @@ fn extract_tickers_from_company_names(
                         // Previously, the consecutive match mechanism would get out of sync and identify
                         // `Apple Hospitality REIT` with a low score.
                         consecutive_match_count = 0;
+                        consecutive_input_token_char_count = 0;
+
                         company_index = 0;
                     }
 
@@ -415,10 +422,19 @@ fn extract_tickers_from_company_names(
 
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
+                        consecutive_input_token_char_count += 1;
+
                         company_index += 1;
 
                         if consecutive_match_count > top_consecutive_match_count {
                             top_consecutive_match_count = consecutive_match_count;
+                        }
+
+                        if consecutive_input_token_char_count
+                            > top_consecutive_input_token_char_count
+                        {
+                            top_consecutive_input_token_char_count =
+                                consecutive_input_token_char_count;
                         }
 
                         // If we've matched the entire company_tokens, score it
@@ -433,9 +449,9 @@ fn extract_tickers_from_company_names(
                 }
 
                 if top_consecutive_match_count > 0 {
-                    // match_score += (consecutive_input_token_char_count as f32
-                    //     / company_name_char_count as f32)
-                    //     * (1.0 - weights.mismatched_letter_penalty);
+                    match_score += (consecutive_input_token_char_count as f32
+                        / company_name_char_count as f32)
+                        * (1.0 - weights.mismatched_letter_penalty);
 
                     match_score += (top_consecutive_match_count as f32
                         / total_company_words as f32)
