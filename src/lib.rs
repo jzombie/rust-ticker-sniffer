@@ -4,7 +4,7 @@ use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::DEFAULT_WEIGHTS;
 use models::CompanyNameTokenRanking;
-pub use models::Weights; // Re-export // Re-export
+pub use models::Weights;
 
 pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
 
