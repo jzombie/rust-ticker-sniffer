@@ -10,6 +10,7 @@ pub struct Weights {
     pub mismatched_letter_penalty: f32,
     pub mismatched_word_penalty: f32,
     pub match_score_threshold: f32,
+    pub symbol_abbr_threshold: f32,
 }
 
 impl Weights {
@@ -18,12 +19,14 @@ impl Weights {
         mismatched_letter_penalty: f32,
         mismatched_word_penalty: f32,
         match_score_threshold: f32,
+        symbol_abbr_threshold: f32,
     ) -> Self {
         Self {
             continuity,
             mismatched_letter_penalty,
             mismatched_word_penalty,
             match_score_threshold,
+            symbol_abbr_threshold,
         }
     }
 }
@@ -59,6 +62,10 @@ pub fn extract_tickers_from_text(
     let symbol_matches = extract_tickers_from_symbols(&filtered_text, symbols_map);
     matches.extend(symbol_matches);
 
+    let abbreviation_matches =
+        extract_tickers_from_abbreviations(&filtered_text, symbols_map, weights);
+    matches.extend(abbreviation_matches);
+
     // Convert HashSet to Vec and return sorted for consistency
     let mut results: Vec<String> = matches.into_iter().collect();
     results.sort();
@@ -86,6 +93,49 @@ fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<Stri
                         matches.insert(alt);
                         break; // Stop checking alternatives once matched
                     }
+                }
+            }
+        }
+    }
+
+    matches.into_iter().collect()
+}
+
+fn extract_tickers_from_abbreviations(
+    text: &str,
+    symbols_map: SymbolsMap,
+    weights: Weights,
+) -> Vec<String> {
+    let mut matches = HashSet::new();
+    let input_tokens = tokenize(text);
+
+    let input_tokens_capitalized: Vec<&str> = input_tokens
+        .iter()
+        .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1) // Min length > 1
+        .filter(|token| {
+            let lowercased = token.to_lowercase();
+            !STOP_WORDS.contains(&lowercased.as_str())
+        })
+        .cloned()
+        .collect();
+
+    for token in input_tokens_capitalized {
+        // Normalize the token to lowercase
+        let lc_token = token.to_lowercase();
+
+        for (symbol, _company_name) in symbols_map {
+            // let lc_company_name = company_name.to_lowercase();
+            let lc_symbol = symbol.to_lowercase();
+
+            // Check if the token starts with part of the company name
+            if lc_token.starts_with(&lc_symbol) {
+                let token_length = token.len();
+                let symbol_length = symbol.len();
+
+                let abbr_perc = symbol_length as f32 / token_length as f32;
+
+                if abbr_perc > weights.symbol_abbr_threshold {
+                    matches.insert(symbol.to_string());
                 }
             }
         }
