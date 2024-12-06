@@ -1,4 +1,4 @@
-Apple Manzana Nvidia Microsoft Alphabet Apple.  The people, some say that Apple Hospitability REIT is something.
+Apple Manzana Nvidia Microsoft Alphabet Apple.  The people, some say that Apple, Apple Hospitality REIT are two different tings.
 
 EXPECTED: AAPL
 EXPECTED: APLE
@@ -6,3 +6,5 @@ EXPECTED: GOOG
 EXPECTED: GOOGL
 EXPECTED: MSFT
 EXPECTED: NVDA
+
+COMMENT: Symbols which are repeated with shared names should be identified as being distinct.
