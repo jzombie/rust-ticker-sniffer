@@ -26,9 +26,11 @@ fn tune_weights() {
         // mismatched_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
         // match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
         // bias: 0.5 + rng.gen_range(-0.1..0.1),
-        mismatched_letter_penalty: 0.2,
-        mismatched_word_penalty: 0.6,
-        match_score_threshold: 0.2499,
+        continuity: 0.025,
+        mismatched_letter_penalty: 1.0,
+        mismatched_word_penalty: 0.3,
+        match_score_threshold: 0.25,
+        symbol_abbr_threshold: 0.8,
     };
 
     let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0);
@@ -64,11 +66,8 @@ fn tune_weights() {
             best_weights = weights.clone();
             no_improvement_count = 0; // Reset patience counter
             println!(
-                "New best weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
-                best_weights.mismatched_letter_penalty,
-                best_weights.mismatched_word_penalty,
-                best_weights.match_score_threshold,
-                best_loss
+                "New best weights: ({}), Loss: {:.4}",
+                best_weights, best_loss
             );
         } else {
             no_improvement_count += 1; // Increment patience counter
@@ -98,6 +97,22 @@ fn tune_weights() {
             regularization_lambda,
             max_gradient_norm,
         );
+        let grad_w4 = compute_gradient_with_regularization(
+            weights,
+            &symbols_map,
+            test_dir,
+            3,
+            regularization_lambda,
+            max_gradient_norm,
+        );
+        let grad_w5 = compute_gradient_with_regularization(
+            weights,
+            &symbols_map,
+            test_dir,
+            4,
+            regularization_lambda,
+            max_gradient_norm,
+        );
 
         velocity.0 = (momentum * velocity.0 + learning_rate * grad_w1)
             .clamp(-max_gradient_norm, max_gradient_norm);
@@ -105,22 +120,22 @@ fn tune_weights() {
             .clamp(-max_gradient_norm, max_gradient_norm);
         velocity.2 = (momentum * velocity.2 + learning_rate * grad_w3)
             .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.3 = (momentum * velocity.3 + learning_rate * grad_w4)
+            .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
+            .clamp(-max_gradient_norm, max_gradient_norm);
 
         weights.mismatched_letter_penalty -= velocity.0;
         weights.mismatched_word_penalty -= velocity.1;
         weights.match_score_threshold -= velocity.2;
+        weights.match_score_threshold -= velocity.3;
+        weights.match_score_threshold -= velocity.4;
+
+        println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
         println!(
-            "Weights: ({:.4}, {:.4}, {:.4}), Loss: {:.4}",
-            weights.mismatched_letter_penalty,
-            weights.mismatched_word_penalty,
-            weights.match_score_threshold,
-            current_loss
-        );
-
-        println!(
-            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}",
-            grad_w1, grad_w2, grad_w3
+            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}, grad_w5 = {:.5}",
+            grad_w1, grad_w2, grad_w3, grad_w4, grad_w5
         );
 
         // Check for convergence with patience
@@ -134,11 +149,8 @@ fn tune_weights() {
     }
 
     println!(
-        "Tuning process completed. Best weights: ({:.4}, {:.4}, {:.4}), Best loss: {:.4}",
-        best_weights.mismatched_letter_penalty,
-        best_weights.mismatched_word_penalty,
-        best_weights.match_score_threshold,
-        best_loss
+        "Tuning process completed. Best weights: ({}), Best loss: {:.4}",
+        best_weights, best_loss
     );
 }
 
@@ -157,9 +169,11 @@ fn compute_gradient_with_regularization(
 
     // Perturb the specific weight
     match weight_index {
-        0 => perturbed_weights.mismatched_letter_penalty += delta,
-        1 => perturbed_weights.mismatched_word_penalty += delta,
-        2 => perturbed_weights.match_score_threshold += delta,
+        0 => perturbed_weights.continuity += delta,
+        1 => perturbed_weights.mismatched_letter_penalty += delta,
+        2 => perturbed_weights.mismatched_word_penalty += delta,
+        3 => perturbed_weights.match_score_threshold += delta,
+        4 => perturbed_weights.symbol_abbr_threshold += delta,
         _ => unreachable!(),
     }
 
@@ -255,17 +269,24 @@ fn evaluate_loss(
 
     // Updated loss function
     // let total_loss = (total_errors.pow(2)) as f32 - total_score + weight_penalty;
-    let total_loss = (total_errors.pow(2)) as f32 - total_score;
+    // let total_loss = (total_errors.pow(2)) as f32 - total_score;
     // let total_loss = (1.0 - total_score) + weight_penalty;
     // let total_loss = 1.0 - total_score;
 
+    let error_scale = 1.0 / (total_errors.max(1) as f32); // Prevent division by zero
+    let score_scale = 1.0 / total_score.max(1.0); // Prevent division by zero
+
+    let scaled_errors = total_errors as f32 * error_scale;
+    let scaled_score = total_score * score_scale;
+
+    let error_weight = 2.0; // Emphasize error count more heavily
+    let score_weight = 1.0; // Score remains as it is
+
+    let total_loss = error_weight * scaled_errors - score_weight * scaled_score;
+
     println!(
-        "Loss for weights ({:.4}, {:.4}, {:.4}): {:.4} (errors: {})",
-        weights.mismatched_letter_penalty,
-        weights.mismatched_word_penalty,
-        weights.match_score_threshold,
-        total_loss,
-        total_errors
+        "Loss for weights ({}): {:.4} (errors: {})",
+        weights, total_loss, total_errors
     );
 
     total_loss
