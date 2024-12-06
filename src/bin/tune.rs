@@ -164,8 +164,8 @@ fn tune_weights() {
         println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
         println!(
-            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}, grad_w5 = {:.5}",
-            grad_w1, grad_w2, grad_w3, grad_w4, grad_w5
+            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}",
+            grad_w1, grad_w2, grad_w3, grad_w4
         );
 
         // Check for convergence with patience
