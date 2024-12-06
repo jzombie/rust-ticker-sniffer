@@ -22,26 +22,26 @@ fn tune_weights() {
 
     // Initialize randomly
     let mut weights = Weights {
-        // mismatched_letter_penalty: 0.5 + rng.gen_range(-0.1..0.1),
-        // mismatched_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
-        // match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
+        // letter_mismatch_penalty: 0.5 + rng.gen_range(-0.1..0.1),
+        // word_mismatch_penalty: 0.5 + rng.gen_range(-0.1..0.1),
+        // minimum_match_score: 0.5 + rng.gen_range(-0.1..0.1),
         // bias: 0.5 + rng.gen_range(-0.1..0.1),
-        // continuity: 0.025 + rng.gen_range(-0.1..0.1),
-        // mismatched_letter_penalty: 1.0 + rng.gen_range(-0.1..0.1),
-        // mismatched_word_penalty: 0.3 + rng.gen_range(-0.1..0.1),
-        // match_score_threshold: 0.25 + rng.gen_range(-0.1..0.1),
-        // symbol_abbr_threshold: 0.8 + rng.gen_range(-0.1..0.1),
-        // continuity: 0.05939734,
-        // mismatched_letter_penalty: 0.7206682,
-        // mismatched_word_penalty: 0.24114594,
-        // match_score_threshold: 0.30506316,
-        // symbol_abbr_threshold: 0.88860726,
-        continuity: 0.021446686,
-        mismatched_letter_penalty: 0.85928243,
-        mismatched_word_penalty: 0.25776097,
-        match_score_threshold: 0.21479446,
-        stop_word_match_ratio: 0.6,
-        symbol_abbr_threshold: 0.8,
+        // consecutive_match_weight: 0.025 + rng.gen_range(-0.1..0.1),
+        // letter_mismatch_penalty: 1.0 + rng.gen_range(-0.1..0.1),
+        // word_mismatch_penalty: 0.3 + rng.gen_range(-0.1..0.1),
+        // minimum_match_score: 0.25 + rng.gen_range(-0.1..0.1),
+        // abbreviation_match_threshold: 0.8 + rng.gen_range(-0.1..0.1),
+        // consecutive_match_weight: 0.05939734,
+        // letter_mismatch_penalty: 0.7206682,
+        // word_mismatch_penalty: 0.24114594,
+        // minimum_match_score: 0.30506316,
+        // abbreviation_match_threshold: 0.88860726,
+        consecutive_match_weight: 0.021446686,
+        letter_mismatch_penalty: 0.85928243,
+        word_mismatch_penalty: 0.25776097,
+        minimum_match_score: 0.21479446,
+        stop_word_filter_ratio: 0.6,
+        abbreviation_match_threshold: 0.8,
     };
 
     let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
@@ -172,11 +172,11 @@ fn tune_weights() {
         velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
             .clamp(-max_gradient_norm, max_gradient_norm);
 
-        weights.continuity -= velocity.0;
-        weights.mismatched_letter_penalty -= velocity.1;
-        weights.mismatched_word_penalty -= velocity.2;
-        weights.match_score_threshold -= velocity.3;
-        weights.stop_word_match_ratio -= velocity.4;
+        weights.consecutive_match_weight -= velocity.0;
+        weights.letter_mismatch_penalty -= velocity.1;
+        weights.word_mismatch_penalty -= velocity.2;
+        weights.minimum_match_score -= velocity.3;
+        weights.stop_word_filter_ratio -= velocity.4;
 
         println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
@@ -228,11 +228,11 @@ fn compute_gradient_with_regularization(
 
     // Perturb the specific weight
     match weight_index {
-        0 => perturbed_weights.continuity += delta,
-        1 => perturbed_weights.mismatched_letter_penalty += delta,
-        2 => perturbed_weights.mismatched_word_penalty += delta,
-        3 => perturbed_weights.match_score_threshold += delta,
-        4 => perturbed_weights.stop_word_match_ratio += delta,
+        0 => perturbed_weights.consecutive_match_weight += delta,
+        1 => perturbed_weights.letter_mismatch_penalty += delta,
+        2 => perturbed_weights.word_mismatch_penalty += delta,
+        3 => perturbed_weights.minimum_match_score += delta,
+        4 => perturbed_weights.stop_word_filter_ratio += delta,
         _ => unreachable!(),
     }
 
@@ -283,11 +283,11 @@ fn evaluate_loss_with_regularization(
 
     // Add L2 regularization penalty
     let l2_penalty = regularization_lambda
-        * (weights.continuity.powi(2)
-            + weights.mismatched_letter_penalty.powi(2)
-            + weights.mismatched_word_penalty.powi(2)
-            + weights.match_score_threshold.powi(2)
-            + weights.stop_word_match_ratio.powi(2));
+        * (weights.consecutive_match_weight.powi(2)
+            + weights.letter_mismatch_penalty.powi(2)
+            + weights.word_mismatch_penalty.powi(2)
+            + weights.minimum_match_score.powi(2)
+            + weights.stop_word_filter_ratio.powi(2));
     base_loss + l2_penalty
 }
 

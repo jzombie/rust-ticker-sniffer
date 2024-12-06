@@ -1,12 +1,12 @@
 use crate::models::weights::Weights;
 
 pub const DEFAULT_WEIGHTS: Weights = Weights {
-    continuity: 0.021446686,
-    mismatched_letter_penalty: 0.85928243,
-    mismatched_word_penalty: 0.25776097,
-    match_score_threshold: 0.21479446,
-    stop_word_match_ratio: 0.6,
-    symbol_abbr_threshold: 0.8,
+    consecutive_match_weight: 0.021446686,
+    letter_mismatch_penalty: 0.85928243,
+    word_mismatch_penalty: 0.25776097,
+    minimum_match_score: 0.21479446,
+    stop_word_filter_ratio: 0.6,
+    abbreviation_match_threshold: 0.8,
 };
 
 pub const STOP_WORDS: &[&str] = &[

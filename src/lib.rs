@@ -45,11 +45,11 @@ pub fn extract_tickers_from_text(
 
     // eprintln!(
     //     "Symbol match ratio: {:4} {:4}, Symbol match count: {}, Company name match count: {}",
-    //     match_ratio, weights.stop_word_match_ratio, symbol_match_count, company_name_match_count
+    //     match_ratio, weights.stop_word_filter_ratio, symbol_match_count, company_name_match_count
     // );
 
     // Decide whether to prune symbol matches based on the ratio and weight
-    if match_ratio < weights.stop_word_match_ratio {
+    if match_ratio < weights.stop_word_filter_ratio {
         symbol_matches.retain(|symbol| {
             if STOP_WORDS.contains(&symbol.to_lowercase().as_str()) {
                 false // Remove stop words entirely
@@ -125,7 +125,7 @@ fn extract_tickers_from_abbreviations(
             if lc_token.starts_with(&lc_symbol) {
                 let abbr_perc = symbol_length as f32 / token_length as f32;
 
-                if abbr_perc > weights.symbol_abbr_threshold {
+                if abbr_perc > weights.abbreviation_match_threshold {
                     matches.insert(symbol.to_string());
                 }
             }
@@ -236,7 +236,8 @@ fn extract_tickers_from_company_names(
                 let mut consecutive_jaccard_similarity: f32 = 0.0;
 
                 if top_consecutive_match_count > 0 {
-                    match_score += top_consecutive_match_count as f32 * weights.continuity;
+                    match_score +=
+                        top_consecutive_match_count as f32 * weights.consecutive_match_weight;
 
                     let lc_norm_input_string: String = top_company_index_token_index_map
                         .values()
@@ -251,14 +252,14 @@ fn extract_tickers_from_company_names(
                         jaccard_similarity_chars(&lc_norm_input_string, &lc_norm_company_string);
 
                     match_score +=
-                        consecutive_jaccard_similarity * (1.0 - weights.mismatched_letter_penalty);
+                        consecutive_jaccard_similarity * (1.0 - weights.letter_mismatch_penalty);
 
                     match_score += (top_consecutive_match_count as f32
                         / total_company_words as f32)
-                        * (1.0 - weights.mismatched_word_penalty);
+                        * (1.0 - weights.word_mismatch_penalty);
                 }
 
-                if match_score > weights.match_score_threshold {
+                if match_score > weights.minimum_match_score {
                     let company_ranking: CompanyNameTokenRanking = CompanyNameTokenRanking {
                         ticker_symbol: symbol.to_string(),
                         company_name: company_name.to_string(),
