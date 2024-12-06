@@ -345,12 +345,16 @@ fn extract_tickers_from_company_names(
     let mut tokenized_filter: HashSet<String> = HashSet::new();
 
     if !input_tokens.is_empty() {
-        // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length
+        // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length, then remove stop words
         let input_tokens_capitalized: Vec<&str> = input_tokens
             .iter()
             .filter(|token| {
                 token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1
             }) // Min length > 1
+            .filter(|token| {
+                let lowercased = token.to_lowercase();
+                !STOP_WORDS.contains(&lowercased.as_str())
+            })
             .cloned()
             .collect();
 
@@ -361,9 +365,7 @@ fn extract_tickers_from_company_names(
                     continue;
                 }
 
-                // let company_name_char_count = company_name.len();
-
-                // Normalize and tokenize the company name
+                // Normalize, filter stop words, and tokenize the company name
                 let company_tokens: Vec<String> = company_name
                     .to_lowercase()
                     .replace(|c: char| !c.is_alphanumeric() && c != ' ', " ")
@@ -399,10 +401,6 @@ fn extract_tickers_from_company_names(
 
                     // eprintln!("Input token: {}", input_token);
 
-                    if STOP_WORDS.contains(&lc_input_token.as_str()) {
-                        continue;
-                    }
-
                     if &lc_input_token != &company_tokens[company_index] {
                         // Note: This reset is perfomrmed before the following `if` statement to fix an issue
                         // where a phrase with `Apple Apple Hopitality REIT` are identified as separate companies.
@@ -413,11 +411,6 @@ fn extract_tickers_from_company_names(
                     }
 
                     if &lc_input_token == &company_tokens[company_index] {
-                        // eprintln!(
-                        //     "match: LC input token: {}; Company Token: {}, Company Name: {}",
-                        //     lc_input_token, &company_tokens[company_index], company_name
-                        // );
-
                         // consecutive_input_token_char_count += input_token_char_count;
 
                         // Match found, increment the company pointer
@@ -427,18 +420,6 @@ fn extract_tickers_from_company_names(
                         if consecutive_match_count > top_consecutive_match_count {
                             top_consecutive_match_count = consecutive_match_count;
                         }
-
-                        // eprintln!(
-                        //     "Consecutive match count: {}, TCW: {}",
-                        //     consecutive_match_count, total_company_words
-                        // );
-
-                        // Prevent double-counting of tokens but still handle their consecutive scoring
-                        // if !seen_tokens.contains(&lc_input_token.to_string()) {
-                        //     // Score with penalty added
-
-                        //     seen_tokens.insert(lc_input_token.to_string());
-                        // }
 
                         // If we've matched the entire company_tokens, score it
                         if company_index == total_company_words {
@@ -451,11 +432,11 @@ fn extract_tickers_from_company_names(
                     }
                 }
 
-                // match_score += (consecutive_input_token_char_count as f32
-                //     / company_name_char_count as f32)
-                //     * (1.0 - weights.mismatched_letter_penalty);
-
                 if top_consecutive_match_count > 0 {
+                    // match_score += (consecutive_input_token_char_count as f32
+                    //     / company_name_char_count as f32)
+                    //     * (1.0 - weights.mismatched_letter_penalty);
+
                     match_score += (top_consecutive_match_count as f32
                         / total_company_words as f32)
                         * (1.0 - weights.mismatched_word_penalty);
