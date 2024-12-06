@@ -170,7 +170,10 @@ fn extract_tickers_from_company_names(
     let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
     let mut company_rankings: Vec<CompanyNameTokenRanking> = Vec::new();
 
-    let mut token_to_top_company: HashMap<usize, CompanyNameTokenRanking> = HashMap::new();
+    let mut input_token_index_to_top_company_ranking_map: HashMap<
+        usize,
+        Vec<CompanyNameTokenRanking>,
+    > = HashMap::new();
 
     if !input_tokens_capitalized.is_empty() {
         // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length, then remove stop words
@@ -332,29 +335,46 @@ fn extract_tickers_from_company_names(
 
             for input_token_index in company_ranking.input_token_indices.iter() {
                 // Check if this token index already has an entry
-                if let Some(existing_ranking) = token_to_top_company.get(input_token_index) {
-                    // Update the entry only if the current match score is higher
-                    if company_ranking.match_score > existing_ranking.match_score {
-                        token_to_top_company.insert(*input_token_index, company_ranking.clone());
+                if let Some(existing_rankings) =
+                    input_token_index_to_top_company_ranking_map.get_mut(input_token_index)
+                {
+                    // Find the highest score in the current list
+                    let max_score = existing_rankings
+                        .iter()
+                        .map(|ranking| ranking.match_score)
+                        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                        .unwrap_or(0.0);
+
+                    if company_ranking.match_score > max_score {
+                        // New higher score, replace the existing vector
+                        *existing_rankings = vec![company_ranking.clone()];
+                    } else if (company_ranking.match_score - max_score).abs() < f32::EPSILON {
+                        // Scores are equal, append the new ranking
+                        existing_rankings.push(company_ranking.clone());
                     }
                 } else {
-                    // No entry exists, insert this company ranking
-                    token_to_top_company.insert(*input_token_index, company_ranking.clone());
+                    // No entry exists, insert this company ranking as a new vector
+                    input_token_index_to_top_company_ranking_map
+                        .insert(*input_token_index, vec![company_ranking.clone()]);
                 }
             }
         }
     }
 
-    for (_, company_ranking) in token_to_top_company {
-        let tokenized_company_name = tokenize(&company_ranking.company_name);
-        for word in tokenized_company_name {
-            tokenized_filter.insert(word.to_string());
-        }
+    for (_, company_rankings) in input_token_index_to_top_company_ranking_map {
+        for company_ranking in company_rankings {
+            // Tokenize the company name and add tokens to the filter
+            let tokenized_company_name = tokenize(&company_ranking.company_name);
+            for word in tokenized_company_name {
+                tokenized_filter.insert(word.to_string());
+            }
 
-        scored_results
-            .entry(company_ranking.ticker_symbol.to_string())
-            .and_modify(|e| *e += company_ranking.match_score)
-            .or_insert(company_ranking.match_score);
+            // Update the scored_results with the match score
+            scored_results
+                .entry(company_ranking.ticker_symbol.to_string())
+                .and_modify(|e| *e += company_ranking.match_score)
+                .or_insert(company_ranking.match_score);
+        }
     }
 
     // Sort scored_results by score
