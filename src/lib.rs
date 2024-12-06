@@ -6,6 +6,7 @@ pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Weights {
+    pub continuity: f32,
     pub mismatched_letter_penalty: f32,
     pub mismatched_word_penalty: f32,
     pub match_score_threshold: f32,
@@ -13,11 +14,13 @@ pub struct Weights {
 
 impl Weights {
     pub fn new(
+        continuity: f32,
         mismatched_letter_penalty: f32,
         mismatched_word_penalty: f32,
         match_score_threshold: f32,
     ) -> Self {
         Self {
+            continuity,
             mismatched_letter_penalty,
             mismatched_word_penalty,
             match_score_threshold,
@@ -210,6 +213,8 @@ fn extract_tickers_from_company_names(
                 }
 
                 if top_consecutive_match_count > 0 {
+                    match_score += top_consecutive_match_count as f32 * weights.continuity;
+
                     match_score += (consecutive_input_token_char_count as f32
                         / company_name_char_count as f32)
                         * (1.0 - weights.mismatched_letter_penalty);
