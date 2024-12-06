@@ -1,5 +1,5 @@
 use csv::Reader;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{extract_tickers_from_text, Weights};
@@ -63,7 +63,7 @@ pub fn run_test_for_file(
     test_file_path: &str,
     use_assertions: bool,
     weights: Weights,
-) -> (usize, f32) {
+) -> (usize, f32, f32) {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -148,8 +148,7 @@ pub fn run_test_for_file(
         }
 
         // Skip further checks since failure was validated
-        // return error_count; // Return early with errors
-        return (error_count, total_score);
+        return (error_count, total_score, 0.0);
     }
 
     // Regular success case validation
@@ -210,5 +209,40 @@ pub fn run_test_for_file(
         }
     }
 
-    (error_count, total_score)
+    // Compute MSE between expected and actual results
+    let mse = compute_mse(&expected_tickers, &results);
+
+    (error_count, total_score, mse)
+}
+
+pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
+    // Get the universe of all unique tickers
+    let all_tickers: HashSet<_> = expected_tickers.iter().chain(results.iter()).collect();
+
+    // Create binary arrays for expected and actual results
+    let expected_binary: Vec<f32> = all_tickers
+        .iter()
+        .map(|ticker| {
+            if expected_tickers.contains(ticker) {
+                1.0
+            } else {
+                0.0
+            }
+        })
+        .collect();
+
+    let results_binary: Vec<f32> = all_tickers
+        .iter()
+        .map(|ticker| if results.contains(ticker) { 1.0 } else { 0.0 })
+        .collect();
+
+    // Compute the squared differences
+    let squared_differences: f32 = expected_binary
+        .iter()
+        .zip(results_binary.iter())
+        .map(|(expected, result)| (expected - result).powi(2))
+        .sum();
+
+    // Calculate the mean squared error
+    squared_differences / all_tickers.len() as f32
 }

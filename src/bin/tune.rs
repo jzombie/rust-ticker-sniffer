@@ -37,8 +37,8 @@ fn tune_weights() {
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
-    let learning_rate = 0.01;
-    let momentum = 0.05;
+    let learning_rate = 0.05;
+    let momentum = 0.1;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
     let max_epochs = 2000; // Maximum number of epochs
@@ -163,7 +163,8 @@ fn compute_gradient_with_regularization(
     regularization_lambda: f32,
     max_gradient_norm: f32,
 ) -> f32 {
-    let delta = 1e-5; // Small perturbation for finite differences
+    // let delta = 1e-3;
+    let delta = 0.1;
 
     let mut perturbed_weights = weights.clone();
 
@@ -236,8 +237,8 @@ fn evaluate_loss(
     _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
 ) -> f32 {
-    let mut total_errors = 0;
-    let mut total_score: f32 = 0.0;
+    let mut total_mse: f32 = 0.0;
+    let mut test_file_count = 0;
 
     // Read test files
     let files = read_dir(test_dir).expect("Failed to read test files directory");
@@ -247,49 +248,25 @@ fn evaluate_loss(
 
         if file_path.is_file() {
             // Wrap `run_test_for_file` to suppress output
-            let (next_errors, next_score) = suppress_output(|| {
+            let (_, _, mse) = suppress_output(|| {
                 run_test_for_file(file_path.to_str().unwrap(), false, weights.clone())
             });
 
-            total_errors += next_errors;
-            total_score += next_score;
+            total_mse += mse;
+            test_file_count += 1;
         }
     }
 
-    // Log the total loss in the console
-    // let total_loss = total_errors as f32 - total_score;
+    // Calculate the average MSE
+    let average_mse = if test_file_count > 0 {
+        total_mse / test_file_count as f32
+    } else {
+        0.0 // Handle edge case where no test files are found
+    };
 
-    // let weight_sum = weights.mismatched_letter_penalty
-    //     + weights.mismatched_word_penalty
-    //     + weights.match_score_threshold
-    //     + weights.bias;
+    println!("Average MSE for weights ({}): {:.4}", weights, average_mse);
 
-    // // Regularization term to penalize large weights
-    // let weight_penalty = 0.1 * weight_sum.powi(2); // Adjust coefficient as needed
-
-    // Updated loss function
-    // let total_loss = (total_errors.pow(2)) as f32 - total_score + weight_penalty;
-    // let total_loss = (total_errors.pow(2)) as f32 - total_score;
-    // let total_loss = (1.0 - total_score) + weight_penalty;
-    // let total_loss = 1.0 - total_score;
-
-    let error_scale = 1.0 / (total_errors.max(1) as f32); // Prevent division by zero
-    let score_scale = 1.0 / total_score.max(1.0); // Prevent division by zero
-
-    let scaled_errors = total_errors as f32 * error_scale;
-    let scaled_score = total_score * score_scale;
-
-    let error_weight = 2.0; // Emphasize error count more heavily
-    let score_weight = 1.0; // Score remains as it is
-
-    let total_loss = error_weight * scaled_errors - score_weight * scaled_score;
-
-    println!(
-        "Loss for weights ({}): {:.4} (errors: {})",
-        weights, total_loss, total_errors
-    );
-
-    total_loss
+    average_mse
 }
 
 /// Suppress output of a given closure
