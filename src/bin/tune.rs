@@ -26,18 +26,23 @@ fn tune_weights() {
         // mismatched_word_penalty: 0.5 + rng.gen_range(-0.1..0.1),
         // match_score_threshold: 0.5 + rng.gen_range(-0.1..0.1),
         // bias: 0.5 + rng.gen_range(-0.1..0.1),
-        continuity: 0.025,
-        mismatched_letter_penalty: 1.0,
-        mismatched_word_penalty: 0.3,
-        match_score_threshold: 0.25,
-        symbol_abbr_threshold: 0.8,
+        continuity: 0.025 + rng.gen_range(-0.1..0.1),
+        mismatched_letter_penalty: 1.0 + rng.gen_range(-0.1..0.1),
+        mismatched_word_penalty: 0.3 + rng.gen_range(-0.1..0.1),
+        match_score_threshold: 0.25 + rng.gen_range(-0.1..0.1),
+        symbol_abbr_threshold: 0.8 + rng.gen_range(-0.1..0.1),
+        // continuity: 0.025,
+        // mismatched_letter_penalty: 1.0,
+        // mismatched_word_penalty: 0.3,
+        // match_score_threshold: 0.25,
+        // symbol_abbr_threshold: 0.8,
     };
 
     let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0);
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
-    let learning_rate = 0.05;
+    let learning_rate = 0.005;
     let momentum = 0.1;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
@@ -192,7 +197,7 @@ fn compute_gradient_with_regularization(
     max_gradient_norm: f32,
 ) -> f32 {
     // let delta = 1e-3;
-    let delta = 0.1;
+    let delta = 0.05;
 
     let mut perturbed_weights = weights.clone();
 
