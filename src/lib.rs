@@ -5,32 +5,12 @@ pub mod models;
 pub use constants::DEFAULT_WEIGHTS;
 use models::CompanyNameTokenRanking;
 pub use models::Weights;
+pub mod utils;
+pub use utils::{
+    generate_alternative_symbols, jaccard_similarity_chars, tokenize, tokenize_company_name_query,
+};
 
 pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
-
-/// Tokenizer function to split the text into individual tokens.
-///
-/// Note: This explcitly does not modify the case of the text.
-pub fn tokenize(text: &str) -> Vec<&str> {
-    text.split_whitespace()
-        // Remove non-alphanumeric characters from end of string (and not in any other position)
-        .map(|word| word.trim_end_matches(|c: char| !c.is_alphanumeric()))
-        .collect()
-}
-
-pub fn tokenize_company_name_query(text: &str) -> Vec<&str> {
-    tokenize(text)
-        .iter()
-        // Only accept first letters that are capitalized
-        .filter(|token| token.chars().next().map_or(false, |c| c.is_uppercase()) && token.len() > 1) // Min length > 1
-        // Remove stop words
-        .filter(|token| {
-            let lowercased = token.to_lowercase();
-            !STOP_WORDS.contains(&lowercased.as_str())
-        })
-        .cloned()
-        .collect()
-}
 
 pub fn extract_tickers_from_text(
     text: &str,
@@ -363,29 +343,4 @@ fn extract_tickers_from_company_names(
 
     // Return only the keys and the total score
     (result_keys, total_score, tokenized_filter)
-}
-
-pub fn generate_alternative_symbols(query: &str) -> Vec<String> {
-    let mut alternatives: Vec<String> = vec![query.to_uppercase()];
-    if query.contains('.') {
-        alternatives.push(query.replace('.', "-").to_uppercase());
-    } else if query.contains('-') {
-        alternatives.push(query.replace('-', ".").to_uppercase());
-    }
-    alternatives
-}
-
-/// Compute the Jaccard similarity between two strings by treating characters as sets.
-pub fn jaccard_similarity_chars(s1: &str, s2: &str) -> f32 {
-    let set1: HashSet<_> = s1.chars().collect();
-    let set2: HashSet<_> = s2.chars().collect();
-
-    let intersection_size = set1.intersection(&set2).count();
-    let union_size = set1.union(&set2).count();
-
-    if union_size == 0 {
-        0.0 // Avoid division by zero if both sets are empty
-    } else {
-        intersection_size as f32 / union_size as f32
-    }
 }
