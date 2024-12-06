@@ -12,15 +12,23 @@ pub struct Weights {
 
 impl fmt::Display for Weights {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-          f,
-          "Weights (\n\tconsecutive_match_weight: {},\n\tletter_mismatch_penalty: {},\n\tword_mismatch_penalty: {},\n\tstop_word_filter_ratio: {},\n\tminimum_match_score: {},\n\tabbreviation_match_threshold: {}\n)",
-          self.consecutive_match_weight,
-          self.letter_mismatch_penalty,
-          self.word_mismatch_penalty,
-          self.stop_word_filter_ratio,
-          self.minimum_match_score,
-          self.abbreviation_match_threshold
-      )
+        let struct_name = stringify!(Weights);
+        let fields = vec![
+            ("consecutive_match_weight", self.consecutive_match_weight),
+            ("letter_mismatch_penalty", self.letter_mismatch_penalty),
+            ("word_mismatch_penalty", self.word_mismatch_penalty),
+            ("stop_word_filter_ratio", self.stop_word_filter_ratio),
+            ("minimum_match_score", self.minimum_match_score),
+            (
+                "abbreviation_match_threshold",
+                self.abbreviation_match_threshold,
+            ),
+        ];
+
+        writeln!(f, "{} (", struct_name)?;
+        for (name, value) in fields {
+            writeln!(f, "\t{}: {},", name, value)?;
+        }
+        write!(f, ")") // Final closing parenthesis
     }
 }
