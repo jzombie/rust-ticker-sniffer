@@ -149,6 +149,14 @@ fn extract_tickers_from_abbreviations(
     matches.into_iter().collect()
 }
 
+struct CompanyNameTokenRanking {
+    company_name: String,
+    input_token_indices: Vec<usize>,
+    consecutive_match_count: usize,
+    consecutive_input_char_count: usize,
+    match_score: f32,
+}
+
 fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: SymbolsMap,
@@ -158,6 +166,7 @@ fn extract_tickers_from_company_names(
     let mut tokenized_filter: HashSet<String> = HashSet::new();
 
     let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
+    let mut company_rankings: Vec<CompanyNameTokenRanking> = Vec::new();
 
     if !input_tokens_capitalized.is_empty() {
         // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length, then remove stop words
@@ -198,7 +207,11 @@ fn extract_tickers_from_company_names(
 
                 // let mut seen_tokens: HashSet<String> = HashSet::new();
 
-                for input_token in &input_tokens_capitalized {
+                let mut input_token_indices: Vec<usize> = Vec::new();
+
+                for (input_token_position, input_token) in
+                    input_tokens_capitalized.iter().enumerate()
+                {
                     // eprintln!(
                     //     "input token: {}, company index: {}, company name: {}",
                     //     input_token, company_index, company_name
@@ -222,6 +235,8 @@ fn extract_tickers_from_company_names(
                     }
 
                     if &lc_input_token == &company_tokens[company_index] {
+                        input_token_indices.push(input_token_position);
+
                         // consecutive_input_token_char_count += input_token_char_count;
 
                         // Match found, increment the company pointer
@@ -264,8 +279,20 @@ fn extract_tickers_from_company_names(
                         * (1.0 - weights.mismatched_word_penalty);
                 }
 
+                let company_ranking: CompanyNameTokenRanking = CompanyNameTokenRanking {
+                    company_name: company_name.to_string(),
+                    input_token_indices,
+                    consecutive_match_count: top_consecutive_match_count,
+                    consecutive_input_char_count: top_consecutive_input_token_char_count,
+                    match_score,
+                };
+
+                company_rankings.push(company_ranking);
+
+                // TODO: Remove this; use company rankings instead
                 // Skip if the match score is insignificant
                 if match_score > weights.match_score_threshold {
+                    // TODO: Move this elsewhere; these are just intermediate results at this point
                     // Add company name tokens to the filter to prevent basic symbol queries from considering them.
                     // For example, if a company match is for "Apple Hospitality REIT, Inc.," the token "REIT"
                     // should not be treated as a standalone symbol.
@@ -285,6 +312,17 @@ fn extract_tickers_from_company_names(
                     );
                 }
             }
+        }
+    }
+
+    for company_ranking in company_rankings {
+        if company_ranking.match_score > 0.0 {
+            eprintln!(
+                "Company name: {}; Match Score: {}; Input Token Positions: {:?}",
+                company_ranking.company_name,
+                company_ranking.match_score,
+                company_ranking.input_token_indices
+            );
         }
     }
 
