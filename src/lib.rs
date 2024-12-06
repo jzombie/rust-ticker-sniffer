@@ -2,7 +2,8 @@ use std::collections::{HashMap, HashSet};
 mod constants;
 use crate::constants::STOP_WORDS;
 pub mod models;
-pub use models::Weights;
+use models::CompanyNameTokenRanking;
+pub use models::Weights; // Re-export
 
 pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
 
@@ -122,16 +123,6 @@ fn extract_tickers_from_abbreviations(
     }
 
     matches.into_iter().collect()
-}
-
-#[derive(Clone)]
-struct CompanyNameTokenRanking {
-    ticker_symbol: String,
-    company_name: String,
-    input_token_indices: Vec<usize>,
-    consecutive_match_count: usize,
-    consecutive_jaccard_similarity: f32,
-    match_score: f32,
 }
 
 fn extract_tickers_from_company_names(
