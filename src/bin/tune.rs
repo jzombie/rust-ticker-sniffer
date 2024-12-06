@@ -47,7 +47,7 @@ fn tune_weights() {
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
-    let learning_rate = 0.005;
+    let learning_rate = 0.05;
     let momentum = 0.05;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
