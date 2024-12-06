@@ -135,14 +135,14 @@ fn tune_weights() {
             regularization_lambda,
             max_gradient_norm,
         );
-        let grad_w5 = compute_gradient_with_regularization(
-            weights,
-            &symbols_map,
-            test_dir,
-            4,
-            regularization_lambda,
-            max_gradient_norm,
-        );
+        // let grad_w5 = compute_gradient_with_regularization(
+        //     weights,
+        //     &symbols_map,
+        //     test_dir,
+        //     4,
+        //     regularization_lambda,
+        //     max_gradient_norm,
+        // );
 
         velocity.0 = (momentum * velocity.0 + learning_rate * grad_w1)
             .clamp(-max_gradient_norm, max_gradient_norm);
