@@ -16,6 +16,7 @@ fn benchmark_extract_tickers(c: &mut Criterion) {
         mismatched_letter_penalty: 0.3,
         mismatched_word_penalty: 0.3,
         match_score_threshold: 0.25,
+        symbol_abbr_threshold: 0.8,
         // continuity: 0.3688305957567424,
         // coverage_input: 0.026040188967873246,
         // coverage_company: 0.5971237581795172,
