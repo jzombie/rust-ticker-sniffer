@@ -161,6 +161,8 @@ fn extract_tickers_from_company_names(
                     continue;
                 }
 
+                // TODO: This could run through "tokenize" as well if it doesn't incur a perf penalty for some reason
+                //
                 // Normalize, filter stop words, and tokenize the company name
                 let company_tokens: Vec<String> = company_name
                     .to_lowercase()
