@@ -211,7 +211,9 @@ fn extract_tickers_from_company_names(
 
                 // let mut seen_tokens: HashSet<String> = HashSet::new();
 
-                let mut input_token_indices: Vec<usize> = Vec::new();
+                // let mut input_token_indices: Vec<usize> = Vec::new();
+                let mut company_index_token_index_map: HashMap<usize, usize> = HashMap::new();
+                let mut top_company_index_token_index_map: HashMap<usize, usize> = HashMap::new();
 
                 for (input_token_position, input_token) in
                     input_tokens_capitalized.iter().enumerate()
@@ -236,10 +238,19 @@ fn extract_tickers_from_company_names(
                         consecutive_input_token_char_count = 0;
 
                         company_index = 0;
+
+                        company_index_token_index_map.remove(&company_index);
                     }
 
                     if &lc_input_token == &company_tokens[company_index] {
-                        input_token_indices.push(input_token_position);
+                        // input_token_indices.push(input_token_position);
+                        company_index_token_index_map.insert(company_index, input_token_position);
+
+                        // eprintln!(
+                        //     "Company name: {}, Inserted: {{ company_index: {}, input_token_position: {} }}",
+                        //     company_name, company_index, input_token_position
+                        // );
+                        // eprintln!("Current map: {:?}", company_index_token_index_map);
 
                         // consecutive_input_token_char_count += input_token_char_count;
 
@@ -251,6 +262,9 @@ fn extract_tickers_from_company_names(
 
                         if consecutive_match_count > top_consecutive_match_count {
                             top_consecutive_match_count = consecutive_match_count;
+
+                            top_company_index_token_index_map =
+                                company_index_token_index_map.clone();
                         }
 
                         if consecutive_input_token_char_count
@@ -287,7 +301,10 @@ fn extract_tickers_from_company_names(
                     let company_ranking: CompanyNameTokenRanking = CompanyNameTokenRanking {
                         ticker_symbol: symbol.to_string(),
                         company_name: company_name.to_string(),
-                        input_token_indices,
+                        input_token_indices: top_company_index_token_index_map
+                            .values()
+                            .cloned()
+                            .collect(),
                         consecutive_match_count: top_consecutive_match_count,
                         consecutive_input_char_count: top_consecutive_input_token_char_count,
                         match_score,
@@ -306,6 +323,13 @@ fn extract_tickers_from_company_names(
 
     for company_ranking in company_rankings {
         if company_ranking.match_score > 0.0 {
+            eprintln!(
+                "Company name: {}; Match Score: {}; Input Token Positions: {:?}",
+                company_ranking.company_name,
+                company_ranking.match_score,
+                company_ranking.input_token_indices
+            );
+
             for input_token_index in company_ranking.input_token_indices.iter() {
                 // Check if this token index already has an entry
                 if let Some(existing_ranking) = token_to_top_company.get(input_token_index) {
@@ -331,13 +355,6 @@ fn extract_tickers_from_company_names(
             .entry(company_ranking.ticker_symbol.to_string())
             .and_modify(|e| *e += company_ranking.match_score)
             .or_insert(company_ranking.match_score);
-
-        eprintln!(
-            "Company name: {}; Match Score: {}; Input Token Positions: {:?}",
-            company_ranking.company_name,
-            company_ranking.match_score,
-            company_ranking.input_token_indices
-        );
     }
 
     // Sort scored_results by score
