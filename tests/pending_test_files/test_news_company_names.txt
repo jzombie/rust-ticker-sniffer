@@ -11,11 +11,21 @@ Texas Pacific Land
 : A new addition to the S&P 500
 , this landowner has a large chunk of acreage in the Permian Basin. While businesses related to oil are expected to succeed under Trump, Cramer warned that during his last term, oil stocks actually underperformed after excessive drilling.
 
+Tapestry
+: Known for several luxury retail brands including Coach, Kate Spade and Stuart Weitzman, Tapestry’s stock has climbed since the Federal Trade Commission blocked its acquisition of peer company Capri. Wall Street had begun to doubt the merger, with some saying Tapestry would pay too much for Capri. Cramer dubbed Tapestry a “rebounding apparel company.”
+
 EXPECTED: PLTR
 EXPECTED: AXON
+EXPECTED: TSLA
+EXPECTED: PBT
+EXPECTED: TPR
+EXPECTED: TPL
+EXPECTED: CPRI
+
+COMMENT: False positives below
 EXPECTED: WAFD
 EXPECTED: WAFDP
-EXPECTED: TSLA
+EXPECTED: FSS
+EXPECTED: TTD
 
 COMMENT: Source: https://www.cnbc.com/2024/12/02/jim-cramer-lists-10-stocks-likely-to-perform-well-in-december.html
-COMMENT: WAFD and WAFDP are actually false positives but it will be very difficult to isolate these without hardcoding them.
