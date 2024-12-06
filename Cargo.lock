@@ -501,7 +501,6 @@ dependencies = [
  "csv",
  "libc",
  "rand",
- "regex",
 ]
 
 [[package]]
