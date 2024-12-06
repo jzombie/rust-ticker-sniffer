@@ -216,16 +216,7 @@ fn extract_tickers_from_company_names(
                 for (input_token_position, input_token) in
                     input_tokens_capitalized.iter().enumerate()
                 {
-                    // eprintln!(
-                    //     "input token: {}, company index: {}, company name: {}",
-                    //     input_token, company_index, company_name
-                    // );
-
                     let lc_input_token = input_token.to_lowercase();
-                    // let input_token_char_count = input_token.len();
-                    //
-
-                    // eprintln!("Input token: {}", input_token);
 
                     if &lc_input_token != &company_tokens[company_index] {
                         // Note: This reset is perfomrmed before the following `if` statement to fix an issue
@@ -242,14 +233,6 @@ fn extract_tickers_from_company_names(
                     if &lc_input_token == &company_tokens[company_index] {
                         // input_token_indices.push(input_token_position);
                         company_index_token_index_map.insert(company_index, input_token_position);
-
-                        // eprintln!(
-                        //     "Company name: {}, Inserted: {{ company_index: {}, input_token_position: {} }}",
-                        //     company_name, company_index, input_token_position
-                        // );
-                        // eprintln!("Current map: {:?}", company_index_token_index_map);
-
-                        // consecutive_input_token_char_count += input_token_char_count;
 
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
@@ -293,11 +276,6 @@ fn extract_tickers_from_company_names(
 
                     match_score +=
                         consecutive_jaccard_similarity * (1.0 - weights.mismatched_letter_penalty);
-
-                    // eprintln!(
-                    //     "{}, {}, {}",
-                    //     input_string, company_string, consecutive_jaccard_similarity
-                    // );
 
                     match_score += (top_consecutive_match_count as f32
                         / total_company_words as f32)
