@@ -13,6 +13,7 @@ pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
 /// Note: This explcitly does not modify the case of the text.
 pub fn tokenize(text: &str) -> Vec<&str> {
     text.split_whitespace()
+        // Remove non-alphanumeric characters from end of string, but not from the middle
         .map(|word| word.trim_end_matches(|c: char| !c.is_alphanumeric()))
         .collect()
 }
