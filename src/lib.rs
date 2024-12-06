@@ -259,7 +259,9 @@ fn extract_tickers_from_company_names(
 
                         // Match found, increment the company pointer
                         consecutive_match_count += 1;
-                        consecutive_input_token_char_count += 1;
+
+                        // TODO: Switch to Jaccard or Levenshstein?
+                        consecutive_input_token_char_count += input_token.len();
 
                         company_index += 1;
 
