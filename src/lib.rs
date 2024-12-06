@@ -279,17 +279,17 @@ fn extract_tickers_from_company_names(
                 if top_consecutive_match_count > 0 {
                     match_score += top_consecutive_match_count as f32 * weights.continuity;
 
-                    let input_string: String = top_company_index_token_index_map
+                    let lc_norm_input_string: String = top_company_index_token_index_map
                         .values()
                         .map(|&index| input_tokens_capitalized[index])
                         .collect::<Vec<&str>>()
                         .join(" ")
                         .to_lowercase();
 
-                    let company_string: String = company_tokens.join(" ");
+                    let lc_norm_company_string: String = company_tokens.join(" ");
 
                     consecutive_jaccard_similarity =
-                        jaccard_similarity_chars(&input_string, &company_string);
+                        jaccard_similarity_chars(&lc_norm_input_string, &lc_norm_company_string);
 
                     match_score +=
                         consecutive_jaccard_similarity * (1.0 - weights.mismatched_letter_penalty);
