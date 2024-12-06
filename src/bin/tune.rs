@@ -36,10 +36,10 @@ fn tune_weights() {
         // mismatched_word_penalty: 0.24114594,
         // match_score_threshold: 0.30506316,
         // symbol_abbr_threshold: 0.88860726,
-        continuity: 0.025,
-        mismatched_letter_penalty: 1.0,
-        mismatched_word_penalty: 0.3,
-        match_score_threshold: 0.25,
+        continuity: 0.021310013,
+        mismatched_letter_penalty: 0.85386753,
+        mismatched_word_penalty: 0.2561357,
+        match_score_threshold: 0.21343957,
         symbol_abbr_threshold: 0.8,
     };
 
