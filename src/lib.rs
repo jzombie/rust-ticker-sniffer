@@ -149,7 +149,9 @@ fn extract_tickers_from_abbreviations(
     matches.into_iter().collect()
 }
 
+#[derive(Clone)]
 struct CompanyNameTokenRanking {
+    ticker_symbol: String,
     company_name: String,
     input_token_indices: Vec<usize>,
     consecutive_match_count: usize,
@@ -167,6 +169,8 @@ fn extract_tickers_from_company_names(
 
     let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
     let mut company_rankings: Vec<CompanyNameTokenRanking> = Vec::new();
+
+    let mut token_to_top_company: HashMap<usize, CompanyNameTokenRanking> = HashMap::new();
 
     if !input_tokens_capitalized.is_empty() {
         // Filter input tokens: Only consider tokens starting with a capital letter and of sufficient length, then remove stop words
@@ -279,32 +283,17 @@ fn extract_tickers_from_company_names(
                         * (1.0 - weights.mismatched_word_penalty);
                 }
 
-                let company_ranking: CompanyNameTokenRanking = CompanyNameTokenRanking {
-                    company_name: company_name.to_string(),
-                    input_token_indices,
-                    consecutive_match_count: top_consecutive_match_count,
-                    consecutive_input_char_count: top_consecutive_input_token_char_count,
-                    match_score,
-                };
-
-                company_rankings.push(company_ranking);
-
-                // TODO: Remove this; use company rankings instead
-                // Skip if the match score is insignificant
                 if match_score > weights.match_score_threshold {
-                    // TODO: Move this elsewhere; these are just intermediate results at this point
-                    // Add company name tokens to the filter to prevent basic symbol queries from considering them.
-                    // For example, if a company match is for "Apple Hospitality REIT, Inc.," the token "REIT"
-                    // should not be treated as a standalone symbol.
-                    let tokenized_company_name = tokenize(&company_name);
-                    for word in tokenized_company_name {
-                        tokenized_filter.insert(word.to_string());
-                    }
+                    let company_ranking: CompanyNameTokenRanking = CompanyNameTokenRanking {
+                        ticker_symbol: symbol.to_string(),
+                        company_name: company_name.to_string(),
+                        input_token_indices,
+                        consecutive_match_count: top_consecutive_match_count,
+                        consecutive_input_char_count: top_consecutive_input_token_char_count,
+                        match_score,
+                    };
 
-                    scored_results
-                        .entry(symbol.to_string())
-                        .and_modify(|e| *e += match_score)
-                        .or_insert(match_score);
+                    company_rankings.push(company_ranking);
                 } else if match_score > 0.0 {
                     eprintln!(
                         "Discarded symbol: {}; Match Score: {:.4}, Consecutive Matches: {}",
@@ -317,13 +306,38 @@ fn extract_tickers_from_company_names(
 
     for company_ranking in company_rankings {
         if company_ranking.match_score > 0.0 {
-            eprintln!(
-                "Company name: {}; Match Score: {}; Input Token Positions: {:?}",
-                company_ranking.company_name,
-                company_ranking.match_score,
-                company_ranking.input_token_indices
-            );
+            for input_token_index in company_ranking.input_token_indices.iter() {
+                // Check if this token index already has an entry
+                if let Some(existing_ranking) = token_to_top_company.get(input_token_index) {
+                    // Update the entry only if the current match score is higher
+                    if company_ranking.match_score > existing_ranking.match_score {
+                        token_to_top_company.insert(*input_token_index, company_ranking.clone());
+                    }
+                } else {
+                    // No entry exists, insert this company ranking
+                    token_to_top_company.insert(*input_token_index, company_ranking.clone());
+                }
+            }
         }
+    }
+
+    for (_, company_ranking) in token_to_top_company {
+        let tokenized_company_name = tokenize(&company_ranking.company_name);
+        for word in tokenized_company_name {
+            tokenized_filter.insert(word.to_string());
+        }
+
+        scored_results
+            .entry(company_ranking.ticker_symbol.to_string())
+            .and_modify(|e| *e += company_ranking.match_score)
+            .or_insert(company_ranking.match_score);
+
+        eprintln!(
+            "Company name: {}; Match Score: {}; Input Token Positions: {:?}",
+            company_ranking.company_name,
+            company_ranking.match_score,
+            company_ranking.input_token_indices
+        );
     }
 
     // Sort scored_results by score
