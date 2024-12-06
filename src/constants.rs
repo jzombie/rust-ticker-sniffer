@@ -1,3 +1,12 @@
+use crate::models::weights::Weights;
+
+pub const DEFAULT_WEIGHTS: Weights = Weights {
+    continuity: 0.025,
+    mismatched_letter_penalty: 1.0,
+    mismatched_word_penalty: 0.3,
+    match_score_threshold: 0.25,
+    symbol_abbr_threshold: 0.8,
+};
 
 pub const STOP_WORDS: &[&str] = &[
     "a",
