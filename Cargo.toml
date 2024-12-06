@@ -15,6 +15,10 @@ libc = { version = "0.2.167", optional = true }
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 
+[[bench]]
+name = "my_benchmark"
+harness = false
+
 [[bin]]
 name = "tune"
 path = "src/bin/tune.rs"
