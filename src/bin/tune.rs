@@ -48,7 +48,7 @@ fn tune_weights() {
     let mut best_loss = f32::MAX;
 
     let learning_rate = 0.005;
-    let momentum = 0.1;
+    let momentum = 0.05;
     let regularization_lambda = 0.01;
     let tolerance = 1e-5; // Minimum loss improvement to reset patience
     let max_epochs = 2000; // Maximum number of epochs
