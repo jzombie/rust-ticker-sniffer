@@ -135,6 +135,9 @@ fn tune_weights() {
             regularization_lambda,
             max_gradient_norm,
         );
+
+        // Note: `symbol_abbreviation_threshold` is currently considered to be
+        // frozen, and tuned manually
         // let grad_w5 = compute_gradient_with_regularization(
         //     weights,
         //     &symbols_map,
