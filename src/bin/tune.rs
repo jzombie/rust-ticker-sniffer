@@ -36,14 +36,15 @@ fn tune_weights() {
         // mismatched_word_penalty: 0.24114594,
         // match_score_threshold: 0.30506316,
         // symbol_abbr_threshold: 0.88860726,
-        continuity: 0.021310013,
-        mismatched_letter_penalty: 0.85386753,
-        mismatched_word_penalty: 0.2561357,
-        match_score_threshold: 0.21343957,
+        continuity: 0.021446686,
+        mismatched_letter_penalty: 0.85928243,
+        mismatched_word_penalty: 0.25776097,
+        match_score_threshold: 0.21479446,
+        stop_word_match_ratio: 0.6,
         symbol_abbr_threshold: 0.8,
     };
 
-    let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0);
+    let mut velocity = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     let mut best_weights = weights.clone();
     let mut best_loss = f32::MAX;
 
@@ -140,13 +141,22 @@ fn tune_weights() {
             max_gradient_norm,
         );
 
+        let grad_w5 = compute_gradient_with_regularization(
+            weights,
+            &symbols_map,
+            test_dir,
+            4,
+            regularization_lambda,
+            max_gradient_norm,
+        );
+
         // Note: `symbol_abbreviation_threshold` is currently considered to be
         // frozen, and tuned manually
-        // let grad_w5 = compute_gradient_with_regularization(
+        // let grad_w6 = compute_gradient_with_regularization(
         //     weights,
         //     &symbols_map,
         //     test_dir,
-        //     4,
+        //     5,
         //     regularization_lambda,
         //     max_gradient_norm,
         // );
@@ -159,20 +169,20 @@ fn tune_weights() {
             .clamp(-max_gradient_norm, max_gradient_norm);
         velocity.3 = (momentum * velocity.3 + learning_rate * grad_w4)
             .clamp(-max_gradient_norm, max_gradient_norm);
-        // velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
-        //     .clamp(-max_gradient_norm, max_gradient_norm);
+        velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
+            .clamp(-max_gradient_norm, max_gradient_norm);
 
         weights.continuity -= velocity.0;
         weights.mismatched_letter_penalty -= velocity.1;
         weights.mismatched_word_penalty -= velocity.2;
         weights.match_score_threshold -= velocity.3;
-        // weights.symbol_abbr_threshold -= velocity.4;
+        weights.symbol_abbr_threshold -= velocity.4;
 
         println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
         println!(
-            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}",
-            grad_w1, grad_w2, grad_w3, grad_w4
+            "Gradients: grad_w1 = {:.5}, grad_w2 = {:.5}, grad_w3 = {:.5}, grad_w4 = {:.5}, grad_w5 = {:.5}",
+            grad_w1, grad_w2, grad_w3, grad_w4, grad_w5
         );
 
         // Check for convergence with patience
@@ -222,7 +232,7 @@ fn compute_gradient_with_regularization(
         1 => perturbed_weights.mismatched_letter_penalty += delta,
         2 => perturbed_weights.mismatched_word_penalty += delta,
         3 => perturbed_weights.match_score_threshold += delta,
-        // 4 => perturbed_weights.symbol_abbr_threshold += delta,
+        4 => perturbed_weights.symbol_abbr_threshold += delta,
         _ => unreachable!(),
     }
 
@@ -273,13 +283,11 @@ fn evaluate_loss_with_regularization(
 
     // Add L2 regularization penalty
     let l2_penalty = regularization_lambda
-        * (
-            weights.continuity.powi(2)
-                + weights.mismatched_letter_penalty.powi(2)
-                + weights.mismatched_word_penalty.powi(2)
-                + weights.match_score_threshold.powi(2)
-            // + weights.symbol_abbr_threshold.powi(2)
-        );
+        * (weights.continuity.powi(2)
+            + weights.mismatched_letter_penalty.powi(2)
+            + weights.mismatched_word_penalty.powi(2)
+            + weights.match_score_threshold.powi(2)
+            + weights.stop_word_match_ratio.powi(2));
     base_loss + l2_penalty
 }
 
