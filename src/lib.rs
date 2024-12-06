@@ -404,6 +404,10 @@ fn extract_tickers_from_company_names(
                     }
 
                     if &lc_input_token != &company_tokens[company_index] {
+                        // Note: This reset is perfomrmed before the following `if` statement to fix an issue
+                        // where a phrase with `Apple Apple Hopitality REIT` are identified as separate companies.
+                        // Previously, the consecutive match mechanism would get out of sync and identify
+                        // `Apple Hospitality REIT` with a low score.
                         consecutive_match_count = 0;
                         company_index = 0;
                     }
