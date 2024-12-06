@@ -155,11 +155,11 @@ fn tune_weights() {
         velocity.4 = (momentum * velocity.4 + learning_rate * grad_w5)
             .clamp(-max_gradient_norm, max_gradient_norm);
 
-        weights.mismatched_letter_penalty -= velocity.0;
-        weights.mismatched_word_penalty -= velocity.1;
-        weights.match_score_threshold -= velocity.2;
+        weights.continuity -= velocity.0;
+        weights.mismatched_letter_penalty -= velocity.1;
+        weights.mismatched_word_penalty -= velocity.2;
         weights.match_score_threshold -= velocity.3;
-        weights.match_score_threshold -= velocity.4;
+        weights.symbol_abbr_threshold -= velocity.4;
 
         println!("Weights: ({}), Loss: {:.4}", weights, current_loss);
 
@@ -263,9 +263,11 @@ fn evaluate_loss_with_regularization(
 
     // Add L2 regularization penalty
     let l2_penalty = regularization_lambda
-        * (weights.mismatched_letter_penalty.powi(2)
+        * (weights.continuity.powi(2)
+            + weights.mismatched_letter_penalty.powi(2)
             + weights.mismatched_word_penalty.powi(2)
-            + weights.match_score_threshold.powi(2));
+            + weights.match_score_threshold.powi(2)
+            + weights.symbol_abbr_threshold.powi(2));
     base_loss + l2_penalty
 }
 
