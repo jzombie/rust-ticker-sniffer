@@ -1,2 +1,5 @@
-// TODO: Use this instead of String type in the library
-// pub type TickerSymbol = String;
+use std::collections::HashMap;
+
+pub type TickerSymbol = String;
+
+pub type SymbolsMap = HashMap<TickerSymbol, Option<String>>;

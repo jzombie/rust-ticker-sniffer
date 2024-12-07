@@ -1,7 +1,9 @@
+use crate::types::TickerSymbol;
+
 // TODO: Remove Debug trait
 #[derive(Debug, Clone)]
 pub struct CompanyNameTokenRanking {
-    pub ticker_symbol: String,
+    pub ticker_symbol: TickerSymbol,
     pub company_name: String,
     pub input_token_indices: Vec<usize>,
     pub consecutive_match_count: usize,

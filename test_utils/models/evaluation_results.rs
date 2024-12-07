@@ -1,19 +1,22 @@
 use std::collections::HashSet;
+use ticker_sniffer::TickerSymbol;
 
 #[derive(Debug)]
 pub struct EvaluationResult {
-    pub expected: Vec<String>,
-    pub false_positives: Vec<String>,
-    pub false_negatives: Vec<String>,
+    pub expected: Vec<TickerSymbol>,
+    pub false_positives: Vec<TickerSymbol>,
+    pub false_negatives: Vec<TickerSymbol>,
 }
 
 impl EvaluationResult {
-    pub fn new(expected: &[String], results: &[String]) -> Self {
+    pub fn new(expected: &[TickerSymbol], results: &[TickerSymbol]) -> Self {
         let expected_set: HashSet<_> = expected.iter().cloned().collect();
         let results_set: HashSet<_> = results.iter().cloned().collect();
 
-        let false_positives: Vec<String> = results_set.difference(&expected_set).cloned().collect();
-        let false_negatives: Vec<String> = expected_set.difference(&results_set).cloned().collect();
+        let false_positives: Vec<TickerSymbol> =
+            results_set.difference(&expected_set).cloned().collect();
+        let false_negatives: Vec<TickerSymbol> =
+            expected_set.difference(&results_set).cloned().collect();
 
         Self {
             expected: expected.to_vec(),

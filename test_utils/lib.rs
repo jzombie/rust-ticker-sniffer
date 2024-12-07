@@ -1,17 +1,16 @@
 use csv::Reader;
-use std::collections::HashMap;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::models::CompanyNameTokenRanking;
-use ticker_sniffer::{extract_tickers_from_text, ContextAttention, Weights};
+use ticker_sniffer::{
+    extract_tickers_from_text, ContextAttention, SymbolsMap, TickerSymbol, Weights,
+};
 pub mod models;
 pub use models::EvaluationResult;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
-pub fn load_symbols_from_file(
-    file_path: &str,
-) -> Result<HashMap<String, Option<String>>, Box<dyn Error>> {
-    let mut symbols_map = HashMap::new();
+pub fn load_symbols_from_file(file_path: &str) -> Result<SymbolsMap, Box<dyn Error>> {
+    let mut symbols_map = SymbolsMap::new();
     let mut reader = Reader::from_path(file_path)?;
 
     // Use headers to extract columns

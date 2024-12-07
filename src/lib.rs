@@ -9,15 +9,15 @@ pub mod utils;
 pub use utils::{
     generate_alternative_symbols, jaccard_similarity_chars, tokenize, tokenize_company_name_query,
 };
-
-pub type SymbolsMap<'a> = &'a HashMap<String, Option<String>>;
+pub mod types;
+pub use types::{SymbolsMap, TickerSymbol};
 
 pub fn extract_tickers_from_text(
     text: &str,
-    symbols_map: SymbolsMap,
+    symbols_map: &SymbolsMap,
     weights: Weights,
     context_attention: &ContextAttention,
-) -> (Vec<String>, f32, Vec<CompanyNameTokenRanking>) {
+) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
     let mut matches = HashSet::new();
 
     // Extract tickers by company name
@@ -67,13 +67,13 @@ pub fn extract_tickers_from_text(
     matches.extend(abbreviation_matches);
 
     // Convert HashSet to Vec and return sorted for consistency
-    let mut results: Vec<String> = matches.into_iter().collect();
+    let mut results: Vec<TickerSymbol> = matches.into_iter().collect();
     results.sort();
 
     (results, total_score, company_rankings)
 }
 
-fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
+fn extract_tickers_from_symbols(text: &str, symbols_map: &SymbolsMap) -> Vec<TickerSymbol> {
     let mut matches = HashSet::new();
     let tokens = tokenize(text);
 
@@ -103,9 +103,9 @@ fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<Stri
 
 fn extract_tickers_from_abbreviations(
     text: &str,
-    symbols_map: SymbolsMap,
+    symbols_map: &SymbolsMap,
     weights: Weights,
-) -> Vec<String> {
+) -> Vec<TickerSymbol> {
     let mut matches = HashSet::new();
 
     let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
@@ -138,16 +138,18 @@ fn extract_tickers_from_abbreviations(
 
 fn extract_tickers_from_company_names(
     text: &str,
-    symbols_map: SymbolsMap,
+    symbols_map: &SymbolsMap,
     weights: Weights,
     context_attention: &ContextAttention,
 ) -> (
-    Vec<String>,
+    Vec<TickerSymbol>,
     f32,
     HashSet<String>,
     Vec<CompanyNameTokenRanking>,
 ) {
-    let mut scored_results: HashMap<String, f32> = HashMap::new();
+    let mut scored_results: HashMap<TickerSymbol, f32> = HashMap::new();
+
+    // Note: This is not a vector of symbols; maybe explicit type defining could make this more apparent
     let mut tokenized_filter: HashSet<String> = HashSet::new();
 
     let input_tokens_capitalized: Vec<&str> = tokenize_company_name_query(text);
