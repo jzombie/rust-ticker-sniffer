@@ -70,6 +70,7 @@ pub fn extract_tickers_from_text(
     let mut results: Vec<String> = matches.into_iter().collect();
     results.sort();
 
+    // TODO: Include Vec<CompanyNameTokenRanking>
     (results, total_score)
 }
 
@@ -241,16 +242,18 @@ fn extract_tickers_from_company_names(
 
                 let mut context_attention_score: f32 = 0.0;
 
+                // TODO: Ideally, this should be set inide the following block,
+                // but I'm fighting with the borrower-checker to try to retain this value
+                let lc_norm_input_string: String = top_company_index_token_index_map
+                    .values()
+                    .map(|&index| input_tokens_capitalized[index])
+                    .collect::<Vec<&str>>()
+                    .join(" ")
+                    .to_lowercase();
+
                 if top_consecutive_match_count > 0 {
                     match_score +=
                         top_consecutive_match_count as f32 * weights.consecutive_match_weight;
-
-                    let lc_norm_input_string: String = top_company_index_token_index_map
-                        .values()
-                        .map(|&index| input_tokens_capitalized[index])
-                        .collect::<Vec<&str>>()
-                        .join(" ")
-                        .to_lowercase();
 
                     let lc_norm_company_string: String = company_tokens.join(" ");
 
@@ -283,6 +286,7 @@ fn extract_tickers_from_company_names(
                         consecutive_jaccard_similarity,
                         match_score,
                         context_attention_score,
+                        context_query_string: lc_norm_input_string,
                     };
 
                     company_rankings.push(company_ranking);
@@ -350,6 +354,8 @@ fn extract_tickers_from_company_names(
         }
     }
 
+    // TODO: Can the following loops be unified?  Are they even necessary/
+
     // Sort scored_results by score
     let mut sorted_results: Vec<_> = scored_results.into_iter().collect();
     sorted_results.sort_by(|(_, score_a), (_, score_b)| {
@@ -383,6 +389,8 @@ fn extract_tickers_from_company_names(
 
     eprintln!("Total score: {:.2}", total_score);
 
+    // TODO: Include Vec<CompanyNameTokenRanking>
+    //
     // Return only the keys and the total score
     (result_keys, total_score, tokenized_filter)
 }

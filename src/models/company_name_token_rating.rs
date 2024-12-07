@@ -7,4 +7,5 @@ pub struct CompanyNameTokenRanking {
     pub consecutive_jaccard_similarity: f32,
     pub match_score: f32,
     pub context_attention_score: f32,
+    pub context_query_string: String,
 }
