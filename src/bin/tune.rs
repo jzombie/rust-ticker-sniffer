@@ -5,7 +5,7 @@ use std::io;
 use std::os::unix::io::AsRawFd;
 use ticker_sniffer::Weights;
 
-#[path = "../../test_utils/lib.rs"] // Adjusted to match your directory structure
+#[path = "../../test_utils/lib.rs"]
 mod test_utils;
 
 use test_utils::{load_symbols_from_file, run_test_for_file};

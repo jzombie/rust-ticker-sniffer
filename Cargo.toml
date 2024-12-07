@@ -23,6 +23,11 @@ name = "tune"
 path = "src/bin/tune.rs"
 required-features = ["csv-support", "rand-support", "libc-support"]
 
+[[bin]]
+name = "train_context_attention"
+path = "src/bin/train_context_attention.rs"
+required-features = ["csv-support", "rand-support", "libc-support"]
+
 [features]
 default = []
 csv-support = ["dep:csv"]

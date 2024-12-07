@@ -1,6 +1,7 @@
+#[derive(Clone)]
 pub struct ContextAttention {
-    global_weights: Vec<f32>, // Shared global weights
-    embedding_size: usize,    // Fixed size of embeddings
+    pub global_weights: Vec<f32>, // Shared global weights
+    pub embedding_size: usize,    // Fixed size of embeddings
 }
 
 impl ContextAttention {
@@ -20,11 +21,6 @@ impl ContextAttention {
             global_weights: weights,
             embedding_size,
         })
-    }
-
-    /// Retrieve the global weights embedding
-    pub fn get_global_weights(&self) -> Vec<f32> {
-        self.global_weights.clone()
     }
 
     /// Represent a token (ticker or word) as a fixed-size vector
