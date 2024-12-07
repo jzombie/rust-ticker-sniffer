@@ -123,6 +123,7 @@ impl ContextAttention {
         aggregated
     }
 
+    // TODO: Rename ticker to query
     /// Compute the score for a ticker against the aggregated context
     pub fn score(&self, ticker: &str, context: &[String]) -> f32 {
         let ticker_vec = self.representation(ticker);
@@ -136,6 +137,7 @@ impl ContextAttention {
             .sum() // Dot product with global weights
     }
 
+    // TODO: Rename ticker to query
     /// Update the global weights based on the reward signal
     /// Uses gradient descent to adjust the weights
     pub fn update_weights(

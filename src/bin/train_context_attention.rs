@@ -59,42 +59,52 @@ fn train_context_attention() {
             break;
         }
 
-        // Update weights using the update_weights method
-        for file in read_dir(test_dir).expect("Failed to read test directory") {
-            let file = file.expect("Failed to read file");
-            let file_path = file.path();
-
-            if file_path.is_file() {
-                // Read the file content
-                let raw_text =
-                    std::fs::read_to_string(file_path).expect("Failed to read test file");
-
-                // TODO: Remove
-                // Filter out lines starting with 'EXPECTED:', 'EXPECTED_FAILURE:', or 'COMMENT:'
-                let filtered_text: String = raw_text
-                    .lines()
-                    .filter(|line| {
-                        !line.trim_start().starts_with("EXPECTED:")
-                            && !line.trim_start().starts_with("EXPECTED_FAILURE:")
-                            && !line.trim_start().starts_with("COMMENT:")
-                    })
-                    .collect::<Vec<&str>>()
-                    .join("\n");
-
-                // TODO: Replace
-                // Extract context from the filtered text
-                let context: Vec<String> =
-                    filtered_text.split_whitespace().map(String::from).collect();
-
-                // TODO: Replace
-                // Simulate target and ticker for training (modify as needed)
-                let ticker = "EXAMPLE"; // Replace with the actual ticker from the file
-                let target = 1.0; // Example: Set to 1.0 for true positive
-
-                // Update weights
-                context_attention.update_weights(&ticker, &context, target, learning_rate);
-            }
+        for company_ranking in all_company_rankings {
+            context_attention.update_weights(
+                &company_ranking.context_query_string,
+                &company_ranking.context_company_tokens,
+                // target,
+                1.0, // TODO: Dynamically determine: 1.0 for true positive, 0.0 for false positive
+                learning_rate,
+            );
         }
+
+        // Update weights using the update_weights method
+        // for file in read_dir(test_dir).expect("Failed to read test directory") {
+        //     let file = file.expect("Failed to read file");
+        //     let file_path = file.path();
+
+        //     if file_path.is_file() {
+        //         // Read the file content
+        //         let raw_text =
+        //             std::fs::read_to_string(file_path).expect("Failed to read test file");
+
+        //         // TODO: Remove
+        //         // Filter out lines starting with 'EXPECTED:', 'EXPECTED_FAILURE:', or 'COMMENT:'
+        //         let filtered_text: String = raw_text
+        //             .lines()
+        //             .filter(|line| {
+        //                 !line.trim_start().starts_with("EXPECTED:")
+        //                     && !line.trim_start().starts_with("EXPECTED_FAILURE:")
+        //                     && !line.trim_start().starts_with("COMMENT:")
+        //             })
+        //             .collect::<Vec<&str>>()
+        //             .join("\n");
+
+        //         // TODO: Replace
+        //         // Extract context from the filtered text
+        //         let context: Vec<String> =
+        //             filtered_text.split_whitespace().map(String::from).collect();
+
+        //         // TODO: Replace
+        //         // Simulate target and ticker for training (modify as needed)
+        //         let ticker = "EXAMPLE"; // Replace with the actual ticker from the file
+        //         let target = 1.0; // Example: Set to 1.0 for true positive
+
+        //         // Update weights
+        //         context_attention.update_weights(&ticker, &context, target, learning_rate);
+        //     }
+        // }
 
         eprintln!("Context weights: {:?}", context_attention.global_weights);
     }
