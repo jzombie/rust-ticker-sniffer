@@ -17,11 +17,11 @@ pub fn extract_tickers_from_text(
     symbols_map: SymbolsMap,
     weights: Weights,
     context_attention: &ContextAttention,
-) -> (Vec<String>, f32) {
+) -> (Vec<String>, f32, Vec<CompanyNameTokenRanking>) {
     let mut matches = HashSet::new();
 
     // Extract tickers by company name
-    let (company_name_matches, total_score, tokenized_filter) =
+    let (company_name_matches, total_score, tokenized_filter, company_rankings) =
         extract_tickers_from_company_names(text, symbols_map, weights, context_attention);
     let company_name_match_count = company_name_matches.len();
 
@@ -70,8 +70,7 @@ pub fn extract_tickers_from_text(
     let mut results: Vec<String> = matches.into_iter().collect();
     results.sort();
 
-    // TODO: Include Vec<CompanyNameTokenRanking>
-    (results, total_score)
+    (results, total_score, company_rankings)
 }
 
 fn extract_tickers_from_symbols(text: &str, symbols_map: SymbolsMap) -> Vec<String> {
@@ -142,7 +141,12 @@ fn extract_tickers_from_company_names(
     symbols_map: SymbolsMap,
     weights: Weights,
     context_attention: &ContextAttention,
-) -> (Vec<String>, f32, HashSet<String>) {
+) -> (
+    Vec<String>,
+    f32,
+    HashSet<String>,
+    Vec<CompanyNameTokenRanking>,
+) {
     let mut scored_results: HashMap<String, f32> = HashMap::new();
     let mut tokenized_filter: HashSet<String> = HashSet::new();
 
@@ -301,7 +305,7 @@ fn extract_tickers_from_company_names(
         }
     }
 
-    for company_ranking in company_rankings {
+    for company_ranking in &company_rankings {
         if company_ranking.match_score > 0.0 {
             eprintln!(
                 "Company name: {}; Match Score: {}; Input Token Positions: {:?}; Jaccard: {}",
@@ -385,5 +389,10 @@ fn extract_tickers_from_company_names(
     // TODO: Include Vec<CompanyNameTokenRanking>
     //
     // Return only the keys and the total score
-    (result_ticker_symbols, total_score, tokenized_filter)
+    (
+        result_ticker_symbols,
+        total_score,
+        tokenized_filter,
+        company_rankings,
+    )
 }

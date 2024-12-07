@@ -95,8 +95,10 @@ pub fn run_test_for_file(
     eprintln!("Filtered text: {}", filtered_text);
 
     // Extract tickers from the filtered text
-    let (results, total_score) =
+    let (results, total_score, company_rankings) =
         extract_tickers_from_text(&filtered_text, &symbols_map, weights, context_attention);
+
+    // TODO: Handle company_rankings
 
     // Get the expected tickers and failure reason
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
