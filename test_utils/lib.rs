@@ -7,6 +7,7 @@ use ticker_sniffer::{
 };
 pub mod models;
 pub use models::EvaluationResult;
+pub mod constants;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
 pub fn load_symbols_from_file(file_path: &str) -> Result<SymbolsMap, Box<dyn Error>> {
@@ -236,13 +237,10 @@ pub fn run_test_for_file(
     // Use EvaluationResult to determine false positives and false negatives
     let evaluation_result = EvaluationResult::new(&expected_tickers, &results, &company_rankings);
 
-    // Compute MSE between expected and actual results
-    let mse = compute_mse(&evaluation_result);
-
     (
         error_count,
         total_score,
-        mse,
+        evaluation_result.mse,
         company_rankings,
         evaluation_result,
     )
