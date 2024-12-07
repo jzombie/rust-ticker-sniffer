@@ -4,7 +4,7 @@ use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
 use ticker_sniffer::models::context_attention;
-use ticker_sniffer::{ContextAttention, Weights};
+use ticker_sniffer::{ContextAttention, SymbolsMap, Weights};
 
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
@@ -224,7 +224,7 @@ fn tune_weights() {
 /// Compute the gradient for a specific weight with regularization
 fn compute_gradient_with_regularization(
     weights: Weights,
-    symbols_map: &HashMap<String, Option<String>>,
+    symbols_map: &SymbolsMap,
     test_dir: &str,
     weight_index: usize,
     regularization_lambda: f32,
@@ -289,7 +289,7 @@ fn compute_gradient_with_regularization(
 /// Evaluate the loss with L2 regularization
 fn evaluate_loss_with_regularization(
     weights: Weights,
-    symbols_map: HashMap<String, Option<String>>,
+    symbols_map: SymbolsMap,
     test_dir: &str,
     regularization_lambda: f32,
     context_attention: &ContextAttention,
@@ -310,7 +310,7 @@ fn evaluate_loss_with_regularization(
 /// Evaluate the loss for given weights
 fn evaluate_loss(
     weights: Weights,
-    _symbols_map: &HashMap<String, Option<String>>,
+    _symbols_map: &SymbolsMap,
     test_dir: &str,
     context_attention: &ContextAttention,
 ) -> f32 {
