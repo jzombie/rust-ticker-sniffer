@@ -1,5 +1,5 @@
 use csv::Reader;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::models::CompanyNameTokenRanking;

@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
-use test_utils::models::evaluation_results;
 use test_utils::{load_symbols_from_file, run_test_for_file};
 use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
@@ -29,7 +28,7 @@ fn train_context_attention() {
     let tolerance = 1e-5;
 
     // Initialize weights and best scores
-    let mut weights = DEFAULT_WEIGHTS;
+    let weights = DEFAULT_WEIGHTS;
     let mut best_loss = f32::MAX;
     let mut no_improvement_count = 0;
 
@@ -118,7 +117,7 @@ fn train_context_attention() {
 fn evaluate_loss(
     context_attention: &ContextAttention,
     weights: &Weights,
-    symbols_map: &HashMap<String, Option<String>>,
+    _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
 ) -> (f32, Vec<CompanyNameTokenRanking>) {
     let mut total_loss = 0.0;
@@ -133,7 +132,7 @@ fn evaluate_loss(
         if file_path.is_file() {
             // Run test and calculate MSE
 
-            let (_, _, mse, company_rankings, evaluation_results) = suppress_output(|| {
+            let (_, _, mse, company_rankings, _evaluation_results) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false, // Disable assertions during training
@@ -160,36 +159,37 @@ fn evaluate_loss(
     (average_loss, all_company_rankings)
 }
 
-/// Compute gradients for global weights
-fn compute_gradient(
-    context_attention: &ContextAttention,
-    weights: &Weights,
-    symbols_map: &HashMap<String, Option<String>>,
-    test_dir: &str,
-) -> Vec<f32> {
-    let delta = 1e-3;
-    let mut gradient = vec![0.0; context_attention.global_weights.len()];
+// TODO: Remove?
+// Compute gradients for global weights
+// fn compute_gradient(
+//     context_attention: &ContextAttention,
+//     weights: &Weights,
+//     symbols_map: &HashMap<String, Option<String>>,
+//     test_dir: &str,
+// ) -> Vec<f32> {
+//     let delta = 1e-3;
+//     let mut gradient = vec![0.0; context_attention.global_weights.len()];
 
-    let (loss_original, _) = evaluate_loss(context_attention, weights, symbols_map, test_dir);
+//     let (loss_original, _) = evaluate_loss(context_attention, weights, symbols_map, test_dir);
 
-    // Clone the context once
-    let mut perturbed_attention = context_attention.clone();
+//     // Clone the context once
+//     let mut perturbed_attention = context_attention.clone();
 
-    // Perturb all weights at once
-    for i in 0..context_attention.global_weights.len() {
-        perturbed_attention.global_weights[i] += delta;
-    }
+//     // Perturb all weights at once
+//     for i in 0..context_attention.global_weights.len() {
+//         perturbed_attention.global_weights[i] += delta;
+//     }
 
-    // Evaluate perturbed loss
-    let (loss_perturbed, _) = evaluate_loss(&perturbed_attention, weights, symbols_map, test_dir);
+//     // Evaluate perturbed loss
+//     let (loss_perturbed, _) = evaluate_loss(&perturbed_attention, weights, symbols_map, test_dir);
 
-    // Compute gradients for all weights in one pass
-    for i in 0..gradient.len() {
-        gradient[i] = (loss_perturbed - loss_original) / delta;
-    }
+//     // Compute gradients for all weights in one pass
+//     for i in 0..gradient.len() {
+//         gradient[i] = (loss_perturbed - loss_original) / delta;
+//     }
 
-    gradient
-}
+//     gradient
+// }
 
 fn main() {
     train_context_attention();

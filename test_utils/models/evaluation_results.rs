@@ -22,13 +22,14 @@ impl EvaluationResult {
         }
     }
 
-    /// Compute summary statistics for the evaluation.
-    pub fn summary(&self) -> String {
-        format!(
-            "Expected: {}, False Positives: {}, False Negatives: {}",
-            self.expected.len(),
-            self.false_positives.len(),
-            self.false_negatives.len()
-        )
-    }
+    // TODO: Reimplement?
+    // Compute summary statistics for the evaluation.
+    // pub fn summary(&self) -> String {
+    //     format!(
+    //         "Expected: {}, False Positives: {}, False Negatives: {}",
+    //         self.expected.len(),
+    //         self.false_positives.len(),
+    //         self.false_negatives.len()
+    //     )
+    // }
 }
