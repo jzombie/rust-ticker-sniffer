@@ -42,8 +42,13 @@ impl ContextAttention {
         for (i, c) in token.chars().enumerate() {
             let char_value = (c as u32 as f32) / 255.0; // Normalize character value
             for j in 0..self.embedding_size {
-                // Distribute influence across all dimensions using a sinusoidal function
-                embedding[j] += char_value * ((i as f32 + 1.0) * (j as f32 + 1.0)).sin();
+                // Distribute influence across dimensions using character and position
+                let pos_enc = if j % 2 == 0 {
+                    ((i as f32) / 10000.0_f32.powf(j as f32 / self.embedding_size as f32)).sin()
+                } else {
+                    ((i as f32) / 10000.0_f32.powf(j as f32 / self.embedding_size as f32)).cos()
+                };
+                embedding[j] += char_value * pos_enc;
             }
         }
 
@@ -98,15 +103,16 @@ impl ContextAttention {
 
     pub fn aggregate_context(&self, context: &[String]) -> Vec<f32> {
         let mut aggregated = vec![0.0; self.embedding_size];
-        let mut attention_weights = vec![1.0; context.len()];
 
-        for (i, word) in context.iter().enumerate() {
+        for (pos, word) in context.iter().enumerate() {
             let word_vec = self.representation(word);
+            let pos_weight = (1.0 + pos as f32).ln(); // Positional weighting (e.g., log scale)
             for j in 0..self.embedding_size {
-                aggregated[j] += attention_weights[i] * word_vec[j];
+                aggregated[j] += pos_weight * word_vec[j];
             }
         }
 
+        // Normalize the aggregated vector
         let norm = aggregated.iter().map(|x| x * x).sum::<f32>().sqrt();
         if norm > 0.0 {
             for value in aggregated.iter_mut() {
