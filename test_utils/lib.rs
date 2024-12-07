@@ -36,7 +36,7 @@ pub fn load_symbols_from_file(file_path: &str) -> Result<SymbolsMap, Box<dyn Err
 }
 
 // Helper function to get the expected tickers from the text file
-pub fn get_expected_tickers(file_path: &Path) -> Vec<String> {
+pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
     // Read the content of the text file
     let content = fs::read_to_string(file_path).expect("Failed to read test file");
 
@@ -55,7 +55,7 @@ pub fn get_expected_tickers(file_path: &Path) -> Vec<String> {
 }
 
 // Helper function to check if the file has an EXPECTED_FAILURE line
-pub fn get_expected_failure(file_path: &Path) -> Option<String> {
+pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
     let content = fs::read_to_string(file_path).expect("Failed to read test file");
 
     content.lines().find_map(|line| {
