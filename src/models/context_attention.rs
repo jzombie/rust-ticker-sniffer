@@ -1,3 +1,6 @@
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+
 #[derive(Clone)]
 pub struct ContextAttention {
     pub global_weights: Vec<f32>, // Shared global weights
@@ -23,7 +26,7 @@ impl ContextAttention {
         })
     }
 
-    /// Represent a token (ticker or word) as a fixed-size vector
+    /// Represent a token (query or word) as a fixed-size vector
     /// Example: Normalize character values for lightweight embeddings
     // pub fn representation(&self, token: &str) -> Vec<f32> {
     //     token
@@ -35,24 +38,46 @@ impl ContextAttention {
     //         .collect()
     // }
 
+    // pub fn representation(&self, token: &str) -> Vec<f32> {
+    //     let mut embedding = vec![0.0; self.embedding_size];
+
+    //     // Influence all embedding dimensions using character and position
+    //     for (i, c) in token.chars().enumerate() {
+    //         let char_value = (c as u32 as f32) / 255.0; // Normalize character value
+    //         for j in 0..self.embedding_size {
+    //             // Distribute influence across dimensions using character and position
+    //             let pos_enc = if j % 2 == 0 {
+    //                 ((i as f32) / 10000.0_f32.powf(j as f32 / self.embedding_size as f32)).sin()
+    //             } else {
+    //                 ((i as f32) / 10000.0_f32.powf(j as f32 / self.embedding_size as f32)).cos()
+    //             };
+    //             embedding[j] += char_value * pos_enc;
+    //         }
+    //     }
+
+    //     // Normalize the embedding vector
+    //     let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
+    //     if norm > 0.0 {
+    //         for value in embedding.iter_mut() {
+    //             *value /= norm;
+    //         }
+    //     }
+
+    //     embedding
+    // }
+
     pub fn representation(&self, token: &str) -> Vec<f32> {
         let mut embedding = vec![0.0; self.embedding_size];
 
-        // Influence all embedding dimensions using character and position
-        for (i, c) in token.chars().enumerate() {
-            let char_value = (c as u32 as f32) / 255.0; // Normalize character value
-            for j in 0..self.embedding_size {
-                // Distribute influence across dimensions using character and position
-                let pos_enc = if j % 2 == 0 {
-                    ((i as f32) / 10000.0_f32.powf(j as f32 / self.embedding_size as f32)).sin()
-                } else {
-                    ((i as f32) / 10000.0_f32.powf(j as f32 / self.embedding_size as f32)).cos()
-                };
-                embedding[j] += char_value * pos_enc;
-            }
+        let mut hasher = DefaultHasher::new();
+        token.hash(&mut hasher);
+        let hash = hasher.finish(); // Generate a hash value
+
+        for i in 0..self.embedding_size {
+            embedding[i] = ((hash >> (i % 64)) & 0xFF) as f32 / 255.0; // Normalize hash values
         }
 
-        // Normalize the embedding vector
+        // Normalize the embedding
         let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
         if norm > 0.0 {
             for value in embedding.iter_mut() {
@@ -123,13 +148,13 @@ impl ContextAttention {
         aggregated
     }
 
-    // TODO: Rename ticker to query
-    /// Compute the score for a ticker against the aggregated context
-    pub fn score(&self, ticker: &str, context: &[String]) -> f32 {
-        let ticker_vec = self.representation(ticker);
+    // TODO: Rename query to query
+    /// Compute the score for a query against the aggregated context
+    pub fn score(&self, query: &str, context: &[String]) -> f32 {
+        let query_vec = self.representation(query);
         let context_vec = self.aggregate_context(context);
 
-        ticker_vec
+        query_vec
             .iter()
             .zip(context_vec.iter())
             .zip(self.global_weights.iter())
@@ -137,23 +162,50 @@ impl ContextAttention {
             .sum() // Dot product with global weights
     }
 
-    // TODO: Rename ticker to query
-    /// Update the global weights based on the reward signal
-    /// Uses gradient descent to adjust the weights
+    // TODO: Rename query to query
+    /// Update the global weights using contrastive loss
+    /// Positive target brings embeddings closer, negative pushes them apart.
     pub fn update_weights(
         &mut self,
-        ticker: &str,
+        query: &str,
         context: &[String],
-        target: f32, // 1.0 for true positive, 0.0 for false positive
+        target: f32, // 1.0 for similar (positive pair), 0.0 for dissimilar (negative pair)
         learning_rate: f32,
     ) {
-        let ticker_vec = self.representation(ticker);
-        let context_vec = self.aggregate_context(context);
-        let predicted = self.score(ticker, context);
+        let query_vec = self.representation(query); // Fixed-size vector for the query
+        let context_vec = self.aggregate_context(context); // Aggregated context vector
 
+        // Compute the dot product as similarity score
+        let similarity = query_vec
+            .iter()
+            .zip(context_vec.iter())
+            .zip(self.global_weights.iter())
+            .map(|((t, c), gw)| t * c * gw)
+            .sum::<f32>();
+
+        // Contrastive loss with margin for dissimilar pairs
+        let margin = 1.0; // Hyperparameter: margin for dissimilar pairs
+                          // let loss = if target == 1.0 {
+                          //     // Positive pair: Minimize the distance (maximize similarity)
+                          //     1.0 - similarity
+                          // } else {
+                          //     // Negative pair: Maximize the distance (penalize only within margin)
+                          //     (similarity - margin).max(0.0)
+                          // };
+
+        // Update weights using gradient descent
         for i in 0..self.embedding_size {
-            let gradient = 2.0 * (predicted - target) * ticker_vec[i] * context_vec[i];
-            // println!("Gradient[{}]: {:.6}", i, gradient); // Log gradient
+            let gradient = if target == 1.0 {
+                // Gradient for positive pairs
+                -2.0 * (1.0 - similarity) * query_vec[i] * context_vec[i]
+            } else {
+                // Gradient for negative pairs (only if similarity < margin)
+                if similarity < margin {
+                    2.0 * (similarity - margin) * query_vec[i] * context_vec[i]
+                } else {
+                    0.0
+                }
+            };
             self.global_weights[i] -= learning_rate * gradient; // Gradient descent
         }
     }
@@ -161,19 +213,19 @@ impl ContextAttention {
     // With regularization
     // pub fn update_weights(
     //     &mut self,
-    //     ticker: &str,
+    //     query: &str,
     //     context: &[String],
     //     target: f32, // 1.0 for true positive, 0.0 for false positive
     //     learning_rate: f32,
     // ) {
-    //     let ticker_vec = self.representation(ticker);
+    //     let query_vec = self.representation(query);
     //     let context_vec = self.aggregate_context(context);
-    //     let predicted = self.score(ticker, context);
+    //     let predicted = self.score(query, context);
 
     //     let regularization_factor = 0.001; // Small regularization term
 
     //     for i in 0..self.embedding_size {
-    //         let gradient = 2.0 * (predicted - target) * ticker_vec[i] * context_vec[i];
+    //         let gradient = 2.0 * (predicted - target) * query_vec[i] * context_vec[i];
     //         self.global_weights[i] -= learning_rate * gradient;
 
     //         // Apply regularization to encourage non-zero values

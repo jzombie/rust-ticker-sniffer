@@ -296,6 +296,11 @@ fn extract_tickers_from_company_names(
                     };
 
                     company_rankings.push(company_ranking);
+
+                    eprintln!(
+                        "Company name: {}, Context attention score: {}",
+                        company_name, context_attention_score
+                    );
                 } else if match_score > 0.0 {
                     eprintln!(
                         "Discarded symbol: {}; Match Score: {:.4}, Consecutive Matches: {}, Jaccard: {}",

@@ -77,8 +77,7 @@ fn train_context_attention() {
                 context_attention.update_weights(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
-                    // target,
-                    0.0, // TODO: Dynamically determine: 1.0 for true positive, 0.0 for false positive
+                    0.0, // TODO: Make configurable
                     learning_rate,
                 );
             }
@@ -87,8 +86,7 @@ fn train_context_attention() {
                 context_attention.update_weights(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
-                    // target,
-                    0.0, // TODO: Dynamically determine: 1.0 for true positive, 0.0 for false positive
+                    0.0, // TODO: Make configurable
                     learning_rate,
                 );
             }
@@ -164,6 +162,14 @@ fn evaluate_loss(
                     context_attention,
                 )
             });
+
+            // let (_, _, evaluation_result) = run_test_for_file(
+            //     file_path.to_str().unwrap(),
+            //     false, // Disable assertions during training
+            //     weights.clone(),
+            //     context_attention,
+            // );
+
             total_loss += evaluation_result.mse;
             file_count += 1;
 
