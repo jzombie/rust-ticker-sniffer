@@ -17,6 +17,7 @@ mod tests {
         // SAFETY: We need to ensure no data races while accessing CONTEXT_ATTENTION
         unsafe {
             if CONTEXT_ATTENTION.is_none() {
+                // TODO: Initialize with some weights
                 CONTEXT_ATTENTION = Some(ContextAttention::new(256));
             }
 
