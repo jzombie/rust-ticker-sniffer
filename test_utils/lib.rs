@@ -4,6 +4,8 @@ use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{extract_tickers_from_text, ContextAttention, Weights};
+pub mod models;
+pub use models::EvaluationResult;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
 pub fn load_symbols_from_file(
@@ -248,50 +250,77 @@ pub fn run_test_for_file(
 }
 
 pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
-    // Get the universe of all unique tickers
-    let all_tickers: HashSet<_> = expected_tickers.iter().chain(results.iter()).collect();
+    // Use EvaluationResult to determine false positives and false negatives
+    let evaluation_result = EvaluationResult::new(expected_tickers, results);
+    eprintln!("Summary: {}", evaluation_result.summary());
 
-    // TODO: Make these configurable as hyperparameters
-    //
+    // TODO: Make these configurable
     // Assign weights to false negatives and false positives
     let false_negative_weight = 2.0; // Higher penalty for missing tickers
     let false_positive_weight = 1.0; // Lower penalty for unexpected tickers
 
-    // Create binary arrays for expected and actual results
-    let expected_binary: Vec<f32> = all_tickers
-        .iter()
-        .map(|ticker| {
-            if expected_tickers.contains(ticker) {
-                1.0
-            } else {
-                0.0
-            }
-        })
-        .collect();
-
-    let results_binary: Vec<f32> = all_tickers
-        .iter()
-        .map(|ticker| if results.contains(ticker) { 1.0 } else { 0.0 })
-        .collect();
-
-    // Compute weighted squared differences
-    let weighted_squared_differences: f32 = expected_binary
-        .iter()
-        .zip(results_binary.iter())
-        .map(|(expected, result)| {
-            if *expected == 1.0 && *result == 0.0 {
-                // False negative: missing an expected ticker
-                false_negative_weight * (expected - result).powi(2)
-            } else if *expected == 0.0 && *result == 1.0 {
-                // False positive: unexpected ticker included
-                false_positive_weight * (expected - result).powi(2)
-            } else {
-                // True positive or true negative
-                (expected - result).powi(2)
-            }
-        })
-        .sum();
+    // Compute the weighted squared differences
+    let weighted_squared_differences: f32 = evaluation_result.false_negatives.len() as f32
+        * false_negative_weight
+        + evaluation_result.false_positives.len() as f32 * false_positive_weight;
 
     // Calculate the mean squared error
-    weighted_squared_differences / all_tickers.len() as f32
+    let total_tickers = evaluation_result.expected.len()
+        + evaluation_result.false_positives.len()
+        + evaluation_result.false_negatives.len();
+
+    weighted_squared_differences / total_tickers as f32
 }
+
+// TODO: Remove
+// pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
+//     // Get the universe of all unique tickers
+//     let all_tickers: HashSet<_> = expected_tickers.iter().chain(results.iter()).collect();
+
+//     // TODO: Make these configurable
+//     //
+//     // Assign weights to false negatives and false positives
+//     let false_negative_weight = 2.0; // Higher penalty for missing tickers
+//     let false_positive_weight = 1.0; // Lower penalty for unexpected tickers
+
+//     let evaluation_result = EvaluationResult::new(&expected_tickers, &results);
+//     eprintln!("Summary: {}", evaluation_result.summary());
+
+//     // Create binary arrays for expected and actual results
+//     let expected_binary: Vec<f32> = all_tickers
+//         .iter()
+//         .map(|ticker| {
+//             if expected_tickers.contains(ticker) {
+//                 1.0
+//             } else {
+//                 0.0
+//             }
+//         })
+//         .collect();
+
+//     let results_binary: Vec<f32> = all_tickers
+//         .iter()
+//         .map(|ticker| if results.contains(ticker) { 1.0 } else { 0.0 })
+//         .collect();
+
+//     // Compute weighted squared differences
+//     let weighted_squared_differences: f32 = expected_binary
+//         .iter()
+//         .zip(results_binary.iter())
+//         .map(|(expected, result)| {
+//             if *expected == 1.0 && *result == 0.0 {
+//                 // False negative: missing an expected ticker
+//                 false_negative_weight * (expected - result).powi(2)
+//             } else if *expected == 0.0 && *result == 1.0 {
+//                 // False positive: unexpected ticker included
+//                 false_positive_weight * (expected - result).powi(2)
+//             } else {
+//                 // True positive or true negative
+//                 (expected - result).powi(2)
+//             }
+//         })
+//         .sum();
+
+//     // Calculate the mean squared error
+//     weighted_squared_differences / all_tickers.len() as f32
+// }
