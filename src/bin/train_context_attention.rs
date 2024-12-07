@@ -3,6 +3,7 @@ use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
 use test_utils::{load_symbols_from_file, run_test_for_file};
+use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
 
 #[path = "../../test_utils/lib.rs"]
@@ -36,7 +37,8 @@ fn train_context_attention() {
         println!("Epoch {}/{}", epoch, max_epochs);
 
         // Evaluate current performance
-        let current_loss = evaluate_loss(&context_attention, &weights, &symbols_map, test_dir);
+        let (current_loss, all_company_rankings) =
+            evaluate_loss(&context_attention, &weights, &symbols_map, test_dir);
 
         println!("Epoch {} - Loss: {:.6}", epoch, current_loss);
 
@@ -106,9 +108,11 @@ fn evaluate_loss(
     weights: &Weights,
     symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
-) -> f32 {
+) -> (f32, Vec<CompanyNameTokenRanking>) {
     let mut total_loss = 0.0;
     let mut file_count = 0;
+
+    let mut all_company_rankings: Vec<CompanyNameTokenRanking> = Vec::new();
 
     for file in read_dir(test_dir).expect("Failed to read test directory") {
         let file = file.expect("Failed to read file");
@@ -117,7 +121,7 @@ fn evaluate_loss(
         if file_path.is_file() {
             // Run test and calculate MSE
 
-            let (_, _, mse, expected_tickers, results) = suppress_output(|| {
+            let (_, _, mse, expected_tickers, results, company_rankings) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false, // Disable assertions during training
@@ -129,11 +133,19 @@ fn evaluate_loss(
             file_count += 1;
 
             // TODO: Collect these and use to influence weight updates
-            eprintln!("expected: {:?}, results: {:?}", expected_tickers, results);
+            // eprintln!(
+            //     "expected: {:?}, results: {:?}, company_rankings: {:?}",
+            //     expected_tickers, results, company_rankings
+            // );
+            for company_ranking in company_rankings {
+                all_company_rankings.push(company_ranking);
+            }
         }
     }
 
-    total_loss / file_count as f32 // Return average loss
+    let average_loss = total_loss / file_count as f32;
+
+    (average_loss, all_company_rankings)
 }
 
 /// Compute gradients for global weights
@@ -146,7 +158,7 @@ fn compute_gradient(
     let delta = 1e-3;
     let mut gradient = vec![0.0; context_attention.global_weights.len()];
 
-    let loss_original = evaluate_loss(context_attention, weights, symbols_map, test_dir);
+    let (loss_original, _) = evaluate_loss(context_attention, weights, symbols_map, test_dir);
 
     // Clone the context once
     let mut perturbed_attention = context_attention.clone();
@@ -157,7 +169,7 @@ fn compute_gradient(
     }
 
     // Evaluate perturbed loss
-    let loss_perturbed = evaluate_loss(&perturbed_attention, weights, symbols_map, test_dir);
+    let (loss_perturbed, _) = evaluate_loss(&perturbed_attention, weights, symbols_map, test_dir);
 
     // Compute gradients for all weights in one pass
     for i in 0..gradient.len() {

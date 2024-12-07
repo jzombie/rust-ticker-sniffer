@@ -1,4 +1,5 @@
-#[derive(Clone)]
+// TODO: Remove Debug trait
+#[derive(Debug, Clone)]
 pub struct CompanyNameTokenRanking {
     pub ticker_symbol: String,
     pub company_name: String,

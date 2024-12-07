@@ -2,6 +2,7 @@ use csv::Reader;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::{fs, path::Path};
+use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{extract_tickers_from_text, ContextAttention, Weights};
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
@@ -72,7 +73,14 @@ pub fn run_test_for_file(
     use_assertions: bool,
     weights: Weights,
     context_attention: &ContextAttention,
-) -> (usize, f32, f32, Vec<String>, Vec<String>) {
+) -> (
+    usize,
+    f32,
+    f32,
+    Vec<String>,
+    Vec<String>,
+    Vec<CompanyNameTokenRanking>,
+) {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -97,8 +105,6 @@ pub fn run_test_for_file(
     // Extract tickers from the filtered text
     let (results, total_score, company_rankings) =
         extract_tickers_from_text(&filtered_text, &symbols_map, weights, context_attention);
-
-    // TODO: Handle company_rankings
 
     // Get the expected tickers and failure reason
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
@@ -160,7 +166,14 @@ pub fn run_test_for_file(
         }
 
         // Skip further checks since failure was validated
-        return (error_count, total_score, 0.0, [].to_vec(), [].to_vec());
+        return (
+            error_count,
+            total_score,
+            0.0,
+            [].to_vec(),
+            [].to_vec(),
+            company_rankings,
+        );
     }
 
     // Regular success case validation
@@ -224,7 +237,14 @@ pub fn run_test_for_file(
     // Compute MSE between expected and actual results
     let mse = compute_mse(&expected_tickers, &results);
 
-    (error_count, total_score, mse, expected_tickers, results)
+    (
+        error_count,
+        total_score,
+        mse,
+        expected_tickers,
+        results,
+        company_rankings,
+    )
 }
 
 pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
