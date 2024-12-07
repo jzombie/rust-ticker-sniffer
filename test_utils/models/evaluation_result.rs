@@ -2,15 +2,14 @@ use crate::test_utils::constants::{DEFAULT_FALSE_NEGATIVE_WEIGHT, DEFAULT_FALSE_
 use std::collections::HashSet;
 use ticker_sniffer::{CompanyNameTokenRanking, TickerSymbol};
 
-#[derive(Debug)]
 pub struct EvaluationResult {
     pub expected: Vec<TickerSymbol>,
     pub false_positives: Vec<TickerSymbol>,
     pub false_negatives: Vec<TickerSymbol>,
-    pub expected_rankings: Vec<CompanyNameTokenRanking>, // Rankings for expected tickers
-    pub false_positive_rankings: Vec<CompanyNameTokenRanking>, // Rankings for false positives
-    pub false_negative_rankings: Vec<CompanyNameTokenRanking>, // Rankings for false negatives
-    pub mse: f32,                                        // Mean Squared Error
+    pub expected_rankings: Vec<CompanyNameTokenRanking>,
+    pub false_positive_rankings: Vec<CompanyNameTokenRanking>,
+    pub false_negative_rankings: Vec<CompanyNameTokenRanking>,
+    pub mse: f32,
 }
 
 impl EvaluationResult {

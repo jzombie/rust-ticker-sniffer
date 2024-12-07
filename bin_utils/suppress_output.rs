@@ -1,10 +1,6 @@
-use rand::Rng;
-use std::collections::HashMap;
-use std::fs::{read_dir, File};
+use std::fs::File;
 use std::io;
 use std::os::unix::io::AsRawFd;
-use ticker_sniffer::models::context_attention;
-use ticker_sniffer::{ContextAttention, SymbolsMap, Weights};
 
 pub fn suppress_output<F, T>(f: F) -> T
 where

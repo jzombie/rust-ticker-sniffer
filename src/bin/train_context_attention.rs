@@ -1,7 +1,5 @@
 use std::collections::HashMap;
-use std::fs::{read_dir, File};
-use std::io;
-use std::os::unix::io::AsRawFd;
+use std::fs::read_dir;
 use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
 
