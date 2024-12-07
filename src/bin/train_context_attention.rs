@@ -50,19 +50,48 @@ fn train_context_attention() {
         }
 
         if no_improvement_count >= patience {
-            println!("No improvement for {} epochs. Stopping training.", patience);
+            println!(
+                "No improvement for {} epochs. Stopping training.",
+                no_improvement_count
+            );
             break;
         }
 
-        // Compute gradients for global weights
-        let gradient = compute_gradient(&context_attention, &weights, &symbols_map, test_dir);
+        // Update weights using the update_weights method
+        for file in read_dir(test_dir).expect("Failed to read test directory") {
+            let file = file.expect("Failed to read file");
+            let file_path = file.path();
 
-        // Update global weights using gradient descent
-        for i in 0..context_attention.global_weights.len() {
-            context_attention.global_weights[i] -= learning_rate * gradient[i];
+            if file_path.is_file() {
+                // Read the file content
+                let raw_text =
+                    std::fs::read_to_string(file_path).expect("Failed to read test file");
+
+                // Filter out lines starting with 'EXPECTED:', 'EXPECTED_FAILURE:', or 'COMMENT:'
+                let filtered_text: String = raw_text
+                    .lines()
+                    .filter(|line| {
+                        !line.trim_start().starts_with("EXPECTED:")
+                            && !line.trim_start().starts_with("EXPECTED_FAILURE:")
+                            && !line.trim_start().starts_with("COMMENT:")
+                    })
+                    .collect::<Vec<&str>>()
+                    .join("\n");
+
+                // Extract context from the filtered text
+                let context: Vec<String> =
+                    filtered_text.split_whitespace().map(String::from).collect();
+
+                // Simulate target and ticker for training (modify as needed)
+                let ticker = "EXAMPLE"; // Replace with the actual ticker from the file
+                let target = 1.0; // Example: Set to 1.0 for true positive
+
+                // Update weights
+                context_attention.update_weights(&ticker, &context, target, learning_rate);
+            }
         }
 
-        eprint!("Context weights: {:?}", context_attention.global_weights);
+        eprintln!("Context weights: {:?}", context_attention.global_weights);
     }
 
     println!("Training completed. Best loss: {:.6}", best_loss);
