@@ -2,7 +2,7 @@ use csv::Reader;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::{fs, path::Path};
-use ticker_sniffer::{extract_tickers_from_text, Weights};
+use ticker_sniffer::{extract_tickers_from_text, ContextAttention, Weights};
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
 pub fn load_symbols_from_file(
@@ -71,6 +71,7 @@ pub fn run_test_for_file(
     test_file_path: &str,
     use_assertions: bool,
     weights: Weights,
+    context_attention: &ContextAttention,
 ) -> (usize, f32, f32) {
     // Load symbols from a test CSV file
     let symbols_map =
@@ -94,7 +95,8 @@ pub fn run_test_for_file(
     eprintln!("Filtered text: {}", filtered_text);
 
     // Extract tickers from the filtered text
-    let (results, total_score) = extract_tickers_from_text(&filtered_text, &symbols_map, weights);
+    let (results, total_score) =
+        extract_tickers_from_text(&filtered_text, &symbols_map, weights, context_attention);
 
     // Get the expected tickers and failure reason
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));

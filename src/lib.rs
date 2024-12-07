@@ -4,7 +4,7 @@ use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::DEFAULT_WEIGHTS;
 use models::CompanyNameTokenRanking;
-pub use models::Weights;
+pub use models::{ContextAttention, Weights};
 pub mod utils;
 pub use utils::{
     generate_alternative_symbols, jaccard_similarity_chars, tokenize, tokenize_company_name_query,
@@ -16,12 +16,13 @@ pub fn extract_tickers_from_text(
     text: &str,
     symbols_map: SymbolsMap,
     weights: Weights,
+    context_attention: &ContextAttention,
 ) -> (Vec<String>, f32) {
     let mut matches = HashSet::new();
 
     // Extract tickers by company name
     let (company_name_matches, total_score, tokenized_filter) =
-        extract_tickers_from_company_names(text, symbols_map, weights);
+        extract_tickers_from_company_names(text, symbols_map, weights, context_attention);
     let company_name_match_count = company_name_matches.len();
 
     matches.extend(company_name_matches);
@@ -139,6 +140,7 @@ fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: SymbolsMap,
     weights: Weights,
+    context_attention: &ContextAttention,
 ) -> (Vec<String>, f32, HashSet<String>) {
     let mut scored_results: HashMap<String, f32> = HashMap::new();
     let mut tokenized_filter: HashSet<String> = HashSet::new();
@@ -237,6 +239,8 @@ fn extract_tickers_from_company_names(
 
                 let mut consecutive_jaccard_similarity: f32 = 0.0;
 
+                let mut context_attention_score: f32 = 0.0;
+
                 if top_consecutive_match_count > 0 {
                     match_score +=
                         top_consecutive_match_count as f32 * weights.consecutive_match_weight;
@@ -259,6 +263,12 @@ fn extract_tickers_from_company_names(
                     match_score += (top_consecutive_match_count as f32
                         / total_company_words as f32)
                         * (1.0 - weights.word_mismatch_penalty);
+
+                    // TODO: Apply configurable weighting?
+                    context_attention_score =
+                        context_attention.score(&lc_norm_input_string, &company_tokens);
+
+                    match_score += context_attention_score;
                 }
 
                 if match_score > weights.minimum_match_score {
@@ -272,6 +282,7 @@ fn extract_tickers_from_company_names(
                         consecutive_match_count: top_consecutive_match_count,
                         consecutive_jaccard_similarity,
                         match_score,
+                        context_attention_score,
                     };
 
                     company_rankings.push(company_ranking);
