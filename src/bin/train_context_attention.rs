@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::fs::read_dir;
-use ticker_sniffer::models::CompanyNameTokenRanking;
+use test_utils::models::evaluation_result;
+use ticker_sniffer::models::{company_name_token_rating, CompanyNameTokenRanking};
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
 
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
-use test_utils::{load_symbols_from_file, run_test_for_file};
+use test_utils::{load_symbols_from_file, run_test_for_file, EvaluationResult};
 
 #[path = "../../bin_utils/lib.rs"]
 mod bin_utils;
@@ -40,16 +41,16 @@ fn train_context_attention() {
         println!("Epoch {}/{}", epoch, max_epochs);
 
         // Evaluate current performance
-        let (current_loss, all_company_rankings) =
+        let (current_loss, all_evaluation_results) =
             evaluate_loss(&context_attention, &weights, &symbols_map, test_dir);
 
-        println!("Epoch {} - Loss: {:.6}", epoch, current_loss);
+        println!("Epoch {} - Loss: {:.8}", epoch, current_loss);
 
         // Track best weights and early stopping
         if current_loss < best_loss - tolerance {
             best_loss = current_loss;
             no_improvement_count = 0;
-            println!("New best loss: {:.6}", best_loss);
+            println!("New best loss: {:.8}", best_loss);
         } else {
             no_improvement_count += 1;
         }
@@ -62,14 +63,35 @@ fn train_context_attention() {
             break;
         }
 
-        for company_ranking in all_company_rankings {
-            context_attention.update_weights(
-                &company_ranking.context_query_string,
-                &company_ranking.context_company_tokens,
-                // target,
-                1.0, // TODO: Dynamically determine: 1.0 for true positive, 0.0 for false positive
-                learning_rate,
-            );
+        for evaluation_result in all_evaluation_results {
+            for company_name_token_rating in evaluation_result.expected_rankings {
+                context_attention.update_weights(
+                    &company_name_token_rating.context_query_string,
+                    &company_name_token_rating.context_company_tokens,
+                    1.0,
+                    learning_rate,
+                );
+            }
+
+            for company_name_token_rating in evaluation_result.false_positive_rankings {
+                context_attention.update_weights(
+                    &company_name_token_rating.context_query_string,
+                    &company_name_token_rating.context_company_tokens,
+                    // target,
+                    0.0, // TODO: Dynamically determine: 1.0 for true positive, 0.0 for false positive
+                    learning_rate,
+                );
+            }
+
+            for company_name_token_rating in evaluation_result.false_negative_rankings {
+                context_attention.update_weights(
+                    &company_name_token_rating.context_query_string,
+                    &company_name_token_rating.context_company_tokens,
+                    // target,
+                    0.0, // TODO: Dynamically determine: 1.0 for true positive, 0.0 for false positive
+                    learning_rate,
+                );
+            }
         }
 
         // Update weights using the update_weights method
@@ -121,11 +143,11 @@ fn evaluate_loss(
     weights: &Weights,
     _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
-) -> (f32, Vec<CompanyNameTokenRanking>) {
+) -> (f32, Vec<EvaluationResult>) {
     let mut total_loss = 0.0;
     let mut file_count = 0;
 
-    let mut all_company_rankings: Vec<CompanyNameTokenRanking> = Vec::new();
+    let mut all_evaluation_results: Vec<EvaluationResult> = Vec::new();
 
     for file in read_dir(test_dir).expect("Failed to read test directory") {
         let file = file.expect("Failed to read file");
@@ -134,7 +156,7 @@ fn evaluate_loss(
         if file_path.is_file() {
             // Run test and calculate MSE
 
-            let (_, _, mse, company_rankings, _evaluation_results) = suppress_output(|| {
+            let (_, _, evaluation_result) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false, // Disable assertions during training
@@ -142,23 +164,16 @@ fn evaluate_loss(
                     context_attention,
                 )
             });
-            total_loss += mse;
+            total_loss += evaluation_result.mse;
             file_count += 1;
 
-            // TODO: Collect these and use to influence weight updates
-            // eprintln!(
-            //     "expected: {:?}, results: {:?}, company_rankings: {:?}",
-            //     expected_tickers, results, company_rankings
-            // );
-            for company_ranking in company_rankings {
-                all_company_rankings.push(company_ranking);
-            }
+            all_evaluation_results.push(evaluation_result);
         }
     }
 
     let average_loss = total_loss / file_count as f32;
 
-    (average_loss, all_company_rankings)
+    (average_loss, all_evaluation_results)
 }
 
 // TODO: Remove?

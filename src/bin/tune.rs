@@ -328,7 +328,7 @@ fn evaluate_loss(
 
         if file_path.is_file() {
             // Wrap `run_test_for_file` to suppress output
-            let (_, _, mse, _, _) = suppress_output(|| {
+            let (_, _, evaluation_result) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false,
@@ -337,7 +337,7 @@ fn evaluate_loss(
                 )
             });
 
-            total_mse += mse;
+            total_mse += evaluation_result.mse;
             test_file_count += 1;
         }
     }

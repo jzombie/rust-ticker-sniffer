@@ -1,7 +1,6 @@
 use csv::Reader;
 use std::error::Error;
 use std::{fs, path::Path};
-use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{
     extract_tickers_from_text, ContextAttention, SymbolsMap, TickerSymbol, Weights,
 };
@@ -75,13 +74,7 @@ pub fn run_test_for_file(
     use_assertions: bool,
     weights: Weights,
     context_attention: &ContextAttention,
-) -> (
-    usize,
-    f32,
-    f32,
-    Vec<CompanyNameTokenRanking>,
-    EvaluationResult,
-) {
+) -> (usize, f32, EvaluationResult) {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -170,8 +163,6 @@ pub fn run_test_for_file(
         return (
             error_count,
             total_score,
-            0.0,
-            company_rankings,
             EvaluationResult::new(&[].to_vec(), &[].to_vec(), &[].to_vec()),
         );
     }
@@ -237,13 +228,7 @@ pub fn run_test_for_file(
     // Use EvaluationResult to determine false positives and false negatives
     let evaluation_result = EvaluationResult::new(&expected_tickers, &results, &company_rankings);
 
-    (
-        error_count,
-        total_score,
-        evaluation_result.mse,
-        company_rankings,
-        evaluation_result,
-    )
+    (error_count, total_score, evaluation_result)
 }
 
 // TODO: Remove
