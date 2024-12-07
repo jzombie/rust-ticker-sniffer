@@ -358,35 +358,27 @@ fn extract_tickers_from_company_names(
     // TODO: Can the following loops be unified?  Are they even necessary/
 
     // Sort scored_results by score
-    let mut sorted_results: Vec<_> = scored_results.into_iter().collect();
-    sorted_results.sort_by(|(_, score_a), (_, score_b)| {
-        score_b
-            .partial_cmp(score_a)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    // let mut sorted_results: Vec<_> = scored_results.into_iter().collect();
+    // sorted_results.sort_by(|(_, score_a), (_, score_b)| {
+    //     score_b
+    //         .partial_cmp(score_a)
+    //         .unwrap_or(std::cmp::Ordering::Equal)
+    // });
 
-    let results: Vec<(String, f32)> = sorted_results
-        .clone()
-        .into_iter()
-        .map(|(symbol, score)| (symbol, score))
-        .collect();
+    let mut result_keys = Vec::new();
+    let mut total_score = 0.0;
 
-    // Iterate over each result and print them
-    for (symbol, score) in &results {
+    for (symbol, score) in scored_results.clone() {
+        // Print the result
         eprintln!(
             "Matched Symbol: {}, Score: {:.4}, Company Name: {:?}",
-            symbol, score, symbols_map[symbol]
+            symbol, score, symbols_map[&symbol]
         );
-    }
 
-    // Compute result keys and total weight in a single iteration
-    let (result_keys, total_score): (Vec<String>, f32) = sorted_results
-        .into_iter()
-        .map(|(symbol, score)| (symbol, score))
-        .fold((vec![], 0.0), |(mut keys, total), (symbol, score)| {
-            keys.push(symbol);
-            (keys, total + score)
-        });
+        // Update the result keys and total score
+        result_keys.push(symbol);
+        total_score += score;
+    }
 
     eprintln!("Total score: {:.2}", total_score);
 
