@@ -72,7 +72,7 @@ pub fn run_test_for_file(
     use_assertions: bool,
     weights: Weights,
     context_attention: &ContextAttention,
-) -> (usize, f32, f32) {
+) -> (usize, f32, f32, Vec<String>, Vec<String>) {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -158,7 +158,7 @@ pub fn run_test_for_file(
         }
 
         // Skip further checks since failure was validated
-        return (error_count, total_score, 0.0);
+        return (error_count, total_score, 0.0, [].to_vec(), [].to_vec());
     }
 
     // Regular success case validation
@@ -222,7 +222,7 @@ pub fn run_test_for_file(
     // Compute MSE between expected and actual results
     let mse = compute_mse(&expected_tickers, &results);
 
-    (error_count, total_score, mse)
+    (error_count, total_score, mse, expected_tickers, results)
 }
 
 pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {

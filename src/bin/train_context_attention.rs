@@ -67,6 +67,7 @@ fn train_context_attention() {
                 let raw_text =
                     std::fs::read_to_string(file_path).expect("Failed to read test file");
 
+                // TODO: Remove
                 // Filter out lines starting with 'EXPECTED:', 'EXPECTED_FAILURE:', or 'COMMENT:'
                 let filtered_text: String = raw_text
                     .lines()
@@ -78,10 +79,12 @@ fn train_context_attention() {
                     .collect::<Vec<&str>>()
                     .join("\n");
 
+                // TODO: Replace
                 // Extract context from the filtered text
                 let context: Vec<String> =
                     filtered_text.split_whitespace().map(String::from).collect();
 
+                // TODO: Replace
                 // Simulate target and ticker for training (modify as needed)
                 let ticker = "EXAMPLE"; // Replace with the actual ticker from the file
                 let target = 1.0; // Example: Set to 1.0 for true positive
@@ -114,7 +117,7 @@ fn evaluate_loss(
         if file_path.is_file() {
             // Run test and calculate MSE
 
-            let (_, _, mse) = suppress_output(|| {
+            let (_, _, mse, expected_tickers, results) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false, // Disable assertions during training
@@ -124,6 +127,9 @@ fn evaluate_loss(
             });
             total_loss += mse;
             file_count += 1;
+
+            // TODO: Collect these and use to influence weight updates
+            eprintln!("expected: {:?}, results: {:?}", expected_tickers, results);
         }
     }
 
