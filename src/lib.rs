@@ -287,6 +287,7 @@ fn extract_tickers_from_company_names(
                         match_score,
                         context_attention_score,
                         context_query_string: lc_norm_input_string,
+                        context_company_tokens: company_tokens,
                     };
 
                     company_rankings.push(company_ranking);

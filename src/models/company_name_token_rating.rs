@@ -8,4 +8,5 @@ pub struct CompanyNameTokenRanking {
     pub match_score: f32,
     pub context_attention_score: f32,
     pub context_query_string: String,
+    pub context_company_tokens: Vec<String>,
 }
