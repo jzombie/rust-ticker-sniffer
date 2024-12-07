@@ -25,31 +25,95 @@ impl ContextAttention {
 
     /// Represent a token (ticker or word) as a fixed-size vector
     /// Example: Normalize character values for lightweight embeddings
+    // pub fn representation(&self, token: &str) -> Vec<f32> {
+    //     token
+    //         .chars()
+    //         .map(|c| (c as u32 as f32) / 255.0) // Normalize character codes
+    //         .take(self.embedding_size) // Limit to embedding size
+    //         .chain(std::iter::repeat(0.0)) // Pad with zeros if necessary
+    //         .take(self.embedding_size)
+    //         .collect()
+    // }
+
     pub fn representation(&self, token: &str) -> Vec<f32> {
-        token
-            .chars()
-            .map(|c| (c as u32 as f32) / 255.0) // Normalize character codes
-            .take(self.embedding_size) // Limit to embedding size
-            .chain(std::iter::repeat(0.0)) // Pad with zeros if necessary
-            .take(self.embedding_size)
-            .collect()
+        let mut embedding = vec![0.0; self.embedding_size];
+
+        // Influence all embedding dimensions using character and position
+        for (i, c) in token.chars().enumerate() {
+            let char_value = (c as u32 as f32) / 255.0; // Normalize character value
+            for j in 0..self.embedding_size {
+                // Distribute influence across all dimensions using a sinusoidal function
+                embedding[j] += char_value * ((i as f32 + 1.0) * (j as f32 + 1.0)).sin();
+            }
+        }
+
+        // Normalize the embedding vector
+        let norm = embedding.iter().map(|x| x * x).sum::<f32>().sqrt();
+        if norm > 0.0 {
+            for value in embedding.iter_mut() {
+                *value /= norm;
+            }
+        }
+
+        embedding
     }
 
     /// Aggregate a context (array of words) into a single representation
     /// Example: Use the average of all word embeddings
+    // pub fn aggregate_context(&self, context: &[String]) -> Vec<f32> {
+    //     let mut aggregated = vec![0.0; self.embedding_size];
+    //     for word in context {
+    //         let word_vec = self.representation(word);
+    //         for i in 0..self.embedding_size {
+    //             aggregated[i] += word_vec[i];
+    //         }
+    //     }
+    //     if !context.is_empty() {
+    //         for value in aggregated.iter_mut() {
+    //             *value /= context.len() as f32; // Normalize by context length
+    //         }
+    //     }
+    //     aggregated
+    // }
+
+    // pub fn aggregate_context(&self, context: &[String]) -> Vec<f32> {
+    //     let mut aggregated = vec![0.0; self.embedding_size];
+    //     for word in context {
+    //         let word_vec = self.representation(word);
+    //         for i in 0..self.embedding_size {
+    //             aggregated[i] += word_vec[i];
+    //         }
+    //     }
+    //     if !context.is_empty() {
+    //         for value in aggregated.iter_mut() {
+    //             *value /= context.len() as f32; // Normalize by context length
+    //         }
+    //     }
+    //     // Ensure no exact zeros in the aggregated vector
+    //     for value in aggregated.iter_mut() {
+    //         *value += 1e-6; // Small constant to ensure gradients propagate
+    //     }
+    //     aggregated
+    // }
+
     pub fn aggregate_context(&self, context: &[String]) -> Vec<f32> {
         let mut aggregated = vec![0.0; self.embedding_size];
-        for word in context {
+        let mut attention_weights = vec![1.0; context.len()];
+
+        for (i, word) in context.iter().enumerate() {
             let word_vec = self.representation(word);
-            for i in 0..self.embedding_size {
-                aggregated[i] += word_vec[i];
+            for j in 0..self.embedding_size {
+                aggregated[j] += attention_weights[i] * word_vec[j];
             }
         }
-        if !context.is_empty() {
+
+        let norm = aggregated.iter().map(|x| x * x).sum::<f32>().sqrt();
+        if norm > 0.0 {
             for value in aggregated.iter_mut() {
-                *value /= context.len() as f32; // Normalize by context length
+                *value /= norm; // Normalize vector
             }
         }
+
         aggregated
     }
 
@@ -81,7 +145,32 @@ impl ContextAttention {
 
         for i in 0..self.embedding_size {
             let gradient = 2.0 * (predicted - target) * ticker_vec[i] * context_vec[i];
+            // println!("Gradient[{}]: {:.6}", i, gradient); // Log gradient
             self.global_weights[i] -= learning_rate * gradient; // Gradient descent
         }
     }
+
+    // With regularization
+    // pub fn update_weights(
+    //     &mut self,
+    //     ticker: &str,
+    //     context: &[String],
+    //     target: f32, // 1.0 for true positive, 0.0 for false positive
+    //     learning_rate: f32,
+    // ) {
+    //     let ticker_vec = self.representation(ticker);
+    //     let context_vec = self.aggregate_context(context);
+    //     let predicted = self.score(ticker, context);
+
+    //     let regularization_factor = 0.001; // Small regularization term
+
+    //     for i in 0..self.embedding_size {
+    //         let gradient = 2.0 * (predicted - target) * ticker_vec[i] * context_vec[i];
+    //         self.global_weights[i] -= learning_rate * gradient;
+
+    //         // Apply regularization to encourage non-zero values
+    //         self.global_weights[i] -=
+    //             learning_rate * regularization_factor * self.global_weights[i];
+    //     }
+    // }
 }
