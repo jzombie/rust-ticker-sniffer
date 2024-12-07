@@ -6,14 +6,13 @@ use std::os::unix::io::AsRawFd;
 use ticker_sniffer::models::context_attention;
 use ticker_sniffer::{ContextAttention, SymbolsMap, Weights};
 
-#[path = "utils/suppress_output.rs"]
-mod suppress_output;
-use suppress_output::suppress_output;
-
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
-
 use test_utils::{load_symbols_from_file, run_test_for_file};
+
+#[path = "../../bin_utils/lib.rs"]
+mod bin_utils;
+use bin_utils::suppress_output;
 
 fn tune_weights() {
     let test_dir = "tests/test_files";

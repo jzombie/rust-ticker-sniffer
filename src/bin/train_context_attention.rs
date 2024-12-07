@@ -2,16 +2,16 @@ use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
-use test_utils::{load_symbols_from_file, run_test_for_file};
 use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
 
-#[path = "utils/suppress_output.rs"]
-mod suppress_output;
-use suppress_output::suppress_output;
-
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
+use test_utils::{load_symbols_from_file, run_test_for_file};
+
+#[path = "../../bin_utils/lib.rs"]
+mod bin_utils;
+use bin_utils::suppress_output;
 
 fn train_context_attention() {
     let test_dir = "tests/test_files";
