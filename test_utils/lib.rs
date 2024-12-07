@@ -82,6 +82,7 @@ pub fn run_test_for_file(
     Vec<String>,
     Vec<String>,
     Vec<CompanyNameTokenRanking>,
+    EvaluationResult,
 ) {
     // Load symbols from a test CSV file
     let symbols_map =
@@ -175,6 +176,7 @@ pub fn run_test_for_file(
             [].to_vec(),
             [].to_vec(),
             company_rankings,
+            EvaluationResult::new(&[].to_vec(), &[].to_vec()),
         );
     }
 
@@ -236,8 +238,11 @@ pub fn run_test_for_file(
         }
     }
 
+    // Use EvaluationResult to determine false positives and false negatives
+    let evaluation_result = EvaluationResult::new(&expected_tickers, &results);
+
     // Compute MSE between expected and actual results
-    let mse = compute_mse(&expected_tickers, &results);
+    let mse = compute_mse(&evaluation_result);
 
     (
         error_count,
@@ -246,14 +251,11 @@ pub fn run_test_for_file(
         expected_tickers,
         results,
         company_rankings,
+        evaluation_result,
     )
 }
 
-pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
-    // Use EvaluationResult to determine false positives and false negatives
-    let evaluation_result = EvaluationResult::new(expected_tickers, results);
-    eprintln!("Summary: {}", evaluation_result.summary());
-
+pub fn compute_mse(evaluation_result: &EvaluationResult) -> f32 {
     // TODO: Make these configurable
     // Assign weights to false negatives and false positives
     let false_negative_weight = 2.0; // Higher penalty for missing tickers
