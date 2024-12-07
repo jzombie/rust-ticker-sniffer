@@ -365,7 +365,7 @@ fn extract_tickers_from_company_names(
     //         .unwrap_or(std::cmp::Ordering::Equal)
     // });
 
-    let mut result_keys = Vec::new();
+    let mut result_ticker_symbols = Vec::new();
     let mut total_score = 0.0;
 
     for (symbol, score) in scored_results.clone() {
@@ -376,7 +376,7 @@ fn extract_tickers_from_company_names(
         );
 
         // Update the result keys and total score
-        result_keys.push(symbol);
+        result_ticker_symbols.push(symbol);
         total_score += score;
     }
 
@@ -385,5 +385,5 @@ fn extract_tickers_from_company_names(
     // TODO: Include Vec<CompanyNameTokenRanking>
     //
     // Return only the keys and the total score
-    (result_keys, total_score, tokenized_filter)
+    (result_ticker_symbols, total_score, tokenized_filter)
 }
