@@ -325,7 +325,7 @@ fn evaluate_loss(
 
         if file_path.is_file() {
             // Wrap `run_test_for_file` to suppress output
-            let (_, _, mse, _, _, _, _) = suppress_output(|| {
+            let (_, _, mse, _, _) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false,

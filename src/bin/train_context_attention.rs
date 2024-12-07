@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
+use test_utils::models::evaluation_results;
 use test_utils::{load_symbols_from_file, run_test_for_file};
 use ticker_sniffer::models::CompanyNameTokenRanking;
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
@@ -17,6 +18,7 @@ fn train_context_attention() {
     let symbols_map: HashMap<String, Option<String>> =
         load_symbols_from_file(symbols_file).expect("Failed to load symbols");
 
+    // TODO: Start w/ pre-trained weights?
     // Initialize ContextAttention
     let mut context_attention = ContextAttention::new(256);
 
@@ -131,7 +133,7 @@ fn evaluate_loss(
         if file_path.is_file() {
             // Run test and calculate MSE
 
-            let (_, _, mse, expected_tickers, results, company_rankings) = suppress_output(|| {
+            let (_, _, mse, company_rankings, evaluation_results) = suppress_output(|| {
                 run_test_for_file(
                     file_path.to_str().unwrap(),
                     false, // Disable assertions during training

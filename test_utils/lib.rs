@@ -79,8 +79,6 @@ pub fn run_test_for_file(
     usize,
     f32,
     f32,
-    Vec<String>,
-    Vec<String>,
     Vec<CompanyNameTokenRanking>,
     EvaluationResult,
 ) {
@@ -173,8 +171,6 @@ pub fn run_test_for_file(
             error_count,
             total_score,
             0.0,
-            [].to_vec(),
-            [].to_vec(),
             company_rankings,
             EvaluationResult::new(&[].to_vec(), &[].to_vec()),
         );
@@ -248,8 +244,6 @@ pub fn run_test_for_file(
         error_count,
         total_score,
         mse,
-        expected_tickers,
-        results,
         company_rankings,
         evaluation_result,
     )
