@@ -3,8 +3,7 @@ mod constants;
 use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::DEFAULT_WEIGHTS;
-use models::CompanyNameTokenRanking;
-pub use models::{ContextAttention, Weights};
+pub use models::{CompanyNameTokenRanking, ContextAttention, Weights};
 pub mod utils;
 pub use utils::{
     generate_alternative_symbols, jaccard_similarity_chars, tokenize, tokenize_company_name_query,

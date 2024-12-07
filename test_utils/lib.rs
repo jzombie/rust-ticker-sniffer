@@ -171,7 +171,7 @@ pub fn run_test_for_file(
             total_score,
             0.0,
             company_rankings,
-            EvaluationResult::new(&[].to_vec(), &[].to_vec()),
+            EvaluationResult::new(&[].to_vec(), &[].to_vec(), &[].to_vec()),
         );
     }
 
@@ -234,7 +234,7 @@ pub fn run_test_for_file(
     }
 
     // Use EvaluationResult to determine false positives and false negatives
-    let evaluation_result = EvaluationResult::new(&expected_tickers, &results);
+    let evaluation_result = EvaluationResult::new(&expected_tickers, &results, &company_rankings);
 
     // Compute MSE between expected and actual results
     let mse = compute_mse(&evaluation_result);
@@ -246,25 +246,6 @@ pub fn run_test_for_file(
         company_rankings,
         evaluation_result,
     )
-}
-
-pub fn compute_mse(evaluation_result: &EvaluationResult) -> f32 {
-    // TODO: Make these configurable
-    // Assign weights to false negatives and false positives
-    let false_negative_weight = 2.0; // Higher penalty for missing tickers
-    let false_positive_weight = 1.0; // Lower penalty for unexpected tickers
-
-    // Compute the weighted squared differences
-    let weighted_squared_differences: f32 = evaluation_result.false_negatives.len() as f32
-        * false_negative_weight
-        + evaluation_result.false_positives.len() as f32 * false_positive_weight;
-
-    // Calculate the mean squared error
-    let total_tickers = evaluation_result.expected.len()
-        + evaluation_result.false_positives.len()
-        + evaluation_result.false_negatives.len();
-
-    weighted_squared_differences / total_tickers as f32
 }
 
 // TODO: Remove

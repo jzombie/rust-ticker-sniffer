@@ -1,3 +1,3 @@
-pub mod evaluation_results;
+pub mod evaluation_result;
 
-pub use evaluation_results::EvaluationResult;
+pub use evaluation_result::EvaluationResult;
