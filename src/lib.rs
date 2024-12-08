@@ -76,24 +76,27 @@ pub fn extract_tickers_from_text_with_custom_weights(
     }
 
     // Pre-allocate bins after determining the maximum token length
-    let mut token_length_bins: Vec<Vec<usize>> = vec![Vec::new(); max_corpus_token_length + 1];
+    let mut token_length_bins: Vec<Vec<(usize, usize)>> =
+        vec![Vec::new(); max_corpus_token_length + 1];
 
     // Second pass: Populate the bins using stored tokenized data
-    for (index, company_tokens) in tokenized_data.iter().enumerate() {
-        // Bin tokens by length
-        for token in company_tokens {
+    for (company_index, company_tokens) in tokenized_data.iter().enumerate() {
+        for (token_index, token) in company_tokens.iter().enumerate() {
             let token_length = token.len();
-            token_length_bins[token_length].push(index);
+            token_length_bins[token_length].push((company_index, token_index));
         }
     }
 
     // Example: Access tokens of a specific length and display associated company tokens
-    let length_of_interest = 5;
+    let length_of_interest = 10;
     if let Some(bin) = token_length_bins.get(length_of_interest) {
         println!("Items with tokens of length {}:", length_of_interest);
-        for &index in bin {
-            let company_tokens = &tokenized_data[index];
-            println!("  Company Index: {} - Tokens: {:?}", index, company_tokens);
+        for &(company_index, token_index) in bin {
+            let token = &tokenized_data[company_index][token_index];
+            println!(
+                "  Company Index: {}, Token Index: {} - Token: {}",
+                company_index, token_index, token
+            );
         }
     } else {
         println!(
