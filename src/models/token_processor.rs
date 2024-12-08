@@ -1,11 +1,30 @@
-use crate::types::{CompanySymbolsList, TokenSourceType};
+use crate::types::CompanySymbolsList;
 use crate::utils::tokenize;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)] // Use a numeric representation for efficiency
+pub enum TokenSourceType {
+    Symbol = 0,      // Tokens derived from the symbol
+    CompanyName = 1, // Tokens derived from the company name
+}
+
+// TODO: Use numeric data
+type TokenizedEntry = Vec<(String, TokenSourceType)>;
+
+/// Index of the company in the `company_symbols_list`
+type CompanyIndex = usize;
+
+/// Index of the token within the company's tokens
+type TokenIndex = usize;
+
+/// A bin of tokens, where each token is represented by its company index and token index.
+type TokenBin = Vec<(CompanyIndex, TokenIndex)>;
 
 pub struct TokenProcessor<'a> {
     pub company_symbols_list: &'a CompanySymbolsList,
-    pub tokenized_data: Vec<Vec<(String, TokenSourceType)>>,
+    pub tokenized_data: Vec<TokenizedEntry>,
     pub max_corpus_token_length: usize,
-    pub token_length_bins: Vec<Vec<(usize, usize)>>,
+    pub token_length_bins: Vec<TokenBin>,
 }
 
 impl<'a> TokenProcessor<'a> {

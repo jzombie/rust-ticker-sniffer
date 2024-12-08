@@ -8,7 +8,7 @@ pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, TokenProcessor, We
 pub mod utils;
 pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
 pub mod types;
-pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, TokenSourceType};
+pub use types::{CompanyName, CompanySymbolsList, TickerSymbol};
 
 pub fn extract_tickers_from_text(
     text: &str,
