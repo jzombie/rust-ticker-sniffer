@@ -89,6 +89,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     (results, total_score, company_rankings)
 }
 
+// TODO: Remove `generate_alternative_symbols` and match on pure alphanumeric
 fn extract_tickers_from_symbols(text: &str, symbols_map: &SymbolsMap) -> Vec<TickerSymbol> {
     let mut matches = HashSet::new();
     let tokens = tokenize(text);
@@ -117,6 +118,7 @@ fn extract_tickers_from_symbols(text: &str, symbols_map: &SymbolsMap) -> Vec<Tic
     matches.into_iter().collect()
 }
 
+// TODO: Replace w/ cosine similarity
 fn extract_tickers_from_abbreviations(
     text: &str,
     symbols_map: &SymbolsMap,
@@ -152,6 +154,7 @@ fn extract_tickers_from_abbreviations(
     matches.into_iter().collect()
 }
 
+// TODO: Replace w/ cosine similarity
 fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: &SymbolsMap,
