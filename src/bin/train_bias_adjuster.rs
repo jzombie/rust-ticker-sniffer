@@ -3,7 +3,7 @@ use std::fs::read_dir;
 use std::thread::current;
 use test_utils::models::evaluation_result;
 use ticker_sniffer::models::{company_name_token_rating, CompanyNameTokenRanking};
-use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
+use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_WEIGHTS};
 
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
@@ -13,7 +13,7 @@ use test_utils::{load_symbols_from_file, run_test_for_file, EvaluationResult};
 mod bin_utils;
 use bin_utils::suppress_output;
 
-fn train_context_attention() {
+fn train_result_bias_adjuster() {
     let test_dir = "tests/test_files";
     let symbols_file = "tests/test_symbols.csv";
 
@@ -22,8 +22,8 @@ fn train_context_attention() {
         load_symbols_from_file(symbols_file).expect("Failed to load symbols");
 
     // TODO: Start w/ pre-trained weights?
-    // Initialize ContextAttention
-    let mut context_attention = ContextAttention::new();
+    // Initialize ResultBiasAdjuster
+    let mut result_bias_adjuster = ResultBiasAdjuster::new();
 
     // Hyperparameters
     let learning_rate = 0.01;
@@ -36,14 +36,14 @@ fn train_context_attention() {
     let mut best_loss = f32::MAX;
     let mut no_improvement_count = 0;
 
-    println!("Starting ContextAttention training...");
+    println!("Starting Bias Adjuster training...");
 
     for epoch in 1..=max_epochs {
         println!("Epoch {}/{}", epoch, max_epochs);
 
         // Evaluate current performance
         let (current_loss, all_evaluation_results) =
-            evaluate_loss(&context_attention, &weights, &symbols_map, test_dir);
+            evaluate_loss(&result_bias_adjuster, &weights, &symbols_map, test_dir);
 
         // Stop training if no more loss
         if current_loss == 0.0 {
@@ -78,7 +78,7 @@ fn train_context_attention() {
             //         &company_name_token_rating.context_company_tokens
             //     );
 
-            //     context_attention.update_weights(
+            //     result_bias_adjuster.update_weights(
             //         &company_name_token_rating.context_query_string,
             //         &company_name_token_rating.context_company_tokens,
             //         1.0,
@@ -93,7 +93,7 @@ fn train_context_attention() {
                     &company_name_token_rating.context_company_tokens
                 );
 
-                context_attention.update_weights(
+                result_bias_adjuster.update_weights(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
                     0.0, // TODO: Make configurable
@@ -108,7 +108,7 @@ fn train_context_attention() {
                     &company_name_token_rating.context_company_tokens
                 );
 
-                context_attention.update_weights(
+                result_bias_adjuster.update_weights(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
                     0.0, // TODO: Make configurable
@@ -150,21 +150,21 @@ fn train_context_attention() {
         //         let target = 1.0; // Example: Set to 1.0 for true positive
 
         //         // Update weights
-        //         context_attention.update_weights(&ticker, &context, target, learning_rate);
+        //         result_bias_adjuster.update_weights(&ticker, &context, target, learning_rate);
         //     }
         // }
 
-        // eprintln!("Context weights: {:?}", context_attention.global_weights);
+        // eprintln!("Context weights: {:?}", result_bias_adjuster.global_weights);
     }
 
-    println!("Weights: {:?}", context_attention.weights);
+    println!("Weights: {:?}", result_bias_adjuster.weights);
 
     println!("Training completed. Best loss: {:.6}", best_loss);
 }
 
-/// Evaluate the current loss for ContextAttention
+/// Evaluate the current loss for ResultBiasAdjuster
 fn evaluate_loss(
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
     weights: &Weights,
     _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
@@ -186,7 +186,7 @@ fn evaluate_loss(
                     file_path.to_str().unwrap(),
                     false, // Disable assertions during training
                     weights.clone(),
-                    context_attention,
+                    result_bias_adjuster,
                 )
             });
 
@@ -194,7 +194,7 @@ fn evaluate_loss(
             //     file_path.to_str().unwrap(),
             //     false, // Disable assertions during training
             //     weights.clone(),
-            //     context_attention,
+            //     result_bias_adjuster,
             // );
 
             total_loss += evaluation_result.mse;
@@ -212,21 +212,21 @@ fn evaluate_loss(
 // TODO: Remove?
 // Compute gradients for global weights
 // fn compute_gradient(
-//     context_attention: &ContextAttention,
+//     result_bias_adjuster: &ResultBiasAdjuster,
 //     weights: &Weights,
 //     symbols_map: &HashMap<String, Option<String>>,
 //     test_dir: &str,
 // ) -> Vec<f32> {
 //     let delta = 1e-3;
-//     let mut gradient = vec![0.0; context_attention.global_weights.len()];
+//     let mut gradient = vec![0.0; result_bias_adjuster.global_weights.len()];
 
-//     let (loss_original, _) = evaluate_loss(context_attention, weights, symbols_map, test_dir);
+//     let (loss_original, _) = evaluate_loss(result_bias_adjuster, weights, symbols_map, test_dir);
 
 //     // Clone the context once
-//     let mut perturbed_attention = context_attention.clone();
+//     let mut perturbed_attention = result_bias_adjuster.clone();
 
 //     // Perturb all weights at once
-//     for i in 0..context_attention.global_weights.len() {
+//     for i in 0..result_bias_adjuster.global_weights.len() {
 //         perturbed_attention.global_weights[i] += delta;
 //     }
 
@@ -242,5 +242,5 @@ fn evaluate_loss(
 // }
 
 fn main() {
-    train_context_attention();
+    train_result_bias_adjuster();
 }

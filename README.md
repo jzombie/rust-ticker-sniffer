@@ -18,10 +18,10 @@ This process adjusts the weights used in the ticker extraction and matching algo
 cargo run --bin tune --features="csv-support rand-support libc-support"
 ```
 
-## Training Context Attention
+## Training Bias Adjuster
 
 ```bash
-cargo run --bin train_context_attention --features="csv-support rand-support libc-support"
+cargo run --bin train_bias_adjuster --features="csv-support rand-support libc-support"
 ```
 
 ## WASM Test Builds

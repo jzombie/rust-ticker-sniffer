@@ -2,7 +2,7 @@ use csv::Reader;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
-    extract_tickers_from_text, ContextAttention, SymbolsMap, TickerSymbol, Weights,
+    extract_tickers_from_text, ResultBiasAdjuster, SymbolsMap, TickerSymbol, Weights,
 };
 pub mod models;
 pub use models::EvaluationResult;
@@ -73,7 +73,7 @@ pub fn run_test_for_file(
     test_file_path: &str,
     use_assertions: bool,
     weights: Weights,
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (usize, f32, EvaluationResult) {
     // Load symbols from a test CSV file
     let symbols_map =
@@ -98,7 +98,7 @@ pub fn run_test_for_file(
 
     // Extract tickers from the filtered text
     let (results, total_score, company_rankings) =
-        extract_tickers_from_text(&filtered_text, &symbols_map, weights, context_attention);
+        extract_tickers_from_text(&filtered_text, &symbols_map, weights, result_bias_adjuster);
 
     // Get the expected tickers and failure reason
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));

@@ -4,10 +4,10 @@ mod test_utils;
 use std::collections::HashMap;
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
-use ticker_sniffer::{ContextAttention, DEFAULT_WEIGHTS};
+use ticker_sniffer::{ResultBiasAdjuster, DEFAULT_WEIGHTS};
 
-// Declare a module-level variable for ContextAttention
-static mut CONTEXT_ATTENTION: Option<ContextAttention> = None;
+// Declare a module-level variable for ResultBiasAdjuster
+static mut CONTEXT_ATTENTION: Option<ResultBiasAdjuster> = None;
 
 #[cfg(test)]
 mod tests {
@@ -19,8 +19,8 @@ mod tests {
         unsafe {
             if CONTEXT_ATTENTION.is_none() {
                 // TODO: Initialize with some weights
-                // CONTEXT_ATTENTION = Some(ContextAttention::new(256));
-                CONTEXT_ATTENTION = Some(ContextAttention::from_weights(HashMap::from([
+                // CONTEXT_ATTENTION = Some(ResultBiasAdjuster::new(256));
+                CONTEXT_ATTENTION = Some(ResultBiasAdjuster::from_weights(HashMap::from([
                     (15726725667165516449, 0.0),
                     (18175059305241253125, 0.0),
                     (6760917874204056577, 0.0),
@@ -32,7 +32,7 @@ mod tests {
                 ])));
             }
 
-            let context_attention = CONTEXT_ATTENTION.as_ref().unwrap();
+            let result_bias_adjuster = CONTEXT_ATTENTION.as_ref().unwrap();
 
             // Directory containing the test files
             let test_dir = "tests/test_files";
@@ -50,7 +50,7 @@ mod tests {
                         file_path.to_str().unwrap(),
                         true,
                         DEFAULT_WEIGHTS,
-                        context_attention,
+                        result_bias_adjuster,
                     );
                 }
             }

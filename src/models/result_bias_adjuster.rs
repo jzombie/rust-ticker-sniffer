@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 #[derive(Clone)]
-pub struct ContextAttention {
+pub struct ResultBiasAdjuster {
     pub weights: HashMap<u64, f32>, // Weights for query-context pairs
 }
 
-impl ContextAttention {
+impl ResultBiasAdjuster {
     /// Initialize the model
     pub fn new() -> Self {
         Self {

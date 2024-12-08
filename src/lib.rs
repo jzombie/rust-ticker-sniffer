@@ -3,7 +3,7 @@ mod constants;
 use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::DEFAULT_WEIGHTS;
-pub use models::{CompanyNameTokenRanking, ContextAttention, Weights};
+pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, Weights};
 pub mod utils;
 pub use utils::{
     generate_alternative_symbols, jaccard_similarity_chars, tokenize, tokenize_company_name_query,
@@ -15,13 +15,13 @@ pub fn extract_tickers_from_text(
     text: &str,
     symbols_map: &SymbolsMap,
     weights: Weights,
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
     let mut matches = HashSet::new();
 
     // Extract tickers by company name
     let (company_name_matches, total_score, tokenized_filter, company_rankings) =
-        extract_tickers_from_company_names(text, symbols_map, weights, context_attention);
+        extract_tickers_from_company_names(text, symbols_map, weights, result_bias_adjuster);
     let company_name_match_count = company_name_matches.len();
 
     matches.extend(company_name_matches);
@@ -139,7 +139,7 @@ fn extract_tickers_from_company_names(
     text: &str,
     symbols_map: &SymbolsMap,
     weights: Weights,
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (
     Vec<TickerSymbol>,
     f32,
@@ -245,7 +245,7 @@ fn extract_tickers_from_company_names(
 
                 let mut consecutive_jaccard_similarity: f32 = 0.0;
 
-                let mut context_attention_score: f32 = 0.0;
+                let mut result_bias_adjuster_score: f32 = 0.0;
 
                 // TODO: Ideally, this should be set inide the following block,
                 // but I'm fighting with the borrower-checker to try to retain this value
@@ -273,11 +273,11 @@ fn extract_tickers_from_company_names(
                         * (1.0 - weights.word_mismatch_penalty);
 
                     // TODO: Apply configurable weighting?
-                    context_attention_score =
-                        context_attention.score(&lc_norm_input_string, &company_tokens);
+                    result_bias_adjuster_score =
+                        result_bias_adjuster.score(&lc_norm_input_string, &company_tokens);
 
-                    // Scale match_score by context_attention_score
-                    match_score = match_score * (context_attention_score * 2.0);
+                    // Scale match_score by result_bias_adjuster_score
+                    match_score = match_score * (result_bias_adjuster_score * 2.0);
                 }
 
                 if lc_norm_input_string.len() > 0 {
@@ -292,7 +292,7 @@ fn extract_tickers_from_company_names(
                         consecutive_match_count: top_consecutive_match_count,
                         consecutive_jaccard_similarity,
                         match_score,
-                        context_attention_score,
+                        result_bias_adjuster_score,
                         context_query_string: lc_norm_input_string,
                         context_company_tokens: company_tokens,
                     };
@@ -301,7 +301,7 @@ fn extract_tickers_from_company_names(
 
                     eprintln!(
                         "Company name: {}, Context attention score: {}",
-                        company_name, context_attention_score
+                        company_name, result_bias_adjuster_score
                     );
                 }
 

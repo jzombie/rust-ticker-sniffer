@@ -24,8 +24,8 @@ path = "src/bin/tune.rs"
 required-features = ["csv-support", "rand-support", "libc-support"]
 
 [[bin]]
-name = "train_context_attention"
-path = "src/bin/train_context_attention.rs"
+name = "train_bias_adjuster"
+path = "src/bin/train_bias_adjuster.rs"
 required-features = ["csv-support", "rand-support", "libc-support"]
 
 [features]

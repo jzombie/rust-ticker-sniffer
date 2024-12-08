@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use std::fs::{read_dir, File};
 use std::io;
 use std::os::unix::io::AsRawFd;
-use ticker_sniffer::models::context_attention;
-use ticker_sniffer::{ContextAttention, SymbolsMap, Weights};
+use ticker_sniffer::models::result_bias_adjuster;
+use ticker_sniffer::{ResultBiasAdjuster, SymbolsMap, Weights};
 
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
@@ -20,8 +20,8 @@ fn tune_weights() {
     println!("Initializing tuning process...");
 
     // TODO: Initialize w/ pretrained weights
-    // Initialize ContextAttention
-    let mut context_attention = ContextAttention::new(256);
+    // Initialize ResultBiasAdjuster
+    let mut result_bias_adjuster = ResultBiasAdjuster::new(256);
 
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -83,7 +83,7 @@ fn tune_weights() {
             symbols_map.clone(),
             test_dir,
             regularization_lambda,
-            &context_attention,
+            &result_bias_adjuster,
         );
 
         if initial_loss.is_none() {
@@ -124,7 +124,7 @@ fn tune_weights() {
             0,
             regularization_lambda,
             max_gradient_norm,
-            &context_attention,
+            &result_bias_adjuster,
         );
         let grad_w2 = compute_gradient_with_regularization(
             weights,
@@ -133,7 +133,7 @@ fn tune_weights() {
             1,
             regularization_lambda,
             max_gradient_norm,
-            &context_attention,
+            &result_bias_adjuster,
         );
         let grad_w3 = compute_gradient_with_regularization(
             weights,
@@ -142,7 +142,7 @@ fn tune_weights() {
             2,
             regularization_lambda,
             max_gradient_norm,
-            &context_attention,
+            &result_bias_adjuster,
         );
         let grad_w4 = compute_gradient_with_regularization(
             weights,
@@ -151,7 +151,7 @@ fn tune_weights() {
             3,
             regularization_lambda,
             max_gradient_norm,
-            &context_attention,
+            &result_bias_adjuster,
         );
 
         let grad_w5 = compute_gradient_with_regularization(
@@ -161,7 +161,7 @@ fn tune_weights() {
             4,
             regularization_lambda,
             max_gradient_norm,
-            &context_attention,
+            &result_bias_adjuster,
         );
 
         // Note: `symbol_abbreviation_threshold` is currently considered to be
@@ -173,7 +173,7 @@ fn tune_weights() {
         //     5,
         //     regularization_lambda,
         //     max_gradient_norm,
-        //     &context_attention,
+        //     &result_bias_adjuster,
         // );
 
         velocity.0 = (momentum * velocity.0 + learning_rate * grad_w1)
@@ -232,7 +232,7 @@ fn compute_gradient_with_regularization(
     weight_index: usize,
     regularization_lambda: f32,
     max_gradient_norm: f32,
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
 ) -> f32 {
     // let delta = 1e-3;
     let delta = 0.0005;
@@ -258,14 +258,14 @@ fn compute_gradient_with_regularization(
         symbols_map.clone(),
         test_dir,
         regularization_lambda,
-        context_attention,
+        result_bias_adjuster,
     );
     let loss_perturbed = evaluate_loss_with_regularization(
         perturbed_weights,
         symbols_map.clone(),
         test_dir,
         regularization_lambda,
-        context_attention,
+        result_bias_adjuster,
     );
 
     // Compute gradient as finite difference
@@ -295,10 +295,10 @@ fn evaluate_loss_with_regularization(
     symbols_map: SymbolsMap,
     test_dir: &str,
     regularization_lambda: f32,
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
 ) -> f32 {
     // Evaluate the original loss
-    let base_loss = evaluate_loss(weights.clone(), &symbols_map, test_dir, context_attention);
+    let base_loss = evaluate_loss(weights.clone(), &symbols_map, test_dir, result_bias_adjuster);
 
     // Add L2 regularization penalty
     let l2_penalty = regularization_lambda
@@ -315,7 +315,7 @@ fn evaluate_loss(
     weights: Weights,
     _symbols_map: &SymbolsMap,
     test_dir: &str,
-    context_attention: &ContextAttention,
+    result_bias_adjuster: &ResultBiasAdjuster,
 ) -> f32 {
     let mut total_mse: f32 = 0.0;
     let mut test_file_count = 0;
@@ -333,7 +333,7 @@ fn evaluate_loss(
                     file_path.to_str().unwrap(),
                     false,
                     weights.clone(),
-                    context_attention,
+                    result_bias_adjuster,
                 )
             });
 
