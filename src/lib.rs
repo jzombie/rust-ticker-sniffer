@@ -54,22 +54,22 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let mut max_corpus_token_length: usize = 0;
 
     // TODO: Store numeric tokens instead
-    let mut tokenized_data: Vec<Vec<(String, Option<String>)>> = Vec::new(); // Store tokenized data for reuse
+    let mut tokenized_data: Vec<Vec<(String, String)>> = Vec::new(); // Store tokenized data for reuse
 
     // First pass: Tokenize and determine the maximum token length
     for (symbol, company_name) in company_symbols_list.iter() {
-        let mut company_tokens: Vec<(String, Option<String>)> = Vec::new();
+        let mut company_tokens: Vec<(String, String)> = Vec::new();
 
         // Handle the symbol token as a single token
         let symbol_token = tokenize(symbol).get(0).cloned(); // Take the first entry, if it exists
         if let Some(symbol_token) = symbol_token {
-            company_tokens.push((symbol_token, None)); // Token from symbol
+            company_tokens.push((symbol_token, (&"symbol").to_string())); // Token from symbol
         }
 
         if let Some(name) = company_name {
             let name_tokens = tokenize(name);
             for token in name_tokens {
-                company_tokens.push((token, Some(name.clone()))); // Token from company name
+                company_tokens.push((token, (&"company_name").to_string())); // Token from company name
             }
         }
 
@@ -95,7 +95,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     }
 
     // Example: Access tokens of a specific length and display associated company tokens
-    let length_of_interest = 5;
+    let length_of_interest = 4;
     if let Some(bin) = token_length_bins.get(length_of_interest) {
         println!("Items with tokens of length {}:", length_of_interest);
         for &(company_index, token_index) in bin {
