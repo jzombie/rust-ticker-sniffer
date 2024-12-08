@@ -6,7 +6,7 @@ pub use constants::{
 };
 pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, TokenProcessor, Weights};
 pub mod utils;
-pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
+pub use utils::{token_to_charcode_vector, tokenize};
 pub mod types;
 pub use types::{CompanyName, CompanySymbolsList, TickerSymbol};
 
