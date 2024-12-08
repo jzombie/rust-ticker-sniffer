@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use std::fs::read_dir;
 use std::thread::current;
-use test_utils::models::evaluation_result;
-use ticker_sniffer::models::{company_name_token_rating, CompanyNameTokenRanking};
 use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_WEIGHTS};
 
 #[path = "../../test_utils/lib.rs"]
@@ -13,6 +11,11 @@ use test_utils::{load_symbols_from_file, run_test_for_file, EvaluationResult};
 mod bin_utils;
 use bin_utils::suppress_output;
 
+struct StructuredQueryContext {
+    query: String,
+    context: Vec<String>,
+}
+
 fn train_result_bias_adjuster() {
     let test_dir = "tests/test_files";
     let symbols_file = "tests/test_symbols.csv";
@@ -21,7 +24,6 @@ fn train_result_bias_adjuster() {
     let symbols_map: HashMap<String, Option<String>> =
         load_symbols_from_file(symbols_file).expect("Failed to load symbols");
 
-    // TODO: Start w/ pre-trained weights?
     // Initialize ResultBiasAdjuster
     let mut result_bias_adjuster = ResultBiasAdjuster::new();
 
@@ -70,91 +72,73 @@ fn train_result_bias_adjuster() {
             break;
         }
 
+        let mut false_positive_query_contexts = HashMap::new();
+        let mut false_negative_query_contexts = HashMap::new();
+
+        // First, collect grouped query contexts to ensure they are unique
         for evaluation_result in all_evaluation_results {
-            // for company_name_token_rating in evaluation_result.expected_rankings {
-            //     eprintln!(
-            //         "Context - Expected - {}, {:?}",
-            //         &company_name_token_rating.context_query_string,
-            //         &company_name_token_rating.context_company_tokens
-            //     );
-
-            //     result_bias_adjuster.update_weights(
-            //         &company_name_token_rating.context_query_string,
-            //         &company_name_token_rating.context_company_tokens,
-            //         1.0,
-            //         learning_rate,
-            //     );
-            // }
-
+            // Collect false positive query contexts
             for company_name_token_rating in evaluation_result.false_positive_rankings {
-                eprintln!(
-                    "Context - False Positive - {}, {:?}",
-                    &company_name_token_rating.context_query_string,
-                    &company_name_token_rating.context_company_tokens
-                );
-
-                result_bias_adjuster.update_weights(
+                let query_hash = result_bias_adjuster.hash_query_context(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
-                    0.0, // TODO: Make configurable
-                    learning_rate,
+                );
+
+                false_positive_query_contexts.insert(
+                    query_hash,
+                    StructuredQueryContext {
+                        query: company_name_token_rating.context_query_string.clone(),
+                        context: company_name_token_rating.context_company_tokens.clone(),
+                    },
                 );
             }
 
+            // Collect false negative query contexts
             for company_name_token_rating in evaluation_result.false_negative_rankings {
-                eprintln!(
-                    "Context - False Negative - {}, {:?}",
-                    &company_name_token_rating.context_query_string,
-                    &company_name_token_rating.context_company_tokens
-                );
-
-                result_bias_adjuster.update_weights(
+                let query_hash = result_bias_adjuster.hash_query_context(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
-                    0.0, // TODO: Make configurable
-                    learning_rate,
+                );
+
+                false_negative_query_contexts.insert(
+                    query_hash,
+                    StructuredQueryContext {
+                        query: company_name_token_rating.context_query_string.clone(),
+                        context: company_name_token_rating.context_company_tokens.clone(),
+                    },
                 );
             }
         }
 
-        // Update weights using the update_weights method
-        // for file in read_dir(test_dir).expect("Failed to read test directory") {
-        //     let file = file.expect("Failed to read file");
-        //     let file_path = file.path();
+        // Process false positive contexts
+        for (_, structured_context) in &false_positive_query_contexts {
+            eprintln!(
+                "Context - False Positive - {}, {:?}",
+                structured_context.query, structured_context.context
+            );
 
-        //     if file_path.is_file() {
-        //         // Read the file content
-        //         let raw_text =
-        //             std::fs::read_to_string(file_path).expect("Failed to read test file");
+            result_bias_adjuster.update_weights(
+                &structured_context.query,
+                &structured_context.context,
+                0.0, // TODO: Make configurable
+                learning_rate,
+            );
+        }
 
-        //         // TODO: Remove
-        //         // Filter out lines starting with 'EXPECTED:', 'EXPECTED_FAILURE:', or 'COMMENT:'
-        //         let filtered_text: String = raw_text
-        //             .lines()
-        //             .filter(|line| {
-        //                 !line.trim_start().starts_with("EXPECTED:")
-        //                     && !line.trim_start().starts_with("EXPECTED_FAILURE:")
-        //                     && !line.trim_start().starts_with("COMMENT:")
-        //             })
-        //             .collect::<Vec<&str>>()
-        //             .join("\n");
+        // Process false negative contexts
+        for (_, structured_context) in &false_negative_query_contexts {
+            eprintln!(
+                "Context - False Negative - {}, {:?}",
+                structured_context.query, structured_context.context
+            );
 
-        //         // TODO: Replace
-        //         // Extract context from the filtered text
-        //         let context: Vec<String> =
-        //             filtered_text.split_whitespace().map(String::from).collect();
-
-        //         // TODO: Replace
-        //         // Simulate target and ticker for training (modify as needed)
-        //         let ticker = "EXAMPLE"; // Replace with the actual ticker from the file
-        //         let target = 1.0; // Example: Set to 1.0 for true positive
-
-        //         // Update weights
-        //         result_bias_adjuster.update_weights(&ticker, &context, target, learning_rate);
-        //     }
-        // }
-
-        // eprintln!("Context weights: {:?}", result_bias_adjuster.global_weights);
+            result_bias_adjuster.update_weights(
+                &structured_context.query,
+                &structured_context.context,
+                0.0, // TODO: Make configurable
+                learning_rate,
+            );
+        }
     }
 
     println!("Weights: {:?}", result_bias_adjuster.weights);

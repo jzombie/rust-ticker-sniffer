@@ -21,7 +21,7 @@ impl ResultBiasAdjuster {
     }
 
     /// Compute a hash for a query-context pair
-    fn hash_query_context(&self, query: &str, context: &[String]) -> u64 {
+    pub fn hash_query_context(&self, query: &str, context: &[String]) -> u64 {
         let mut hash = hash64(query);
 
         for word in context {
