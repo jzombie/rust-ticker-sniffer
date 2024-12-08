@@ -56,19 +56,19 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
     let length_of_interest = 8;
-    let intermediate_query_results = token_processor.query_tokens_by_length(length_of_interest);
+    let results_iter = token_processor.query_tokens_by_length(length_of_interest);
 
-    for intermediate_query_result in intermediate_query_results {
-            println!(
-                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?} - Company Tokens: {:?}",
-                intermediate_query_result.company_index,
-                intermediate_query_result.token_index,
-                intermediate_query_result.symbol, 
-                intermediate_query_result.token,
-                intermediate_query_result.source_type,
-                intermediate_query_result.company_name,
-                intermediate_query_result.company_tokens
-            );
+    for result in results_iter {
+        println!(
+            "Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Tokens: {:?}",
+            result.company_index,
+            result.token_index,
+            result.symbol,
+            result.token,
+            result.source_type,
+            result.company_tokens
+        
+        );
     }
 
     // if let Some(bin) = token_processor.query_tokens_by_length(length_of_interest) {

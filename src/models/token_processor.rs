@@ -103,32 +103,32 @@ impl<'a> TokenProcessor<'a> {
         }
     }
 
-    pub fn query_tokens_by_length(&self, length: usize) -> Vec<IntermediateQueryResult> {
-        let mut results = Vec::new();
+    /// Note: An Iterator is used on the output to prevent eager execution,
+    /// letting the consumer determine if it should proceed to the next result.
+    pub fn query_tokens_by_length(
+        &'a self,
+        length: usize,
+    ) -> impl Iterator<Item = IntermediateQueryResult> + 'a {
+        self.token_length_bins
+            .get(length)
+            .into_iter()
+            .flat_map(move |bin| {
+                bin.iter().map(move |&(company_index, token_index)| {
+                    let (token, source_type) = &self.tokenized_entries[company_index][token_index];
+                    let (symbol, company_name) = &self.company_symbols_list[company_index];
+                    let company_tokens = self.tokenized_entries[company_index].clone();
 
-        // Check if there are tokens of the requested length
-        if let Some(bin) = self.token_length_bins.get(length) {
-            for &(company_index, token_index) in bin {
-                // Retrieve token and source type
-                let (token, source_type) = &self.tokenized_entries[company_index][token_index];
-                let (symbol, company_name) = &self.company_symbols_list[company_index]; // Retrieve the stock symbol and company name
-
-                let company_tokens = self.tokenized_entries[company_index].clone();
-
-                // Add to the results
-                results.push(IntermediateQueryResult {
-                    company_index,
-                    token_index,
-                    token: token.clone(),
-                    source_type: *source_type,
-                    symbol: symbol.clone(),
-                    company_name: company_name.clone(),
-                    company_tokens,
-                });
-            }
-        }
-
-        results
+                    IntermediateQueryResult {
+                        company_index,
+                        token_index,
+                        token: token.clone(),
+                        source_type: *source_type,
+                        symbol: symbol.clone(),
+                        company_name: company_name.clone(),
+                        company_tokens,
+                    }
+                })
+            })
     }
 
     // pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
