@@ -8,7 +8,7 @@ pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, TokenProcessor, We
 pub mod utils;
 pub use utils::{token_to_charcode_vector, tokenize};
 pub mod types;
-pub use types::{CompanyName, CompanySymbolsList, TickerSymbol};
+pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, TokenSourceType};
 
 pub fn extract_tickers_from_text(
     text: &str,
@@ -55,11 +55,11 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
-    let length_of_interest = 5;
+    let length_of_interest = 4;
     let token_start_index = 0;
-    let token_end_index = 1;
-    let include_company_name_tokens = false;
-    let results_iter = token_processor.query_tokens_by_length(length_of_interest, token_start_index, token_end_index, include_company_name_tokens);
+    let token_end_index = 4;
+    let include_source_types = &[TokenSourceType::Symbol, TokenSourceType::CompanyName];
+    let results_iter = token_processor.query_tokens_by_length(length_of_interest, token_start_index, token_end_index, include_source_types );
 
     for result in results_iter {
         println!(

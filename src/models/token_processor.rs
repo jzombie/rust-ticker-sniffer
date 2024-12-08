@@ -1,12 +1,5 @@
-use crate::types::CompanySymbolsList;
+use crate::types::{CompanySymbolsList, TokenSourceType};
 use crate::utils::tokenize;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(u8)] // Use a numeric representation for efficiency
-pub enum TokenSourceType {
-    Symbol = 0,      // Tokens derived from the symbol
-    CompanyName = 1, // Tokens derived from the company name
-}
 
 // TODO: Use numeric data
 type TokenizedEntry = Vec<(String, TokenSourceType)>;
@@ -109,7 +102,7 @@ impl<'a> TokenProcessor<'a> {
         length: usize,
         token_start_index: usize,
         token_end_index: usize,
-        include_company_name_tokens: bool,
+        include_source_types: &'a [TokenSourceType],
     ) -> impl Iterator<Item = IntermediateQueryResult<'a>> + 'a {
         self.token_length_bins
             .get(length)
@@ -122,8 +115,8 @@ impl<'a> TokenProcessor<'a> {
                     })
                     .filter(move |&&(company_index, token_index)| {
                         let (_, source_type) = &self.tokenized_entries[company_index][token_index];
-                        // Include or exclude tokens based on `source_type`
-                        include_company_name_tokens || *source_type != TokenSourceType::CompanyName
+                        // Include only tokens with source types in the provided list
+                        include_source_types.contains(source_type)
                     })
                     .map(move |&(company_index, token_index)| {
                         let (token, source_type) =
@@ -143,6 +136,7 @@ impl<'a> TokenProcessor<'a> {
                     })
             })
     }
+
     // pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
     //     self.token_length_bins.get(length)
     // }
