@@ -1,4 +1,4 @@
-use crate::types::CompanySymbolsList;
+use crate::types::{CompanyName, CompanySymbolsList};
 use crate::utils::tokenize;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -25,6 +25,15 @@ pub struct TokenProcessor<'a> {
     pub tokenized_entries: Vec<TokenizedEntry>,
     pub max_corpus_token_length: usize,
     pub token_length_bins: Vec<TokenBin>,
+}
+
+pub struct IntermediateQueryResult {
+    pub company_index: CompanyIndex,
+    pub token_index: TokenIndex,
+    pub token: String,
+    pub source_type: TokenSourceType,
+    pub symbol: String,
+    pub company_name: Option<CompanyName>,
 }
 
 impl<'a> TokenProcessor<'a> {
@@ -93,7 +102,32 @@ impl<'a> TokenProcessor<'a> {
         }
     }
 
-    pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
-        self.token_length_bins.get(length)
+    pub fn query_tokens_by_length(&self, length: usize) -> Vec<IntermediateQueryResult> {
+        let mut results = Vec::new();
+
+        // Check if there are tokens of the requested length
+        if let Some(bin) = self.token_length_bins.get(length) {
+            for &(company_index, token_index) in bin {
+                // Retrieve token and source type
+                let (token, source_type) = &self.tokenized_entries[company_index][token_index];
+                let (symbol, company_name) = &self.company_symbols_list[company_index]; // Retrieve the stock symbol and company name
+
+                // Add to the results
+                results.push(IntermediateQueryResult {
+                    company_index,
+                    token_index,
+                    token: token.clone(),
+                    source_type: *source_type,
+                    symbol: symbol.clone(),
+                    company_name: company_name.clone(),
+                });
+            }
+        }
+
+        results
     }
+
+    // pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
+    //     self.token_length_bins.get(length)
+    // }
 }

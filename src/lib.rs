@@ -56,23 +56,37 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
     let length_of_interest = 8;
-    if let Some(bin) = token_processor.query_tokens_by_length(length_of_interest) {
-        println!("Items with tokens of length {}:", length_of_interest);
-        for &(company_index, token_index) in bin {
-            let (token, source_type) =
-                &token_processor.tokenized_entries[company_index][token_index];
-            let (symbol, company_name) = &company_symbols_list[company_index];
+    let intermediate_query_results = token_processor.query_tokens_by_length(length_of_interest);
+
+    for intermediate_query_result in intermediate_query_results {
             println!(
-             "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
-             company_index, token_index, symbol, token, source_type, company_name
-         );
-        }
-    } else {
-        println!(
-            "No items found with tokens of length {}.",
-            length_of_interest
-        );
+                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
+                intermediate_query_result.company_index,
+                intermediate_query_result.token_index,
+                intermediate_query_result.symbol, 
+                intermediate_query_result.token,
+                intermediate_query_result.source_type,
+                intermediate_query_result.company_name
+            );
     }
+
+    // if let Some(bin) = token_processor.query_tokens_by_length(length_of_interest) {
+    //     println!("Items with tokens of length {}:", length_of_interest);
+    //     for &(company_index, token_index) in bin {
+    //         let (token, source_type) =
+    //             &token_processor.tokenized_entries[company_index][token_index];
+    //         let (symbol, company_name) = &company_symbols_list[company_index];
+    //         println!(
+    //          "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
+    //          company_index, token_index, symbol, token, source_type, company_name
+    //      );
+    //     }
+    // } else {
+    //     println!(
+    //         "No items found with tokens of length {}.",
+    //         length_of_interest
+    //     );
+    // }
 
     // // Example: Access tokens of a specific length
     // let length_of_interest = 15;
