@@ -93,7 +93,7 @@ impl<'a> TokenProcessor<'a> {
         }
     }
 
-    // pub fn query_tokens_by_length(&self, length: usize) -> Option<&Vec<(usize, usize)>> {
-    //     // Return tokens of a given length
-    // }
+    pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
+        self.token_length_bins.get(length)
+    }
 }

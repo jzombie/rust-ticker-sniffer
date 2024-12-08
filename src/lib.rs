@@ -54,18 +54,18 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let token_processor = TokenProcessor::new(&company_symbols_list);
 
     // TODO: Refactor
-    // Example: Access tokens of a specific length and display associated company tokens
+    // Query for tokens of a specific length (e.g., length 8)
     let length_of_interest = 8;
-    if let Some(bin) = token_processor.token_length_bins.get(length_of_interest) {
+    if let Some(bin) = token_processor.query_tokens_by_length(length_of_interest) {
         println!("Items with tokens of length {}:", length_of_interest);
         for &(company_index, token_index) in bin {
             let (token, source_type) =
                 &token_processor.tokenized_entries[company_index][token_index];
-            let (symbol, company_name) = &company_symbols_list[company_index]; // Retrieve the stock symbol
+            let (symbol, company_name) = &company_symbols_list[company_index];
             println!(
-                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
-                company_index, token_index, symbol, token, source_type, &company_name
-            );
+             "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
+             company_index, token_index, symbol, token, source_type, company_name
+         );
         }
     } else {
         println!(
