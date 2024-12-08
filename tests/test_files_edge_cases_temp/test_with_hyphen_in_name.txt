@@ -1,0 +1,5 @@
+The shift was prompted by Wal-mart's...
+
+EXPECTED: WMT
+
+COMMENT: COMMENT: https://www.zacks.com/stock/news/2232512/etfs-in-focus-as-amazon-enters-dow-jones?cid=CS-STOCKNEWSAPI-FT-etf_news_and_commentary-2232512
