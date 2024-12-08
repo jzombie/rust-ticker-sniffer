@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 mod constants;
 use crate::constants::STOP_WORDS;
 pub mod models;
-pub use constants::DEFAULT_WEIGHTS;
+pub use constants::{DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_WEIGHTS};
 pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, Weights};
 pub mod utils;
 pub use utils::{
@@ -277,7 +277,7 @@ fn extract_tickers_from_company_names(
                         result_bias_adjuster.score(&lc_norm_input_string, &company_tokens);
 
                     // Scale match_score by result_bias_adjuster_score
-                    match_score = match_score * (result_bias_adjuster_score * 2.0);
+                    match_score *= result_bias_adjuster_score * (1.0 / DEFAULT_BIAS_ADJUSTER_SCORE);
                 }
 
                 if lc_norm_input_string.len() > 0 {

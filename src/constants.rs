@@ -9,6 +9,8 @@ pub const DEFAULT_WEIGHTS: Weights = Weights {
     abbreviation_match_threshold: 0.8,
 };
 
+pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
+
 pub const STOP_WORDS: &[&str] = &[
     "a",
     "about",

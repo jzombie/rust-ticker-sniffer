@@ -1,3 +1,4 @@
+use crate::constants::DEFAULT_BIAS_ADJUSTER_SCORE;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -32,7 +33,10 @@ impl ResultBiasAdjuster {
     /// Compute the score for a query-context pair
     pub fn score(&self, query: &str, context: &[String]) -> f32 {
         let key = self.hash_query_context(query, context);
-        *self.weights.get(&key).unwrap_or(&0.5) // Default to 0.5 for neutral start
+        *self
+            .weights
+            .get(&key)
+            .unwrap_or(&DEFAULT_BIAS_ADJUSTER_SCORE)
     }
 
     /// Update the weights for a query-context pair using a simple gradient
