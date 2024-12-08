@@ -51,20 +51,23 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // eprintln!("vectors: {:?}", vectors);
 
-    // First pass: Determine the maximum token length
-    let mut max_corpus_token_length = 0;
+    let mut max_corpus_token_length: usize = 0;
+    let mut tokenized_data: Vec<Vec<String>> = Vec::new(); // Store tokenized data for reuse
 
+    // First pass: Tokenize and determine the maximum token length
     for (symbol, company_name) in company_symbols_list.iter() {
+        // TODO: Store numeric tokens instead
         let mut company_tokens: Vec<String> = Vec::new();
 
         if let Some(name) = company_name {
             let combined = format!("{} {}", symbol, name);
-            let tokenized_name = tokenize(&combined);
-            company_tokens.extend(tokenized_name);
+            company_tokens = tokenize(&combined); // Tokenize once and store
         } else {
-            let tokenized_name = tokenize(symbol);
-            company_tokens.extend(tokenized_name);
+            company_tokens = tokenize(symbol); // Tokenize once and store
         }
+
+        // Store tokenized data for later use
+        tokenized_data.push(company_tokens.clone());
 
         // Update the maximum token length
         for token in &company_tokens {
@@ -75,24 +78,22 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // Pre-allocate bins after determining the maximum token length
     let mut token_length_bins: Vec<Vec<usize>> = vec![Vec::new(); max_corpus_token_length + 1];
 
-    // Second pass: Populate the bins
-    for (index, (symbol, company_name)) in company_symbols_list.iter().enumerate() {
-        let mut company_tokens: Vec<String> = Vec::new();
-
-        if let Some(name) = company_name {
-            let combined = format!("{} {}", symbol, name);
-            let tokenized_name = tokenize(&combined);
-            company_tokens.extend(tokenized_name);
-        } else {
-            let tokenized_name = tokenize(symbol);
-            company_tokens.extend(tokenized_name);
-        }
-
+    // Second pass: Populate the bins using stored tokenized data
+    for (index, company_tokens) in tokenized_data.iter().enumerate() {
         // Bin tokens by length
-        for token in &company_tokens {
+        for token in company_tokens {
             let token_length = token.len();
             token_length_bins[token_length].push(index);
         }
+    }
+
+    // Example: Access tokens of a specific length
+    let length_of_interest = 5;
+    if let Some(bin) = token_length_bins.get(length_of_interest) {
+        println!(
+            "Items with tokens of length {}: {:?}",
+            length_of_interest, bin
+        );
     }
 
     // Example: Access tokens of a specific length
