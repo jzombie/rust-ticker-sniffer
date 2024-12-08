@@ -1,5 +1,6 @@
 #[path = "../test_utils/lib.rs"]
 mod test_utils;
+use test_utils::constants::TEST_FILES_DIRECTORY;
 
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
@@ -25,7 +26,7 @@ mod tests {
             let result_bias_adjuster = CONTEXT_ATTENTION.as_ref().unwrap();
 
             // Directory containing the test files
-            let test_dir = "tests/test_files";
+            let test_dir = TEST_FILES_DIRECTORY;
 
             // Read all files in the directory
             let files = read_dir(test_dir).expect("Failed to read test files directory");

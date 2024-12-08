@@ -4,6 +4,7 @@ use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_WEIGHTS};
 
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
+use test_utils::constants::{TEST_FILES_DIRECTORY, TEST_SYMBOLS_CSV_PATH};
 use test_utils::{load_symbols_from_file, run_test_for_file, EvaluationResult};
 
 #[path = "../../bin_utils/lib.rs"]
@@ -18,12 +19,12 @@ struct StructuredQueryContext {
 }
 
 fn train_result_bias_adjuster() {
-    let test_dir = "tests/test_files";
-    let symbols_file = "tests/test_symbols.csv";
+    let test_dir = TEST_FILES_DIRECTORY;
+    let symbols_file = TEST_SYMBOLS_CSV_PATH;
 
     // Load symbols
     let symbols_map: HashMap<String, Option<String>> =
-        load_symbols_from_file(symbols_file).expect("Failed to load symbols");
+        load_symbols_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols");
 
     // Initialize ResultBiasAdjuster
     let mut result_bias_adjuster = ResultBiasAdjuster::new();

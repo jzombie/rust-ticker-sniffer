@@ -7,6 +7,7 @@ use ticker_sniffer::{
 pub mod models;
 pub use models::EvaluationResult;
 pub mod constants;
+use constants::TEST_SYMBOLS_CSV_PATH;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
 pub fn load_symbols_from_file(file_path: &str) -> Result<SymbolsMap, Box<dyn Error>> {
@@ -77,7 +78,7 @@ pub fn run_test_for_file(
 ) -> (usize, f32, EvaluationResult) {
     // Load symbols from a test CSV file
     let symbols_map =
-        load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
+        load_symbols_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols from CSV");
 
     // Read the content of the text file
     let raw_text = fs::read_to_string(test_file_path).expect("Failed to read test file");
