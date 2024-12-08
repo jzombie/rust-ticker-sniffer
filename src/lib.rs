@@ -28,7 +28,7 @@ pub fn extract_tickers_from_text(
 
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
-    _symbols_map: &SymbolsMap,
+    symbols_map: &SymbolsMap,
     _weights: Weights,
     _result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
@@ -46,11 +46,16 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // let tokens = tokenize(&text, 3);
 
-    let tokens = tokenize(
-        &"E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.",
-    );
-
-    eprintln!("Tokens: {:?}", tokens);
+    for (symbol, company_name) in symbols_map {
+        if let Some(name) = company_name {
+            let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
+            let tokenized_name = tokenize(&combined); // Pass as a single string reference
+            eprintln!("{:?}", tokenized_name);
+        } else {
+            let tokenized_name = tokenize(&symbol);
+            eprintln!("{:?}", tokenized_name);
+        }
+    }
 
     let results = vec![];
     let total_score = 0.0;

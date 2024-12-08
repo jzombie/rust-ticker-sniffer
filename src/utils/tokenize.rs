@@ -20,7 +20,6 @@ pub fn tokenize(text: &str) -> Vec<String> {
         .to_string();
 
     // Tokenize, process possessives, handle web addresses, and uppercase
-    // Tokenize, process possessives, handle web addresses, and uppercase
     cleaned_text
         .split_whitespace()
         .filter(|word| word.chars().any(|c| c.is_uppercase())) // Keep only words with at least one capital letter
