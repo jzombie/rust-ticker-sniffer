@@ -26,7 +26,7 @@ fn main() {
     }
 
     // Step 2: Query a test string
-    let query = "Berkshire";
+    let query = "Apple";
     let query_words: Vec<&str> = query.split_whitespace().collect();
     let query_vectors: Vec<Vec<u32>> = query_words
         .iter()
@@ -35,32 +35,50 @@ fn main() {
 
     println!("Query: {}, Word Vectors: {:?}", query, query_vectors);
 
-    // Step 3: Filter candidates by length and truncate vectors
-    let length_tolerance = 2;
+    // Step 3: Filter candidates by length and pad query vectors
+    let length_tolerance = 2; // Tolerance for length difference
     let mut similarities = Vec::new();
 
     for (symbol, company_name, vectors, word_lengths) in &word_vectors {
+        // Define the sliding window: indices for the range of words to consider
+        let start_index = 0;
+        let end_index = 4;
+
+        // Extract the vectors and word lengths within the sliding window
+        let limited_vectors: Vec<&Vec<u32>> = vectors
+            .iter()
+            .skip(start_index)
+            .take(end_index - start_index)
+            .collect();
+        let limited_word_lengths: Vec<usize> = word_lengths
+            .iter()
+            .skip(start_index)
+            .take(end_index - start_index)
+            .cloned()
+            .collect();
+
         let mut total_similarity = 0.0;
 
         for (query_vector, query_length) in query_vectors
             .iter()
             .zip(query_words.iter().map(|w| w.len()))
         {
-            // Check if any word in the company name matches the query length tolerance
-            if word_lengths
+            // Check if any word in the first two words matches the query length tolerance
+            if limited_word_lengths
                 .iter()
                 .any(|&length| (length as isize - query_length as isize).abs() <= length_tolerance)
             {
-                // Truncate each candidate vector to the query vector length
-                let truncated_vectors: Vec<Vec<u32>> = vectors
+                // Pad the query vector to match each candidate vector length
+                let padded_query_vectors: Vec<Vec<u32>> = limited_vectors
                     .iter()
-                    .map(|v| truncate_vector(v, query_vector.len()))
+                    .map(|v| pad_vector(query_vector, v.len()))
                     .collect();
 
                 // Compute cosine similarity
-                let max_similarity = truncated_vectors
+                let max_similarity = padded_query_vectors
                     .iter()
-                    .map(|v| cosine_similarity(query_vector, v))
+                    .zip(limited_vectors.iter()) // Use iter() here to avoid moving limited_vectors
+                    .map(|(padded_query, candidate)| cosine_similarity(padded_query, candidate))
                     .fold(0.0, f64::max);
 
                 total_similarity += max_similarity;
@@ -98,9 +116,13 @@ fn string_to_charcode_vector(input: &str) -> Vec<u32> {
         .collect()
 }
 
-/// Truncate a vector to the desired length
-fn truncate_vector(vector: &[u32], length: usize) -> Vec<u32> {
-    vector.iter().cloned().take(length).collect()
+/// Pad a vector with zeros to the desired length
+fn pad_vector(vector: &[u32], length: usize) -> Vec<u32> {
+    let mut padded = vector.to_vec();
+    if padded.len() < length {
+        padded.resize(length, 0);
+    }
+    padded
 }
 
 /// Calculate cosine similarity between two vectors
