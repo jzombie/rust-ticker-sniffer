@@ -14,6 +14,8 @@ use test_utils::{load_symbols_from_file, run_test_for_file};
 mod bin_utils;
 use bin_utils::suppress_output;
 
+const SHOULD_SUPPRESS_OUTPUT: bool = true;
+
 fn tune_weights() {
     let test_dir = "tests/test_files";
 
@@ -86,6 +88,7 @@ fn tune_weights() {
             test_dir,
             regularization_lambda,
             &result_bias_adjuster,
+            SHOULD_SUPPRESS_OUTPUT,
         );
 
         if initial_loss.is_none() {
@@ -261,6 +264,7 @@ fn compute_gradient_with_regularization(
         test_dir,
         regularization_lambda,
         result_bias_adjuster,
+        SHOULD_SUPPRESS_OUTPUT,
     );
     let loss_perturbed = evaluate_loss_with_regularization(
         perturbed_weights,
@@ -268,6 +272,7 @@ fn compute_gradient_with_regularization(
         test_dir,
         regularization_lambda,
         result_bias_adjuster,
+        SHOULD_SUPPRESS_OUTPUT,
     );
 
     // Compute gradient as finite difference
@@ -298,6 +303,7 @@ fn evaluate_loss_with_regularization(
     test_dir: &str,
     regularization_lambda: f32,
     result_bias_adjuster: &ResultBiasAdjuster,
+    should_suppress_output: bool,
 ) -> f32 {
     // Evaluate the original loss
     let base_loss = evaluate_loss(
@@ -305,6 +311,7 @@ fn evaluate_loss_with_regularization(
         &symbols_map,
         test_dir,
         result_bias_adjuster,
+        should_suppress_output,
     );
 
     // Add L2 regularization penalty
@@ -323,6 +330,7 @@ fn evaluate_loss(
     _symbols_map: &SymbolsMap,
     test_dir: &str,
     result_bias_adjuster: &ResultBiasAdjuster,
+    should_suppress_output: bool,
 ) -> f32 {
     let mut total_mse: f32 = 0.0;
     let mut test_file_count = 0;
@@ -335,14 +343,17 @@ fn evaluate_loss(
 
         if file_path.is_file() {
             // Wrap `run_test_for_file` to suppress output
-            let (_, _, evaluation_result) = suppress_output(|| {
-                run_test_for_file(
-                    file_path.to_str().unwrap(),
-                    false,
-                    weights.clone(),
-                    result_bias_adjuster,
-                )
-            });
+            let (_, _, evaluation_result) = suppress_output(
+                || {
+                    run_test_for_file(
+                        file_path.to_str().unwrap(),
+                        false,
+                        weights.clone(),
+                        result_bias_adjuster,
+                    )
+                },
+                should_suppress_output,
+            );
 
             total_mse += evaluation_result.mse;
             test_file_count += 1;

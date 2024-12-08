@@ -175,8 +175,8 @@ fn evaluate_loss(
             let evaluation_result: EvaluationResult;
 
             // Run test and calculate MSE
-            if should_suppress_output {
-                evaluation_result = suppress_output(|| {
+            evaluation_result = suppress_output(
+                || {
                     let (_, _, result) = run_test_for_file(
                         file_path.to_str().expect("Invalid UTF-8 in file path"),
                         false, // Disable assertions during training
@@ -184,16 +184,9 @@ fn evaluate_loss(
                         result_bias_adjuster,
                     );
                     result
-                });
-            } else {
-                let (_, _, result) = run_test_for_file(
-                    file_path.to_str().expect("Invalid UTF-8 in file path"),
-                    false, // Disable assertions during training
-                    weights.clone(),
-                    result_bias_adjuster,
-                );
-                evaluation_result = result;
-            }
+                },
+                should_suppress_output,
+            );
 
             total_loss += evaluation_result.mse;
             file_count += 1;
