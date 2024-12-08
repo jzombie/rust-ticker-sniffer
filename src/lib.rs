@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 mod constants;
 // use crate::constants::STOP_WORDS;
 pub mod models;
@@ -44,7 +43,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     //     &"E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.",
     // );
 
-    let tokens = tokenize("A cool test, way to go Apple, e-Trade");
+    // let tokens = tokenize("A cool test, way to go Apple, e-Trade");
     // let vectors: Vec<Vec<u32>> = tokens
     //     .into_iter()
     //     .map(|token| token_to_charcode_vector(&token)) // Each token produces a Vec<u32>
@@ -52,45 +51,58 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // eprintln!("vectors: {:?}", vectors);
 
-    // Prototype symbols_map tokenization
-    let mut max_corpus_token_length: usize = 0;
-    let mut token_length_bins: HashMap<usize, Vec<usize>> = HashMap::new(); // Bin tokens by length
+    // First pass: Determine the maximum token length
+    let mut max_corpus_token_length = 0;
 
-    for (index, (symbol, company_name)) in company_symbols_list.iter().enumerate() {
-        let mut company_tokens: Vec<String> = Vec::new(); // Initialize a vector for tokens
+    for (symbol, company_name) in company_symbols_list.iter() {
+        let mut company_tokens: Vec<String> = Vec::new();
 
         if let Some(name) = company_name {
-            let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
-            let tokenized_name = tokenize(&combined); // Tokenize the combined string
-                                                      // eprintln!("{:?}", tokenized_name);
-
-            // Push each token into company_tokens
+            let combined = format!("{} {}", symbol, name);
+            let tokenized_name = tokenize(&combined);
             company_tokens.extend(tokenized_name);
         } else {
-            let tokenized_name = tokenize(&symbol); // Tokenize the symbol
-                                                    // eprintln!("{:?}", tokenized_name);
-
-            // Push each token into company_tokens
+            let tokenized_name = tokenize(symbol);
             company_tokens.extend(tokenized_name);
         }
 
-        // // Update the maximum token length
+        // Update the maximum token length
         for token in &company_tokens {
-            let token_length = token.len();
-
-            token_length_bins
-                .entry(token_length)
-                .or_insert_with(Vec::new)
-                .push(index);
-
-            // max_corpus_token_length = max_corpus_token_length.max(token.len());
+            max_corpus_token_length = max_corpus_token_length.max(token.len());
         }
-
-        // Optionally, print or process the company_tokens vector
-        // eprintln!("Company tokens for {}: {:?}", symbol, company_tokens);
     }
 
-    eprintln!("{:?}", &token_length_bins.get(&5));
+    // Pre-allocate bins after determining the maximum token length
+    let mut token_length_bins: Vec<Vec<usize>> = vec![Vec::new(); max_corpus_token_length + 1];
+
+    // Second pass: Populate the bins
+    for (index, (symbol, company_name)) in company_symbols_list.iter().enumerate() {
+        let mut company_tokens: Vec<String> = Vec::new();
+
+        if let Some(name) = company_name {
+            let combined = format!("{} {}", symbol, name);
+            let tokenized_name = tokenize(&combined);
+            company_tokens.extend(tokenized_name);
+        } else {
+            let tokenized_name = tokenize(symbol);
+            company_tokens.extend(tokenized_name);
+        }
+
+        // Bin tokens by length
+        for token in &company_tokens {
+            let token_length = token.len();
+            token_length_bins[token_length].push(index);
+        }
+    }
+
+    // Example: Access tokens of a specific length
+    let length_of_interest = 15;
+    if let Some(bin) = token_length_bins.get(length_of_interest) {
+        println!(
+            "Items with tokens of length {}: {:?}",
+            length_of_interest, bin
+        );
+    }
 
     let results = vec![];
     let total_score = 0.0;
