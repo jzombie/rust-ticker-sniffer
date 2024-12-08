@@ -10,6 +10,13 @@ pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
 pub mod types;
 pub use types::{CompanyName, CompanySymbolsList, TickerSymbol};
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)] // Use a numeric representation for efficiency
+pub enum TokenSourceType {
+    Symbol = 0,      // Tokens derived from the symbol
+    CompanyName = 1, // Tokens derived from the company name
+}
+
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
@@ -54,22 +61,22 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let mut max_corpus_token_length: usize = 0;
 
     // TODO: Store numeric tokens instead
-    let mut tokenized_data: Vec<Vec<(String, String)>> = Vec::new(); // Store tokenized data for reuse
+    let mut tokenized_data: Vec<Vec<(String, TokenSourceType)>> = Vec::new(); // Store tokenized data for reuse
 
     // First pass: Tokenize and determine the maximum token length
     for (symbol, company_name) in company_symbols_list.iter() {
-        let mut company_tokens: Vec<(String, String)> = Vec::new();
+        let mut company_tokens: Vec<(String, TokenSourceType)> = Vec::new();
 
         // Handle the symbol token as a single token
         let symbol_token = tokenize(symbol).get(0).cloned(); // Take the first entry, if it exists
         if let Some(symbol_token) = symbol_token {
-            company_tokens.push((symbol_token, (&"symbol").to_string())); // Token from symbol
+            company_tokens.push((symbol_token, TokenSourceType::Symbol)); // Token from symbol
         }
 
         if let Some(name) = company_name {
             let name_tokens = tokenize(name);
             for token in name_tokens {
-                company_tokens.push((token, (&"company_name").to_string())); // Token from company name
+                company_tokens.push((token, TokenSourceType::CompanyName)); // Token from company name
             }
         }
 
