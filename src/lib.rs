@@ -102,15 +102,15 @@ pub fn extract_tickers_from_text_with_custom_weights(
     }
 
     // Example: Access tokens of a specific length and display associated company tokens
-    let length_of_interest = 4;
+    let length_of_interest = 8;
     if let Some(bin) = token_length_bins.get(length_of_interest) {
         println!("Items with tokens of length {}:", length_of_interest);
         for &(company_index, token_index) in bin {
-            let (token, source) = &tokenized_data[company_index][token_index];
-            let (symbol, _) = &company_symbols_list[company_index]; // Retrieve the stock symbol
+            let (token, source_type) = &tokenized_data[company_index][token_index];
+            let (symbol, company_name) = &company_symbols_list[company_index]; // Retrieve the stock symbol
             println!(
-                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source: {:?}",
-                company_index, token_index, symbol, token, source
+                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
+                company_index, token_index, symbol, token, source_type, &company_name
             );
         }
     } else {
