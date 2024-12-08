@@ -54,24 +54,30 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let mut max_corpus_token_length: usize = 0;
 
     // TODO: Store numeric tokens instead
-    let mut tokenized_data: Vec<Vec<String>> = Vec::new(); // Store tokenized data for reuse
+    let mut tokenized_data: Vec<Vec<(String, Option<String>)>> = Vec::new(); // Store tokenized data for reuse
 
     // First pass: Tokenize and determine the maximum token length
     for (symbol, company_name) in company_symbols_list.iter() {
-        let mut company_tokens: Vec<String> = Vec::new();
+        let mut company_tokens: Vec<(String, Option<String>)> = Vec::new();
+
+        // Handle the symbol token as a single token
+        let symbol_token = tokenize(symbol).get(0).cloned(); // Take the first entry, if it exists
+        if let Some(symbol_token) = symbol_token {
+            company_tokens.push((symbol_token, None)); // Token from symbol
+        }
 
         if let Some(name) = company_name {
-            let combined = format!("{} {}", symbol, name);
-            company_tokens = tokenize(&combined); // Tokenize once and store
-        } else {
-            company_tokens = tokenize(symbol); // Tokenize once and store
+            let name_tokens = tokenize(name);
+            for token in name_tokens {
+                company_tokens.push((token, Some(name.clone()))); // Token from company name
+            }
         }
 
         // Store tokenized data for later use
         tokenized_data.push(company_tokens.clone());
 
         // Update the maximum token length
-        for token in &company_tokens {
+        for (token, _) in &company_tokens {
             max_corpus_token_length = max_corpus_token_length.max(token.len());
         }
     }
@@ -82,7 +88,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // Second pass: Populate the bins using stored tokenized data
     for (company_index, company_tokens) in tokenized_data.iter().enumerate() {
-        for (token_index, token) in company_tokens.iter().enumerate() {
+        for (token_index, (token, _)) in company_tokens.iter().enumerate() {
             let token_length = token.len();
             token_length_bins[token_length].push((company_index, token_index));
         }
@@ -93,13 +99,11 @@ pub fn extract_tickers_from_text_with_custom_weights(
     if let Some(bin) = token_length_bins.get(length_of_interest) {
         println!("Items with tokens of length {}:", length_of_interest);
         for &(company_index, token_index) in bin {
-            let token = &tokenized_data[company_index][token_index];
+            let (token, source) = &tokenized_data[company_index][token_index];
+            let (symbol, _) = &company_symbols_list[company_index]; // Retrieve the stock symbol
             println!(
-                "  Company Index: {}, Token Index: {} - Token: {} - List Item: {:?}",
-                company_index,
-                token_index,
-                token,
-                company_symbols_list.get(company_index)
+                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source: {:?}",
+                company_index, token_index, symbol, token, source
             );
         }
     } else {
