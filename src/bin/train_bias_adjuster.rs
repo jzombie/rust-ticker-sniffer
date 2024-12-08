@@ -11,6 +11,8 @@ use test_utils::{load_symbols_from_file, run_test_for_file, EvaluationResult};
 mod bin_utils;
 use bin_utils::suppress_output;
 
+const SHOULD_SUPPRESS_OUTPUT: bool = true;
+
 struct StructuredQueryContext {
     query: String,
     context: Vec<String>,
@@ -44,8 +46,13 @@ fn train_result_bias_adjuster() {
         println!("Epoch {}/{}", epoch, max_epochs);
 
         // Evaluate current performance
-        let (current_loss, all_evaluation_results) =
-            evaluate_loss(&result_bias_adjuster, &weights, &symbols_map, test_dir);
+        let (current_loss, all_evaluation_results) = evaluate_loss(
+            &result_bias_adjuster,
+            &weights,
+            &symbols_map,
+            test_dir,
+            SHOULD_SUPPRESS_OUTPUT,
+        );
 
         // Stop training if no more loss
         if current_loss == 0.0 {
@@ -152,6 +159,7 @@ fn evaluate_loss(
     weights: &Weights,
     _symbols_map: &HashMap<String, Option<String>>,
     test_dir: &str,
+    should_suppress_output: bool,
 ) -> (f32, Vec<EvaluationResult>) {
     let mut total_loss = 0.0;
     let mut file_count = 0;
@@ -163,23 +171,29 @@ fn evaluate_loss(
         let file_path = file.path();
 
         if file_path.is_file() {
-            // Run test and calculate MSE
+            // Declare evaluation_result outside the block
+            let evaluation_result: EvaluationResult;
 
-            let (_, _, evaluation_result) = suppress_output(|| {
-                run_test_for_file(
-                    file_path.to_str().unwrap(),
+            // Run test and calculate MSE
+            if should_suppress_output {
+                evaluation_result = suppress_output(|| {
+                    let (_, _, result) = run_test_for_file(
+                        file_path.to_str().expect("Invalid UTF-8 in file path"),
+                        false, // Disable assertions during training
+                        weights.clone(),
+                        result_bias_adjuster,
+                    );
+                    result
+                });
+            } else {
+                let (_, _, result) = run_test_for_file(
+                    file_path.to_str().expect("Invalid UTF-8 in file path"),
                     false, // Disable assertions during training
                     weights.clone(),
                     result_bias_adjuster,
-                )
-            });
-
-            // let (_, _, evaluation_result) = run_test_for_file(
-            //     file_path.to_str().unwrap(),
-            //     false, // Disable assertions during training
-            //     weights.clone(),
-            //     result_bias_adjuster,
-            // );
+                );
+                evaluation_result = result;
+            }
 
             total_loss += evaluation_result.mse;
             file_count += 1;
@@ -188,7 +202,12 @@ fn evaluate_loss(
         }
     }
 
-    let average_loss = total_loss / file_count as f32;
+    // Avoid division by zero
+    let average_loss = if file_count > 0 {
+        total_loss / file_count as f32
+    } else {
+        0.0
+    };
 
     (average_loss, all_evaluation_results)
 }
