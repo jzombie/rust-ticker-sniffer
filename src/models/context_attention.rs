@@ -15,6 +15,10 @@ impl ContextAttention {
         }
     }
 
+    pub fn from_weights(weights: HashMap<u64, f32>) -> Self {
+        Self { weights }
+    }
+
     /// Compute a hash for a query-context pair
     fn hash_query_context(&self, query: &str, context: &[String]) -> u64 {
         let mut hasher = DefaultHasher::new();

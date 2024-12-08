@@ -1,6 +1,7 @@
 #[path = "../test_utils/lib.rs"]
 mod test_utils;
 
+use std::collections::HashMap;
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
 use ticker_sniffer::{ContextAttention, DEFAULT_WEIGHTS};
@@ -18,7 +19,17 @@ mod tests {
         unsafe {
             if CONTEXT_ATTENTION.is_none() {
                 // TODO: Initialize with some weights
-                CONTEXT_ATTENTION = Some(ContextAttention::new(256));
+                // CONTEXT_ATTENTION = Some(ContextAttention::new(256));
+                CONTEXT_ATTENTION = Some(ContextAttention::from_weights(HashMap::from([
+                    (15726725667165516449, 0.0),
+                    (18175059305241253125, 0.0),
+                    (6760917874204056577, 0.0),
+                    (2949345933018568219, 0.0),
+                    (2963807753026003782, 0.0),
+                    (13343208097864498901, 0.0),
+                    (10774098009159108967, 0.0),
+                    (18009285742348921912, 0.0),
+                ])));
             }
 
             let context_attention = CONTEXT_ATTENTION.as_ref().unwrap();

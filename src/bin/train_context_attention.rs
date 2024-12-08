@@ -156,6 +156,8 @@ fn train_context_attention() {
         // eprintln!("Context weights: {:?}", context_attention.global_weights);
     }
 
+    println!("Weights: {:?}", context_attention.weights);
+
     println!("Training completed. Best loss: {:.6}", best_loss);
 }
 
