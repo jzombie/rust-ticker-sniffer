@@ -7,7 +7,7 @@ pub use constants::{
 };
 pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, Weights};
 pub mod utils;
-pub use utils::{jaccard_similarity_chars, tokenize};
+pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
 pub mod types;
 pub use types::{SymbolsMap, TickerSymbol};
 
@@ -44,18 +44,25 @@ pub fn extract_tickers_from_text_with_custom_weights(
     //     &"E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.",
     // );
 
-    // let tokens = tokenize(&text, 3);
+    let tokens = tokenize("A cool test, way to go Apple, e-Trade");
+    let vectors: Vec<Vec<u32>> = tokens
+        .into_iter()
+        .map(|token| token_to_charcode_vector(&token)) // Each token produces a Vec<u32>
+        .collect();
 
-    for (symbol, company_name) in symbols_map {
-        if let Some(name) = company_name {
-            let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
-            let tokenized_name = tokenize(&combined); // Pass as a single string reference
-            eprintln!("{:?}", tokenized_name);
-        } else {
-            let tokenized_name = tokenize(&symbol);
-            eprintln!("{:?}", tokenized_name);
-        }
-    }
+    eprintln!("vectors: {:?}", vectors);
+
+    // Prototype symbols_map tokenization
+    // for (symbol, company_name) in symbols_map {
+    //     if let Some(name) = company_name {
+    //         let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
+    //         let tokenized_name = tokenize(&combined); // Pass as a single string reference
+    //         eprintln!("{:?}", tokenized_name);
+    //     } else {
+    //         let tokenized_name = tokenize(&symbol);
+    //         eprintln!("{:?}", tokenized_name);
+    //     }
+    // }
 
     let results = vec![];
     let total_score = 0.0;

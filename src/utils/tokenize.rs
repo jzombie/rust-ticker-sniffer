@@ -62,6 +62,13 @@ pub fn tokenize(text: &str) -> Vec<String> {
         .collect()
 }
 
+pub fn token_to_charcode_vector(token: &str) -> Vec<u32> {
+    token
+        .chars()
+        .map(|c| c.to_ascii_lowercase() as u32) // Convert to lowercase and get char code
+        .collect()
+}
+
 // pub fn tokenize_company_name_query(text: &str) -> Vec<&str> {
 //     tokenize(text)
 //         .iter()
