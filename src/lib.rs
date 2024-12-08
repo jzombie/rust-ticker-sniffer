@@ -79,9 +79,9 @@ fn extract_tickers_from_symbols(text: &str, symbols_map: &SymbolsMap) -> Vec<Tic
     let tokens = tokenize(text);
 
     for token in tokens {
-        // Normalize token to match symbol patterns
+        // Only match on tokens that are fully upper-case
         if token == token.to_uppercase() {
-            let normalized = token.to_uppercase();
+            let normalized = token.to_string();
 
             // Check if the normalized token directly matches any symbol
             if symbols_map.contains_key(&normalized) {
