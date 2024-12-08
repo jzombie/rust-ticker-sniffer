@@ -58,7 +58,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let length_of_interest = 5;
     let token_start_index = 0;
     let token_end_index = 1;
-    let results_iter = token_processor.query_tokens_by_length(length_of_interest, token_start_index, token_end_index);
+    let include_company_name_tokens = false;
+    let results_iter = token_processor.query_tokens_by_length(length_of_interest, token_start_index, token_end_index, include_company_name_tokens);
 
     for result in results_iter {
         println!(

@@ -109,6 +109,7 @@ impl<'a> TokenProcessor<'a> {
         length: usize,
         token_start_index: usize,
         token_end_index: usize,
+        include_company_name_tokens: bool,
     ) -> impl Iterator<Item = IntermediateQueryResult<'a>> + 'a {
         self.token_length_bins
             .get(length)
@@ -118,6 +119,11 @@ impl<'a> TokenProcessor<'a> {
                     // Filter tokens by their index within the specified range
                     .filter(move |&&(_, token_index)| {
                         token_index >= token_start_index && token_index < token_end_index
+                    })
+                    .filter(move |&&(company_index, token_index)| {
+                        let (_, source_type) = &self.tokenized_entries[company_index][token_index];
+                        // Include or exclude tokens based on `source_type`
+                        include_company_name_tokens || *source_type != TokenSourceType::CompanyName
                     })
                     .map(move |&(company_index, token_index)| {
                         let (token, source_type) =
