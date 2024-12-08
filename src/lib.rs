@@ -1,6 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 mod constants;
-use crate::constants::STOP_WORDS;
+// use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS,
@@ -9,7 +9,7 @@ pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, Weights};
 pub mod utils;
 pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
 pub mod types;
-pub use types::{CompanySymbolsList, TickerSymbol};
+pub use types::{CompanyName, CompanySymbolsList, TickerSymbol};
 
 pub fn extract_tickers_from_text(
     text: &str,
