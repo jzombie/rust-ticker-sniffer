@@ -27,16 +27,15 @@ pub struct TokenProcessor<'a> {
     pub token_length_bins: Vec<TokenBin>,
 }
 
-pub struct IntermediateQueryResult {
+pub struct IntermediateQueryResult<'a> {
     pub company_index: CompanyIndex,
     pub token_index: TokenIndex,
-    pub token: String,
+    pub token: &'a str,
     pub source_type: TokenSourceType,
-    pub symbol: String,
-    pub company_name: Option<CompanyName>,
-    pub company_tokens: Vec<(String, TokenSourceType)>,
+    pub symbol: &'a str,
+    pub company_name: Option<&'a str>,
+    pub company_tokens: &'a [(String, TokenSourceType)],
 }
-
 impl<'a> TokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
         let mut instance = Self {
@@ -108,7 +107,7 @@ impl<'a> TokenProcessor<'a> {
     pub fn query_tokens_by_length(
         &'a self,
         length: usize,
-    ) -> impl Iterator<Item = IntermediateQueryResult> + 'a {
+    ) -> impl Iterator<Item = IntermediateQueryResult<'a>> + 'a {
         self.token_length_bins
             .get(length)
             .into_iter()
@@ -116,15 +115,15 @@ impl<'a> TokenProcessor<'a> {
                 bin.iter().map(move |&(company_index, token_index)| {
                     let (token, source_type) = &self.tokenized_entries[company_index][token_index];
                     let (symbol, company_name) = &self.company_symbols_list[company_index];
-                    let company_tokens = self.tokenized_entries[company_index].clone();
+                    let company_tokens = &self.tokenized_entries[company_index];
 
                     IntermediateQueryResult {
                         company_index,
                         token_index,
-                        token: token.clone(),
+                        token,
                         source_type: *source_type,
-                        symbol: symbol.clone(),
-                        company_name: company_name.clone(),
+                        symbol,
+                        company_name: company_name.as_deref(),
                         company_tokens,
                     }
                 })
