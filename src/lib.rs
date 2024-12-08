@@ -52,11 +52,12 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // eprintln!("vectors: {:?}", vectors);
 
     let mut max_corpus_token_length: usize = 0;
+
+    // TODO: Store numeric tokens instead
     let mut tokenized_data: Vec<Vec<String>> = Vec::new(); // Store tokenized data for reuse
 
     // First pass: Tokenize and determine the maximum token length
     for (symbol, company_name) in company_symbols_list.iter() {
-        // TODO: Store numeric tokens instead
         let mut company_tokens: Vec<String> = Vec::new();
 
         if let Some(name) = company_name {

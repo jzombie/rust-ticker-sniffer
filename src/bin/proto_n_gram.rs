@@ -116,13 +116,13 @@ fn main() {
     }
 }
 
-fn string_to_charcode_vector(input: &str) -> Vec<u32> {
-    input
-        .chars()
-        .filter(|c| c.is_alphanumeric()) // Remove punctuation
-        .map(|c| c.to_ascii_lowercase() as u32) // Convert to lowercase and get char code
-        .collect()
-}
+// fn string_to_charcode_vector(input: &str) -> Vec<u32> {
+//     input
+//         .chars()
+//         .filter(|c| c.is_alphanumeric()) // Remove punctuation
+//         .map(|c| c.to_ascii_lowercase() as u32) // Convert to lowercase and get char code
+//         .collect()
+// }
 
 // Tri-gram version
 /// Convert a string into a vector of character codes, removing punctuation and making it lowercase
