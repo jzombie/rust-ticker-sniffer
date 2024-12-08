@@ -1,7 +1,7 @@
+extern crate fxhash;
 use crate::constants::DEFAULT_BIAS_ADJUSTER_SCORE;
-use std::collections::hash_map::DefaultHasher;
+use fxhash::hash64;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 
 #[derive(Clone)]
 pub struct ResultBiasAdjuster {
@@ -22,12 +22,13 @@ impl ResultBiasAdjuster {
 
     /// Compute a hash for a query-context pair
     fn hash_query_context(&self, query: &str, context: &[String]) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        query.hash(&mut hasher);
+        let mut hash = hash64(query);
+
         for word in context {
-            word.hash(&mut hasher);
+            hash ^= hash64(word); // Combine hashes with XOR for deterministic result
         }
-        hasher.finish()
+
+        hash
     }
 
     /// Compute the score for a query-context pair
