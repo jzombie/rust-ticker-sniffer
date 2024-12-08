@@ -60,13 +60,14 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     for intermediate_query_result in intermediate_query_results {
             println!(
-                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
+                "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?} - Company Tokens: {:?}",
                 intermediate_query_result.company_index,
                 intermediate_query_result.token_index,
                 intermediate_query_result.symbol, 
                 intermediate_query_result.token,
                 intermediate_query_result.source_type,
-                intermediate_query_result.company_name
+                intermediate_query_result.company_name,
+                intermediate_query_result.company_tokens
             );
     }
 

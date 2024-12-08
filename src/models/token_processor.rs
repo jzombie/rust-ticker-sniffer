@@ -34,6 +34,7 @@ pub struct IntermediateQueryResult {
     pub source_type: TokenSourceType,
     pub symbol: String,
     pub company_name: Option<CompanyName>,
+    pub company_tokens: Vec<(String, TokenSourceType)>,
 }
 
 impl<'a> TokenProcessor<'a> {
@@ -112,6 +113,8 @@ impl<'a> TokenProcessor<'a> {
                 let (token, source_type) = &self.tokenized_entries[company_index][token_index];
                 let (symbol, company_name) = &self.company_symbols_list[company_index]; // Retrieve the stock symbol and company name
 
+                let company_tokens = self.tokenized_entries[company_index].clone();
+
                 // Add to the results
                 results.push(IntermediateQueryResult {
                     company_index,
@@ -120,6 +123,7 @@ impl<'a> TokenProcessor<'a> {
                     source_type: *source_type,
                     symbol: symbol.clone(),
                     company_name: company_name.clone(),
+                    company_tokens,
                 });
             }
         }
