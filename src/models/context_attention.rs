@@ -66,6 +66,8 @@ impl ContextAttention {
         // Compute the updated weight
         let updated_weight = weight + learning_rate * gradient - regularization * weight;
 
+        println!("Updated weight: {}", updated_weight);
+
         // Update the weight in the HashMap
         self.weights.insert(key, updated_weight.clamp(0.0, 1.0));
     }

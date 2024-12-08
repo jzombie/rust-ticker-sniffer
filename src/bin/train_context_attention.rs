@@ -26,7 +26,7 @@ fn train_context_attention() {
     let mut context_attention = ContextAttention::new();
 
     // Hyperparameters
-    let learning_rate = 0.05;
+    let learning_rate = 0.01;
     let max_epochs = 1000;
     let patience = 10;
     let tolerance = 1e-5;
