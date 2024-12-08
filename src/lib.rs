@@ -59,7 +59,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
     if let Some(bin) = token_processor.token_length_bins.get(length_of_interest) {
         println!("Items with tokens of length {}:", length_of_interest);
         for &(company_index, token_index) in bin {
-            let (token, source_type) = &token_processor.tokenized_data[company_index][token_index];
+            let (token, source_type) =
+                &token_processor.tokenized_entries[company_index][token_index];
             let (symbol, company_name) = &company_symbols_list[company_index]; // Retrieve the stock symbol
             println!(
                 "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",

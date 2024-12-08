@@ -22,7 +22,7 @@ type TokenBin = Vec<(CompanyIndex, TokenIndex)>;
 
 pub struct TokenProcessor<'a> {
     pub company_symbols_list: &'a CompanySymbolsList,
-    pub tokenized_data: Vec<TokenizedEntry>,
+    pub tokenized_entries: Vec<TokenizedEntry>,
     pub max_corpus_token_length: usize,
     pub token_length_bins: Vec<TokenBin>,
 }
@@ -31,7 +31,7 @@ impl<'a> TokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
         let mut instance = Self {
             company_symbols_list,
-            tokenized_data: Vec::new(),
+            tokenized_entries: Vec::new(),
             max_corpus_token_length: 0,
             token_length_bins: Vec::new(),
         };
@@ -45,7 +45,7 @@ impl<'a> TokenProcessor<'a> {
     /// Tokenize and populate tokenized_data and max_corpus_token_length
     fn tokenize_all(&mut self) {
         self.max_corpus_token_length = 0;
-        self.tokenized_data.clear();
+        self.tokenized_entries.clear();
 
         // First pass: Tokenize and determine the maximum token length
         for (symbol, company_name) in self.company_symbols_list.iter() {
@@ -65,7 +65,7 @@ impl<'a> TokenProcessor<'a> {
             }
 
             // Store tokenized data for later use
-            self.tokenized_data.push(company_tokens.clone());
+            self.tokenized_entries.push(company_tokens.clone());
 
             // Update the maximum token length
             for (token, _) in &company_tokens {
@@ -85,7 +85,7 @@ impl<'a> TokenProcessor<'a> {
         self.token_length_bins = vec![Vec::new(); self.max_corpus_token_length + 1];
 
         // Second pass: Populate the bins using stored tokenized data
-        for (company_index, company_tokens) in self.tokenized_data.iter().enumerate() {
+        for (company_index, company_tokens) in self.tokenized_entries.iter().enumerate() {
             for (token_index, (token, _)) in company_tokens.iter().enumerate() {
                 let token_length = token.len();
                 self.token_length_bins[token_length].push((company_index, token_index));
