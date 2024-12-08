@@ -61,6 +61,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let mut max_corpus_token_length: usize = 0;
 
     // TODO: Store numeric tokens instead
+    // Outer vector element is by company index
+    // Inner vector element is individual tokens for respective company
     let mut tokenized_data: Vec<Vec<(String, TokenSourceType)>> = Vec::new(); // Store tokenized data for reuse
 
     // First pass: Tokenize and determine the maximum token length
