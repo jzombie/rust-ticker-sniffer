@@ -26,7 +26,7 @@ fn main() {
     }
 
     // Step 2: Query a test string
-    let query = "Apple";
+    let query = "Best Buy";
     let query_words: Vec<&str> = query.split_whitespace().collect();
     let query_vectors: Vec<Vec<u32>> = query_words
         .iter()
@@ -42,7 +42,7 @@ fn main() {
     for (symbol, company_name, vectors, word_lengths) in &word_vectors {
         // Define the sliding window: indices for the range of words to consider
         let start_index = 0;
-        let end_index = 4;
+        let end_index = 2;
 
         // Extract the vectors and word lengths within the sliding window
         let limited_vectors: Vec<&Vec<u32>> = vectors
@@ -63,22 +63,30 @@ fn main() {
             .iter()
             .zip(query_words.iter().map(|w| w.len()))
         {
-            // Check if any word in the first two words matches the query length tolerance
+            // Check if any word in the sliding window matches the query length tolerance
             if limited_word_lengths
                 .iter()
                 .any(|&length| (length as isize - query_length as isize).abs() <= length_tolerance)
             {
-                // Pad the query vector to match each candidate vector length
-                let padded_query_vectors: Vec<Vec<u32>> = limited_vectors
+                // Determine the maximum length for padding
+                let max_length = limited_vectors
                     .iter()
-                    .map(|v| pad_vector(query_vector, v.len()))
+                    .map(|v| v.len())
+                    .chain(std::iter::once(query_vector.len())) // Include query vector length
+                    .max()
+                    .unwrap_or(0);
+
+                // Pad the query vector and the candidate vectors to the same length
+                let padded_query_vector = pad_vector(query_vector, max_length);
+                let padded_limited_vectors: Vec<Vec<u32>> = limited_vectors
+                    .iter()
+                    .map(|v| pad_vector(v, max_length))
                     .collect();
 
                 // Compute cosine similarity
-                let max_similarity = padded_query_vectors
+                let max_similarity = padded_limited_vectors
                     .iter()
-                    .zip(limited_vectors.iter()) // Use iter() here to avoid moving limited_vectors
-                    .map(|(padded_query, candidate)| cosine_similarity(padded_query, candidate))
+                    .map(|candidate| cosine_similarity(&padded_query_vector, candidate))
                     .fold(0.0, f64::max);
 
                 total_similarity += max_similarity;
@@ -107,7 +115,6 @@ fn main() {
     }
 }
 
-/// Convert a string into a vector of character codes, removing punctuation and making it lowercase
 fn string_to_charcode_vector(input: &str) -> Vec<u32> {
     input
         .chars()
@@ -115,6 +122,32 @@ fn string_to_charcode_vector(input: &str) -> Vec<u32> {
         .map(|c| c.to_ascii_lowercase() as u32) // Convert to lowercase and get char code
         .collect()
 }
+
+/// Convert a string into a vector of character codes, removing punctuation and making it lowercase
+// fn string_to_charcode_vector(input: &str) -> Vec<u32> {
+//     // Normalize the input: remove punctuation and convert to lowercase
+//     let normalized: String = input
+//         .chars()
+//         .filter(|c| c.is_alphanumeric()) // Remove punctuation
+//         .map(|c| c.to_ascii_lowercase()) // Convert to lowercase
+//         .collect();
+
+//     // Generate trigrams and expand each character into the vector
+//     let mut trigram_vector = Vec::new();
+//     let chars: Vec<char> = normalized.chars().collect();
+//     for i in 0..chars.len().saturating_sub(2) {
+//         let trigram: &[char] = &chars[i..i + 3]; // Take a trigram slice
+//                                                  // Add each character's code to the vector
+//         trigram_vector.extend(trigram.iter().map(|&c| c as u32));
+//     }
+
+//     // Remove the last element if there are 5 or more entries
+//     // if trigram_vector.len() >= 5 {
+//     //     trigram_vector.pop();
+//     // }
+
+//     trigram_vector
+// }
 
 /// Pad a vector with zeros to the desired length
 fn pad_vector(vector: &[u32], length: usize) -> Vec<u32> {
@@ -127,6 +160,12 @@ fn pad_vector(vector: &[u32], length: usize) -> Vec<u32> {
 
 /// Calculate cosine similarity between two vectors
 fn cosine_similarity(v1: &[u32], v2: &[u32]) -> f64 {
+    assert_eq!(
+        v1.len(),
+        v2.len(),
+        "Vectors must have the same length for cosine similarity"
+    );
+
     let dot_product: u64 = v1.iter().zip(v2).map(|(a, b)| *a as u64 * *b as u64).sum();
     let magnitude_v1: f64 = (v1.iter().map(|x| (*x as f64).powi(2)).sum::<f64>()).sqrt();
     let magnitude_v2: f64 = (v2.iter().map(|x| (*x as f64).powi(2)).sum::<f64>()).sqrt();
