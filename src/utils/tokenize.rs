@@ -1,4 +1,4 @@
-use crate::constants::STOP_WORDS;
+// use crate::constants::STOP_WORDS;
 
 /// Tokenizer function to split the text into individual tokens.
 ///
@@ -69,6 +69,7 @@ pub fn token_to_charcode_vector(token: &str) -> Vec<u32> {
         .collect()
 }
 
+// TODO: Remove
 // pub fn tokenize_company_name_query(text: &str) -> Vec<&str> {
 //     tokenize(text)
 //         .iter()
