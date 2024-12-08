@@ -24,7 +24,7 @@ impl<'a> TokenProcessor<'a> {
     }
 
     /// Tokenize and populate tokenized_data and max_corpus_token_length
-    pub fn tokenize_all(&mut self) {
+    fn tokenize_all(&mut self) {
         self.max_corpus_token_length = 0;
         self.tokenized_data.clear();
 
