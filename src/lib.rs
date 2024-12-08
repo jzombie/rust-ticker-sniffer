@@ -371,16 +371,6 @@ fn extract_tickers_from_company_names(
         }
     }
 
-    // TODO: Can the following loops be unified?  Are they even necessary/
-
-    // Sort scored_results by score
-    // let mut sorted_results: Vec<_> = scored_results.into_iter().collect();
-    // sorted_results.sort_by(|(_, score_a), (_, score_b)| {
-    //     score_b
-    //         .partial_cmp(score_a)
-    //         .unwrap_or(std::cmp::Ordering::Equal)
-    // });
-
     let mut result_ticker_symbols = Vec::new();
     let mut total_score = 0.0;
 
@@ -398,9 +388,6 @@ fn extract_tickers_from_company_names(
 
     eprintln!("Total score: {:.2}", total_score);
 
-    // TODO: Include Vec<CompanyNameTokenRanking>
-    //
-    // Return only the keys and the total score
     (
         result_ticker_symbols,
         total_score,
