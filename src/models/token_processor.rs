@@ -1,4 +1,4 @@
-use crate::types::{CompanyName, CompanySymbolsList};
+use crate::types::CompanySymbolsList;
 use crate::utils::tokenize;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
