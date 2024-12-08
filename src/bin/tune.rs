@@ -19,9 +19,11 @@ fn tune_weights() {
 
     println!("Initializing tuning process...");
 
-    // TODO: Initialize w/ pretrained weights
+    // Note: For the tuning process, the result bias adjuster should not be
+    // initialized with default weights so that it does not influence the tuner
+    //
     // Initialize ResultBiasAdjuster
-    let mut result_bias_adjuster = ResultBiasAdjuster::new(256);
+    let mut result_bias_adjuster = ResultBiasAdjuster::new();
 
     let symbols_map =
         load_symbols_from_file("tests/test_symbols.csv").expect("Failed to load symbols from CSV");
@@ -298,7 +300,12 @@ fn evaluate_loss_with_regularization(
     result_bias_adjuster: &ResultBiasAdjuster,
 ) -> f32 {
     // Evaluate the original loss
-    let base_loss = evaluate_loss(weights.clone(), &symbols_map, test_dir, result_bias_adjuster);
+    let base_loss = evaluate_loss(
+        weights.clone(),
+        &symbols_map,
+        test_dir,
+        result_bias_adjuster,
+    );
 
     // Add L2 regularization penalty
     let l2_penalty = regularization_lambda
