@@ -45,24 +45,43 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // );
 
     let tokens = tokenize("A cool test, way to go Apple, e-Trade");
-    let vectors: Vec<Vec<u32>> = tokens
-        .into_iter()
-        .map(|token| token_to_charcode_vector(&token)) // Each token produces a Vec<u32>
-        .collect();
+    // let vectors: Vec<Vec<u32>> = tokens
+    //     .into_iter()
+    //     .map(|token| token_to_charcode_vector(&token)) // Each token produces a Vec<u32>
+    //     .collect();
 
-    eprintln!("vectors: {:?}", vectors);
+    // eprintln!("vectors: {:?}", vectors);
 
     // Prototype symbols_map tokenization
-    // for (symbol, company_name) in symbols_map {
-    //     if let Some(name) = company_name {
-    //         let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
-    //         let tokenized_name = tokenize(&combined); // Pass as a single string reference
-    //         eprintln!("{:?}", tokenized_name);
-    //     } else {
-    //         let tokenized_name = tokenize(&symbol);
-    //         eprintln!("{:?}", tokenized_name);
-    //     }
-    // }
+    let mut max_corpus_token_length: usize = 0;
+    for (symbol, company_name) in symbols_map {
+        let mut company_tokens: Vec<String> = Vec::new(); // Initialize a vector for tokens
+
+        if let Some(name) = company_name {
+            let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
+            let tokenized_name = tokenize(&combined); // Tokenize the combined string
+            eprintln!("{:?}", tokenized_name);
+
+            // Push each token into company_tokens
+            company_tokens.extend(tokenized_name);
+        } else {
+            let tokenized_name = tokenize(&symbol); // Tokenize the symbol
+            eprintln!("{:?}", tokenized_name);
+
+            // Push each token into company_tokens
+            company_tokens.extend(tokenized_name);
+        }
+
+        // // Update the maximum token length
+        // for token in &company_tokens {
+        //     max_corpus_token_length = max_corpus_token_length.max(token.len());
+        // }
+
+        // Optionally, print or process the company_tokens vector
+        eprintln!("Company tokens for {}: {:?}", symbol, company_tokens);
+    }
+
+    // eprintln!("max_corpus_token_length {}", max_corpus_token_length);
 
     let results = vec![];
     let total_score = 0.0;
