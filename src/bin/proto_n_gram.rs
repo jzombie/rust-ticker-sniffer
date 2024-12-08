@@ -123,6 +123,7 @@ fn string_to_charcode_vector(input: &str) -> Vec<u32> {
         .collect()
 }
 
+// Tri-gram version
 /// Convert a string into a vector of character codes, removing punctuation and making it lowercase
 // fn string_to_charcode_vector(input: &str) -> Vec<u32> {
 //     // Normalize the input: remove punctuation and convert to lowercase
