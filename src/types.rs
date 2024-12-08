@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 pub type TickerSymbol = String;
 
-pub type SymbolsMap = HashMap<TickerSymbol, Option<String>>;
+pub type CompanySymbolsList = Vec<(TickerSymbol, Option<String>)>;

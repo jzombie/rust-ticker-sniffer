@@ -2,8 +2,8 @@ use csv::Reader;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
-    extract_tickers_from_text_with_custom_weights, ResultBiasAdjuster, SymbolsMap, TickerSymbol,
-    Weights,
+    extract_tickers_from_text_with_custom_weights, CompanySymbolsList, ResultBiasAdjuster,
+    TickerSymbol, Weights,
 };
 pub mod models;
 pub use models::EvaluationResult;
@@ -11,8 +11,8 @@ pub mod constants;
 use constants::TEST_SYMBOLS_CSV_PATH;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
-pub fn load_symbols_from_file(file_path: &str) -> Result<SymbolsMap, Box<dyn Error>> {
-    let mut symbols_map = SymbolsMap::new();
+pub fn load_symbols_from_file(file_path: &str) -> Result<CompanySymbolsList, Box<dyn Error>> {
+    let mut company_symbols_list = CompanySymbolsList::new();
     let mut reader = Reader::from_path(file_path)?;
 
     // Use headers to extract columns
@@ -25,16 +25,16 @@ pub fn load_symbols_from_file(file_path: &str) -> Result<SymbolsMap, Box<dyn Err
         let company_name = record.get(headers.iter().position(|h| h == "Company Name").unwrap());
 
         if let Some(symbol) = symbol {
-            symbols_map.insert(
+            company_symbols_list.push((
                 symbol.to_uppercase(),
                 company_name.map(|name| name.to_string()),
-            );
+            ));
         } else {
             eprintln!("Skipping invalid row: {:?}", record);
         }
     }
 
-    Ok(symbols_map)
+    Ok(company_symbols_list)
 }
 
 // Helper function to get the expected tickers from the text file

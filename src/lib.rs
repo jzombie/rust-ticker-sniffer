@@ -9,18 +9,18 @@ pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, Weights};
 pub mod utils;
 pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
 pub mod types;
-pub use types::{SymbolsMap, TickerSymbol};
+pub use types::{CompanySymbolsList, TickerSymbol};
 
 pub fn extract_tickers_from_text(
     text: &str,
-    symbols_map: &SymbolsMap,
+    company_symbols_list: &CompanySymbolsList,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
     let result_bias_adjuster =
         ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
 
     extract_tickers_from_text_with_custom_weights(
         &text,
-        &symbols_map,
+        &company_symbols_list,
         DEFAULT_WEIGHTS,
         &result_bias_adjuster,
     )
@@ -28,7 +28,7 @@ pub fn extract_tickers_from_text(
 
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
-    symbols_map: &SymbolsMap,
+    company_symbols_list: &CompanySymbolsList,
     _weights: Weights,
     _result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
@@ -54,9 +54,9 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // Prototype symbols_map tokenization
     let mut max_corpus_token_length: usize = 0;
-    let mut token_length_bins: HashMap<usize, HashSet<String>> = HashMap::new(); // Bin tokens by length
+    let mut token_length_bins: HashMap<usize, Vec<usize>> = HashMap::new(); // Bin tokens by length
 
-    for (symbol, company_name) in symbols_map {
+    for (index, (symbol, company_name)) in company_symbols_list.iter().enumerate() {
         let mut company_tokens: Vec<String> = Vec::new(); // Initialize a vector for tokens
 
         if let Some(name) = company_name {
@@ -80,8 +80,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
             token_length_bins
                 .entry(token_length)
-                .or_insert_with(HashSet::new)
-                .insert(symbol.clone());
+                .or_insert_with(Vec::new)
+                .push(index);
 
             // max_corpus_token_length = max_corpus_token_length.max(token.len());
         }
