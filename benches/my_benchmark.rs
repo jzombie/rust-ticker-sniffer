@@ -1,3 +1,5 @@
+#![allow(dead_code, unused_imports, unused_variables)]
+
 #[path = "../test_utils/lib.rs"]
 mod test_utils;
 
