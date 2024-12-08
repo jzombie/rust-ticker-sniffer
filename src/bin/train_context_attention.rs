@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs::read_dir;
+use std::thread::current;
 use test_utils::models::evaluation_result;
 use ticker_sniffer::models::{company_name_token_rating, CompanyNameTokenRanking};
 use ticker_sniffer::{ContextAttention, Weights, DEFAULT_WEIGHTS};
@@ -22,10 +23,10 @@ fn train_context_attention() {
 
     // TODO: Start w/ pre-trained weights?
     // Initialize ContextAttention
-    let mut context_attention = ContextAttention::new(256);
+    let mut context_attention = ContextAttention::new();
 
     // Hyperparameters
-    let learning_rate = 0.01;
+    let learning_rate = 0.05;
     let max_epochs = 1000;
     let patience = 10;
     let tolerance = 1e-5;
@@ -43,6 +44,11 @@ fn train_context_attention() {
         // Evaluate current performance
         let (current_loss, all_evaluation_results) =
             evaluate_loss(&context_attention, &weights, &symbols_map, test_dir);
+
+        // Stop training if no more loss
+        if current_loss == 0.0 {
+            break;
+        }
 
         println!("Epoch {} - Loss: {:.8}", epoch, current_loss);
 
@@ -64,16 +70,28 @@ fn train_context_attention() {
         }
 
         for evaluation_result in all_evaluation_results {
-            for company_name_token_rating in evaluation_result.expected_rankings {
-                context_attention.update_weights(
-                    &company_name_token_rating.context_query_string,
-                    &company_name_token_rating.context_company_tokens,
-                    1.0,
-                    learning_rate,
-                );
-            }
+            // for company_name_token_rating in evaluation_result.expected_rankings {
+            //     eprintln!(
+            //         "Context - Expected - {}, {:?}",
+            //         &company_name_token_rating.context_query_string,
+            //         &company_name_token_rating.context_company_tokens
+            //     );
+
+            //     context_attention.update_weights(
+            //         &company_name_token_rating.context_query_string,
+            //         &company_name_token_rating.context_company_tokens,
+            //         1.0,
+            //         learning_rate,
+            //     );
+            // }
 
             for company_name_token_rating in evaluation_result.false_positive_rankings {
+                eprintln!(
+                    "Context - False Positive - {}, {:?}",
+                    &company_name_token_rating.context_query_string,
+                    &company_name_token_rating.context_company_tokens
+                );
+
                 context_attention.update_weights(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
@@ -83,6 +101,12 @@ fn train_context_attention() {
             }
 
             for company_name_token_rating in evaluation_result.false_negative_rankings {
+                eprintln!(
+                    "Context - False Negative - {}, {:?}",
+                    &company_name_token_rating.context_query_string,
+                    &company_name_token_rating.context_company_tokens
+                );
+
                 context_attention.update_weights(
                     &company_name_token_rating.context_query_string,
                     &company_name_token_rating.context_company_tokens,
@@ -129,7 +153,7 @@ fn train_context_attention() {
         //     }
         // }
 
-        eprintln!("Context weights: {:?}", context_attention.global_weights);
+        // eprintln!("Context weights: {:?}", context_attention.global_weights);
     }
 
     println!("Training completed. Best loss: {:.6}", best_loss);

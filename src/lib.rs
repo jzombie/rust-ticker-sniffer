@@ -276,10 +276,11 @@ fn extract_tickers_from_company_names(
                     context_attention_score =
                         context_attention.score(&lc_norm_input_string, &company_tokens);
 
-                    match_score += context_attention_score;
+                    match_score = match_score * (context_attention_score);
                 }
 
-                if match_score > weights.minimum_match_score {
+                if lc_norm_input_string.len() > 0 {
+                    // if match_score > weights.minimum_match_score {
                     let company_ranking: CompanyNameTokenRanking = CompanyNameTokenRanking {
                         ticker_symbol: symbol.to_string(),
                         company_name: company_name.to_string(),
@@ -301,12 +302,14 @@ fn extract_tickers_from_company_names(
                         "Company name: {}, Context attention score: {}",
                         company_name, context_attention_score
                     );
-                } else if match_score > 0.0 {
-                    eprintln!(
-                        "Discarded symbol: {}; Match Score: {:.4}, Consecutive Matches: {}, Jaccard: {}",
-                        symbol, match_score, top_consecutive_match_count, consecutive_jaccard_similarity
-                    );
                 }
+
+                // } else if match_score > 0.0 {
+                //     eprintln!(
+                //         "Discarded symbol: {}; Match Score: {:.4}, Consecutive Matches: {}, Jaccard: {}",
+                //         symbol, match_score, top_consecutive_match_count, consecutive_jaccard_similarity
+                //     );
+                // }
             }
         }
     }
