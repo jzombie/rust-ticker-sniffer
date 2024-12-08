@@ -54,34 +54,43 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // Prototype symbols_map tokenization
     let mut max_corpus_token_length: usize = 0;
+    let mut token_length_bins: HashMap<usize, HashSet<String>> = HashMap::new(); // Bin tokens by length
+
     for (symbol, company_name) in symbols_map {
         let mut company_tokens: Vec<String> = Vec::new(); // Initialize a vector for tokens
 
         if let Some(name) = company_name {
             let combined = format!("{} {}", symbol, name); // Concatenate symbol and name
             let tokenized_name = tokenize(&combined); // Tokenize the combined string
-            eprintln!("{:?}", tokenized_name);
+                                                      // eprintln!("{:?}", tokenized_name);
 
             // Push each token into company_tokens
             company_tokens.extend(tokenized_name);
         } else {
             let tokenized_name = tokenize(&symbol); // Tokenize the symbol
-            eprintln!("{:?}", tokenized_name);
+                                                    // eprintln!("{:?}", tokenized_name);
 
             // Push each token into company_tokens
             company_tokens.extend(tokenized_name);
         }
 
         // // Update the maximum token length
-        // for token in &company_tokens {
-        //     max_corpus_token_length = max_corpus_token_length.max(token.len());
-        // }
+        for token in &company_tokens {
+            let token_length = token.len();
+
+            token_length_bins
+                .entry(token_length)
+                .or_insert_with(HashSet::new)
+                .insert(symbol.clone());
+
+            // max_corpus_token_length = max_corpus_token_length.max(token.len());
+        }
 
         // Optionally, print or process the company_tokens vector
-        eprintln!("Company tokens for {}: {:?}", symbol, company_tokens);
+        // eprintln!("Company tokens for {}: {:?}", symbol, company_tokens);
     }
 
-    // eprintln!("max_corpus_token_length {}", max_corpus_token_length);
+    eprintln!("{:?}", &token_length_bins.get(&5));
 
     let results = vec![];
     let total_score = 0.0;
