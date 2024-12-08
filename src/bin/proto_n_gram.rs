@@ -42,7 +42,7 @@ fn main() {
     for (symbol, company_name, vectors, word_lengths) in &word_vectors {
         // Define the sliding window: indices for the range of words to consider
         let start_index = 0;
-        let end_index = 2;
+        let end_index = 2; // Exclusive (does not include the end index)
 
         // Extract the vectors and word lengths within the sliding window
         let limited_vectors: Vec<&Vec<u32>> = vectors
