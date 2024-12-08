@@ -55,8 +55,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
-    let length_of_interest = 8;
-    let results_iter = token_processor.query_tokens_by_length(length_of_interest);
+    let length_of_interest = 5;
+    let token_start_index = 0;
+    let token_end_index = 1;
+    let results_iter = token_processor.query_tokens_by_length(length_of_interest, token_start_index, token_end_index);
 
     for result in results_iter {
         println!(

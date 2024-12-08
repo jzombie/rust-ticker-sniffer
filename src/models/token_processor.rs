@@ -107,29 +107,36 @@ impl<'a> TokenProcessor<'a> {
     pub fn query_tokens_by_length(
         &'a self,
         length: usize,
+        token_start_index: usize,
+        token_end_index: usize,
     ) -> impl Iterator<Item = IntermediateQueryResult<'a>> + 'a {
         self.token_length_bins
             .get(length)
             .into_iter()
             .flat_map(move |bin| {
-                bin.iter().map(move |&(company_index, token_index)| {
-                    let (token, source_type) = &self.tokenized_entries[company_index][token_index];
-                    let (symbol, company_name) = &self.company_symbols_list[company_index];
-                    let company_tokens = &self.tokenized_entries[company_index];
+                bin.iter()
+                    // Filter tokens by their index within the specified range
+                    .filter(move |&&(_, token_index)| {
+                        token_index >= token_start_index && token_index < token_end_index
+                    })
+                    .map(move |&(company_index, token_index)| {
+                        let (token, source_type) =
+                            &self.tokenized_entries[company_index][token_index];
+                        let (symbol, company_name) = &self.company_symbols_list[company_index];
+                        let company_tokens = &self.tokenized_entries[company_index];
 
-                    IntermediateQueryResult {
-                        company_index,
-                        token_index,
-                        token,
-                        source_type: *source_type,
-                        symbol,
-                        company_name: company_name.as_deref(),
-                        company_tokens,
-                    }
-                })
+                        IntermediateQueryResult {
+                            company_index,
+                            token_index,
+                            token,
+                            source_type: *source_type,
+                            symbol,
+                            company_name: company_name.as_deref(),
+                            company_tokens,
+                        }
+                    })
             })
     }
-
     // pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
     //     self.token_length_bins.get(length)
     // }
