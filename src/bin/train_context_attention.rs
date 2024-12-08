@@ -47,6 +47,7 @@ fn train_context_attention() {
 
         // Stop training if no more loss
         if current_loss == 0.0 {
+            best_loss = 0.0;
             break;
         }
 

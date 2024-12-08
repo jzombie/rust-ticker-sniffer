@@ -276,7 +276,8 @@ fn extract_tickers_from_company_names(
                     context_attention_score =
                         context_attention.score(&lc_norm_input_string, &company_tokens);
 
-                    match_score = match_score * (context_attention_score);
+                    // Scale match_score by context_attention_score
+                    match_score = match_score * context_attention_score;
                 }
 
                 if lc_norm_input_string.len() > 0 {
