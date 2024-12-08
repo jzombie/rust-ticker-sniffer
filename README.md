@@ -29,3 +29,11 @@ cargo run --bin train_bias_adjuster --features="csv-support rand-support libc-su
 ```bash
 docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
 ```
+
+## Prototype `n-gram` Bin
+
+Probably not going to use n-gram itself, but this is the latest prototype.
+
+```bash
+RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="csv-support rand-support libc-support"
+```

@@ -26,7 +26,7 @@ fn main() {
     }
 
     // Step 2: Query a test string
-    let query = "Best Buy";
+    let query = "Apple";
     let query_words: Vec<&str> = query.split_whitespace().collect();
     let query_vectors: Vec<Vec<u32>> = query_words
         .iter()
