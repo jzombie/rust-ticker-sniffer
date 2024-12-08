@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::fs::read_dir;
-use std::thread::current;
 use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_WEIGHTS};
 
 #[path = "../../test_utils/lib.rs"]
