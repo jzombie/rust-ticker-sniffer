@@ -20,7 +20,7 @@ pub struct TokenProcessor<'a> {
     pub token_length_bins: Vec<TokenBin>,
 }
 
-pub struct IntermediateQueryResult<'a> {
+pub struct TokenQueryResult<'a> {
     pub company_index: CompanyIndex,
     pub token_index: TokenIndex,
     pub token: &'a str,
@@ -97,15 +97,15 @@ impl<'a> TokenProcessor<'a> {
 
     /// Note: An Iterator is used on the output to prevent eager execution,
     /// letting the consumer determine if it should proceed to the next result.
-    pub fn query_tokens_by_length(
+    pub fn query_tokens(
         &'a self,
-        length: usize,
+        token_length: usize,
         token_start_index: usize,
         token_end_index: usize,
         include_source_types: &'a [TokenSourceType],
-    ) -> impl Iterator<Item = IntermediateQueryResult<'a>> + 'a {
+    ) -> impl Iterator<Item = TokenQueryResult<'a>> + 'a {
         self.token_length_bins
-            .get(length)
+            .get(token_length)
             .into_iter()
             .flat_map(move |bin| {
                 bin.iter()
@@ -124,7 +124,7 @@ impl<'a> TokenProcessor<'a> {
                         let (symbol, company_name) = &self.company_symbols_list[company_index];
                         let company_tokens = &self.tokenized_entries[company_index];
 
-                        IntermediateQueryResult {
+                        TokenQueryResult {
                             company_index,
                             token_index,
                             token,
