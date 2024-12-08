@@ -4,6 +4,9 @@ use crate::constants::STOP_WORDS;
 ///
 /// Note: This explcitly does not modify the case of the text.
 pub fn tokenize(text: &str) -> Vec<String> {
+    // List of common TLDs for robust handling
+    const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
+
     // Preprocess text: handle hyphenation, line breaks, and cleanup
     let cleaned_text = text
         .replace("-\n", "") // Merge hyphenated words across lines
@@ -16,15 +19,34 @@ pub fn tokenize(text: &str) -> Vec<String> {
         .trim()
         .to_string();
 
-    // Tokenize, process possessives, and uppercase
+    // Tokenize, process possessives, handle web addresses, and uppercase
+    // Tokenize, process possessives, handle web addresses, and uppercase
     cleaned_text
         .split_whitespace()
         .filter(|word| word.chars().any(|c| c.is_uppercase())) // Keep only words with at least one capital letter
         .flat_map(|word| {
             let mut tokens = Vec::new();
-            let clean_word: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
 
-            // Check for possessive endings `'s` or `s'` in the original word
+            // Handle web addresses
+            if let Some((base, tld)) = word.rsplit_once('.') {
+                if TLD_LIST.contains(&tld.to_lowercase().as_str()) {
+                    let cleaned_word: String = format!("{}{}", base, tld); // Concatenate base and TLD
+                    tokens.push(cleaned_word.to_uppercase());
+
+                    // Add the base word as another token
+                    tokens.push(
+                        base.chars()
+                            .filter(|c| c.is_alphanumeric())
+                            .collect::<String>()
+                            .to_uppercase(),
+                    );
+
+                    return tokens;
+                }
+            }
+
+            // Handle possessive endings `'s` or `s'`
+            let clean_word: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
             if word.ends_with("'s") || word.ends_with("s'") {
                 let base_word: String = word
                     .trim_end_matches("'s")

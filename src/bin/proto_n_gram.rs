@@ -26,7 +26,7 @@ fn main() {
     }
 
     // Step 2: Query a test string
-    let query = "Apple";
+    let query = "Alphabet";
     let query_words: Vec<&str> = query.split_whitespace().collect();
     let query_vectors: Vec<Vec<u32>> = query_words
         .iter()
@@ -39,6 +39,7 @@ fn main() {
     let length_tolerance = 2; // Tolerance for length difference
     let mut similarities = Vec::new();
 
+    // TODO: For really short queries (maybe one or two chars), just match on the letters instead, or optionally ignore them
     for (symbol, company_name, vectors, word_lengths) in &word_vectors {
         // Define the sliding window: indices for the range of words to consider
         let start_index = 0;
