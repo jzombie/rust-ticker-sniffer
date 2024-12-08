@@ -87,23 +87,29 @@ pub fn extract_tickers_from_text_with_custom_weights(
         }
     }
 
-    // Example: Access tokens of a specific length
+    // Example: Access tokens of a specific length and display associated company tokens
     let length_of_interest = 5;
     if let Some(bin) = token_length_bins.get(length_of_interest) {
+        println!("Items with tokens of length {}:", length_of_interest);
+        for &index in bin {
+            let company_tokens = &tokenized_data[index];
+            println!("  Company Index: {} - Tokens: {:?}", index, company_tokens);
+        }
+    } else {
         println!(
-            "Items with tokens of length {}: {:?}",
-            length_of_interest, bin
+            "No items found with tokens of length {}.",
+            length_of_interest
         );
     }
 
-    // Example: Access tokens of a specific length
-    let length_of_interest = 15;
-    if let Some(bin) = token_length_bins.get(length_of_interest) {
-        println!(
-            "Items with tokens of length {}: {:?}",
-            length_of_interest, bin
-        );
-    }
+    // // Example: Access tokens of a specific length
+    // let length_of_interest = 15;
+    // if let Some(bin) = token_length_bins.get(length_of_interest) {
+    //     println!(
+    //         "Items with tokens of length {}: {:?}",
+    //         length_of_interest, bin
+    //     );
+    // }
 
     let results = vec![];
     let total_score = 0.0;
