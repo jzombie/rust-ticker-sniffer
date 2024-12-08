@@ -16,8 +16,17 @@ impl ResultBiasAdjuster {
         }
     }
 
-    pub fn from_weights(weights: HashMap<u64, f32>) -> Self {
-        Self { weights }
+    /// Initialize from weights in the form of a slice of tuples
+    pub fn from_weights(weights: &[(u64, f32)]) -> Self {
+        let weights_map: HashMap<u64, f32> = weights.iter().cloned().collect();
+        Self {
+            weights: weights_map,
+        }
+    }
+
+    /// Display weights in the format of a slice of tuples
+    pub fn to_weight_slice_format(&self) -> Vec<(u64, f32)> {
+        self.weights.iter().map(|(&k, &v)| (k, v)).collect()
     }
 
     /// Compute a hash for a query-context pair

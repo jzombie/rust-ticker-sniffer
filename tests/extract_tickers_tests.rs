@@ -1,10 +1,9 @@
 #[path = "../test_utils/lib.rs"]
 mod test_utils;
 
-use std::collections::HashMap;
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
-use ticker_sniffer::{ResultBiasAdjuster, DEFAULT_WEIGHTS};
+use ticker_sniffer::{ResultBiasAdjuster, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS};
 
 // Declare a module-level variable for ResultBiasAdjuster
 static mut CONTEXT_ATTENTION: Option<ResultBiasAdjuster> = None;
@@ -18,18 +17,9 @@ mod tests {
         // SAFETY: We need to ensure no data races while accessing CONTEXT_ATTENTION
         unsafe {
             if CONTEXT_ATTENTION.is_none() {
-                // TODO: Initialize with some weights
-                // CONTEXT_ATTENTION = Some(ResultBiasAdjuster::new(256));
-                CONTEXT_ATTENTION = Some(ResultBiasAdjuster::from_weights(HashMap::from([
-                    (15726725667165516449, 0.0),
-                    (18175059305241253125, 0.0),
-                    (6760917874204056577, 0.0),
-                    (2949345933018568219, 0.0),
-                    (2963807753026003782, 0.0),
-                    (13343208097864498901, 0.0),
-                    (10774098009159108967, 0.0),
-                    (18009285742348921912, 0.0),
-                ])));
+                CONTEXT_ATTENTION = Some(ResultBiasAdjuster::from_weights(
+                    DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS,
+                ));
             }
 
             let result_bias_adjuster = CONTEXT_ATTENTION.as_ref().unwrap();

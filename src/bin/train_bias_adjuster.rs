@@ -148,7 +148,10 @@ fn train_result_bias_adjuster() {
         }
     }
 
-    println!("Weights: {:?}", result_bias_adjuster.weights);
+    println!(
+        "Weights: {:?}",
+        result_bias_adjuster.to_weight_slice_format()
+    );
 
     println!("Training completed. Best loss: {:.6}", best_loss);
 }

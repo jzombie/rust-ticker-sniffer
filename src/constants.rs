@@ -9,6 +9,17 @@ pub const DEFAULT_WEIGHTS: Weights = Weights {
     abbreviation_match_threshold: 0.8,
 };
 
+pub const DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS: &[(u64, f32)] = &[
+    (5027082478324188184, 0.0),
+    (12878710264565919950, 0.0),
+    (10924579049891311281, 0.0),
+    (2433875553612328626, 0.0),
+    (4968048704973372908, 0.0),
+    (14466227645131027605, 0.0),
+    (6637009396815904247, 0.0),
+    (6383954734645899013, 0.0),
+];
+
 pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
 
 pub const STOP_WORDS: &[&str] = &[
