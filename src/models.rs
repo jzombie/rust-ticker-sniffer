@@ -6,3 +6,6 @@ pub use result_bias_adjuster::ResultBiasAdjuster;
 
 pub mod company_name_token_rating;
 pub use company_name_token_rating::CompanyNameTokenRanking;
+
+pub mod token_processor;
+pub use token_processor::TokenProcessor;

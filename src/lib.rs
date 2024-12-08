@@ -8,14 +8,7 @@ pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, Weights};
 pub mod utils;
 pub use utils::{jaccard_similarity_chars, token_to_charcode_vector, tokenize};
 pub mod types;
-pub use types::{CompanyName, CompanySymbolsList, TickerSymbol};
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[repr(u8)] // Use a numeric representation for efficiency
-pub enum TokenSourceType {
-    Symbol = 0,      // Tokens derived from the symbol
-    CompanyName = 1, // Tokens derived from the company name
-}
+pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, TokenSourceType};
 
 pub fn extract_tickers_from_text(
     text: &str,
