@@ -16,6 +16,21 @@ pub use types::{SymbolsMap, TickerSymbol};
 pub fn extract_tickers_from_text(
     text: &str,
     symbols_map: &SymbolsMap,
+) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
+    let result_bias_adjuster =
+        ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
+
+    extract_tickers_from_text_with_custom_weights(
+        &text,
+        &symbols_map,
+        DEFAULT_WEIGHTS,
+        &result_bias_adjuster,
+    )
+}
+
+pub fn extract_tickers_from_text_with_custom_weights(
+    text: &str,
+    symbols_map: &SymbolsMap,
     weights: Weights,
     result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
