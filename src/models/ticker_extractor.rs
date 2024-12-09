@@ -37,7 +37,7 @@ pub struct TickerExtractor<'a> {
     text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
     text: Option<String>,
-    weights: TickerExtractorConfig,
+    user_config: TickerExtractorConfig,
     tokenized_query_vectors: Vec<Vec<u32>>,
     results: Vec<TickerSymbol>,
     is_extracting: bool,
@@ -46,7 +46,7 @@ pub struct TickerExtractor<'a> {
 impl<'a> TickerExtractor<'a> {
     pub fn new(
         company_symbols_list: &'a CompanySymbolsList,
-        weights: TickerExtractorConfig,
+        user_config: TickerExtractorConfig,
     ) -> Self {
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
         let text_doc_tokenizer = Tokenizer::text_doc_parser();
@@ -59,7 +59,7 @@ impl<'a> TickerExtractor<'a> {
             company_token_processor,
             text: Some("".to_string()),
             // TODO: Apply default weights
-            weights,
+            user_config,
             tokenized_query_vectors: vec![],
             results: vec![],
             is_extracting: false,
@@ -80,8 +80,8 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
-        let token_start_index = token_window_index * self.weights.token_window_size;
-        let token_end_index = token_start_index + self.weights.token_window_size;
+        let token_start_index = token_window_index * self.user_config.token_window_size;
+        let token_end_index = token_start_index + self.user_config.token_window_size;
 
         (token_start_index, token_end_index)
     }
@@ -159,7 +159,7 @@ impl<'a> TickerExtractor<'a> {
                             // let similarity =
                             //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
 
-                            if similarity >= self.weights.min_similarity_threshold {
+                            if similarity >= self.user_config.min_similarity_threshold {
                                 // println!(
                                 //     "Matched company: {:?}; Token Index: {}",
                                 //     company_symbols_list.get(*company_index),
