@@ -1,9 +1,9 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType};
 use crate::utils::tokenize_to_charcode_vectors;
 
-type CompanyTokenType = Vec<u32>;
+type CompanyVectorTokenType = Vec<u32>;
 
-type CompanyTokenizedEntry = (CompanyTokenType, CompanyTokenSourceType);
+type CompanyTokenizedEntry = (CompanyVectorTokenType, CompanyTokenSourceType);
 
 /// Index of the company in the `company_symbols_list`
 type CompanyIndex = usize;
@@ -23,7 +23,7 @@ pub struct CompanyTokenProcessor<'a> {
 pub struct CompanyFilteredTokenResult<'a> {
     pub company_index: CompanyIndex,
     pub token_index: CompanyTokenIndex,
-    pub token: &'a CompanyTokenType,
+    pub vector_token: &'a CompanyVectorTokenType,
     pub source_type: CompanyTokenSourceType,
     pub symbol: &'a str,
     pub company_name: Option<&'a str>,
@@ -125,7 +125,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         include_source_types.contains(source_type)
                     })
                     .map(move |&(company_index, token_index)| {
-                        let (token, source_type) =
+                        let (vector_token, source_type) =
                             &self.tokenized_entries[company_index][token_index];
                         let (symbol, company_name) = &self.company_symbols_list[company_index];
                         let company_tokenized_entries = &self.tokenized_entries[company_index];
@@ -133,7 +133,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         CompanyFilteredTokenResult {
                             company_index,
                             token_index,
-                            token,
+                            vector_token,
                             source_type: *source_type,
                             symbol,
                             company_name: company_name.as_deref(),

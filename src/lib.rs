@@ -71,7 +71,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
             result.company_index,
             result.token_index,
             result.symbol,
-            charcode_vector_to_token(result.token),
+            charcode_vector_to_token(result.vector_token),
             result.source_type,
             result.company_tokenized_entries
         
