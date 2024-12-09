@@ -218,6 +218,8 @@ impl<'a> TickerExtractor<'a> {
                                     },
                                 );
 
+                                // TODO: Consider renaming
+                                // This is used to ensure that a company can progress to the next window round
                                 self.seen_company_indices.insert(*company_index);
                             }
                         }

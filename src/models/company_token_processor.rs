@@ -58,6 +58,22 @@ impl<'a> CompanyTokenProcessor<'a> {
         instance
     }
 
+    // pub fn get_company_name_token_vector_at_index(
+    //     &self,
+    //     company_index: usize,
+    //     company_token_index: usize,
+    // ) -> Option<&TokenizerVectorTokenType> {
+    //     // Retrieve tokenized entries for the specified company index
+    //     let company_tokenized_entries = self.tokenized_entries.get(company_index)?;
+
+    //     // Find the specific token entry matching the given token index and source type
+    //     company_tokenized_entries
+    //         .iter()
+    //         .filter(|entry| entry.1 == CompanyTokenSourceType::CompanyName)
+    //         .nth(company_token_index)
+    //         .map(|entry| &entry.0)
+    // }
+
     /// Tokenize and populate tokenized_data and max_corpus_token_length
     fn tokenize_all(&mut self) {
         self.max_corpus_token_length = 0;
