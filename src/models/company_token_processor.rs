@@ -13,6 +13,9 @@ type CompanyTokenIndex = usize;
 
 type CompanyTokenBinEntry = (CompanyIndex, CompanyTokenIndex);
 
+// For all nested vectors:
+//  - Outer vector elements are by company index
+//  - Inner vector elements are for multiple entries, per company
 pub struct CompanyTokenProcessor<'a> {
     pub company_symbols_list: &'a CompanySymbolsList,
     pub tokenized_entries: Vec<Vec<CompanyTokenizedEntry>>,
@@ -84,10 +87,6 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     fn bin_tokens_by_length(&mut self) {
         self.token_length_bins.clear();
-
-        // TODO: Store numeric tokens instead
-        // Outer vector element is by company index
-        // Inner vector element is individual tokens for respective company
 
         // Pre-allocate bins after determining the maximum token length
         self.token_length_bins = vec![Vec::new(); self.max_corpus_token_length + 1];

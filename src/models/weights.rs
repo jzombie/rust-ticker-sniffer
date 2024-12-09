@@ -1,5 +1,7 @@
 use std::fmt;
 
+// TODO: Move to `TickerExtractor`
+
 #[derive(Debug, Clone, Copy)]
 pub struct Weights {
     pub consecutive_match_weight: f32,
