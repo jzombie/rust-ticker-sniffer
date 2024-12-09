@@ -172,8 +172,6 @@ impl<'a> TickerExtractor<'a> {
             match token_length_bins {
                 Some(bins) => {
                     for (company_index, company_token_index) in bins {
-                        // println!("company_token_index: {}", *company_token_index);
-
                         if token_window_index > 0
                             && !self.seen_company_indices.contains(company_index)
                         {
