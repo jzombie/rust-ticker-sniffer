@@ -61,12 +61,16 @@ impl<'a> TickerExtractor<'a> {
 
     pub fn extract(&mut self, text: &str) {
         self.text = text.to_string();
+        self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
-        let tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
+        self.parse(0)
+    }
 
+    // TODO: Handle "intermediate results collector"
+    fn parse(&mut self, token_window_index: usize) {
         println!(
             "Query tokens: {:?}",
-            tokenized_query_vectors
+            self.tokenized_query_vectors
                 .iter()
                 .map(|vector| self.text_doc_tokenizer.charcode_vector_to_token(vector))
                 .collect::<Vec<String>>()
@@ -74,7 +78,7 @@ impl<'a> TickerExtractor<'a> {
 
         // let length_tolerance: usize = 0;
         let mut match_count: usize = 0;
-        for (query_token_index, query_vector) in tokenized_query_vectors.iter().enumerate() {
+        for (query_token_index, query_vector) in self.tokenized_query_vectors.iter().enumerate() {
             // println!(
             //     "index: {}, query: {}",
             //     index,
