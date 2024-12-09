@@ -151,6 +151,12 @@ pub fn extract_tickers_from_text_with_custom_weights(
         //     (query_vector_length - length_tolerance).clamp(1, query_vector_length);
         // let max_token_length = query_vector_length + length_tolerance;
 
+        // TODO: This should perform multiple passes, moving the window up as it goes; results that are no
+        // longer present in a subsequent pass should be capped off at that; each query token (at the
+        // relevant index) that is matched, should be stored, where the longest consecutive matches of tokens
+        // for a particular query should be scored higher than the others; where each token at each index,
+        // ultimately, should only be associated with a single company, if any at all.
+        //
         let token_start_index = 0;
         let token_end_index = 3;
 
