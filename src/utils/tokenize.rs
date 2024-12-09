@@ -67,6 +67,13 @@ pub fn token_to_charcode_vector(token: &str) -> Vec<u32> {
         .collect()
 }
 
+pub fn charcode_vector_to_token(charcodes: &[u32]) -> String {
+    charcodes
+        .iter()
+        .map(|&code| char::from_u32(code).unwrap_or('\u{FFFD}')) // Convert code to char, using '�' as a fallback
+        .collect()
+}
+
 pub fn tokenize_to_charcode_vectors(text: &str) -> Vec<Vec<u32>> {
     tokenize(text)
         .into_iter() // Use the existing `tokenize` function to get tokens
