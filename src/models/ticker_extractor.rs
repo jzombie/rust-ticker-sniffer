@@ -52,7 +52,7 @@ pub struct TickerExtractor<'a> {
     text: Option<String>,
     tokenized_query_vectors: Vec<Vec<u32>>,
     company_similarity_states: Vec<QueryVectorCompanySimilarityState>,
-    seen_company_indices: HashSet<usize>,
+    progressible_company_indices: HashSet<usize>,
     results: Vec<TickerSymbol>,
 }
 
@@ -76,7 +76,7 @@ impl<'a> TickerExtractor<'a> {
             text: None,
             tokenized_query_vectors: vec![],
             company_similarity_states: vec![],
-            seen_company_indices: HashSet::new(),
+            progressible_company_indices: HashSet::new(),
             results: vec![],
         }
     }
@@ -89,7 +89,7 @@ impl<'a> TickerExtractor<'a> {
         }
 
         self.company_similarity_states.clear();
-        self.seen_company_indices.clear();
+        self.progressible_company_indices.clear();
         self.results.clear();
 
         self.text = Some(text.to_string());
@@ -183,7 +183,7 @@ impl<'a> TickerExtractor<'a> {
                 Some(bins) => {
                     for (company_index, company_token_index) in bins {
                         if token_window_index > 0
-                            && !self.seen_company_indices.contains(company_index)
+                            && !self.progressible_company_indices.contains(company_index)
                         {
                             continue;
                         }
@@ -240,11 +240,9 @@ impl<'a> TickerExtractor<'a> {
                                     None => unreachable!(),
                                 }
 
-                                // TODO: Consider renaming
-                                // This is used to ensure that a company can progress to the next window round
-                                self.seen_company_indices.insert(*company_index);
+                                self.progressible_company_indices.insert(*company_index);
                             } else {
-                                self.seen_company_indices.remove(company_index);
+                                self.progressible_company_indices.remove(company_index);
                             }
                         }
                     }
