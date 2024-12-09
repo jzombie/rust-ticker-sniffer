@@ -2,13 +2,16 @@ mod constants;
 // use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::{
-    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS,TLD_LIST
+    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS, TLD_LIST,
 };
-pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, CompanyTokenProcessor, Weights};
+pub use models::{CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, Weights};
 pub mod utils;
-pub use utils::{token_to_charcode_vector, tokenize, tokenize_to_charcode_vectors, pad_vector, charcode_vector_to_token};
+pub use utils::{
+    charcode_vector_to_token, pad_vector, pad_vectors_to_match, token_to_charcode_vector, tokenize,
+    tokenize_to_charcode_vectors,
+};
 pub mod types;
-pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, CompanyTokenSourceType};
+pub use types::{CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
 
 pub fn extract_tickers_from_text(
     text: &str,
@@ -55,30 +58,78 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
-    let min_token_legnth = 1;
-    let max_token_length = 20;
-    let token_start_index = 0;
-    let token_end_index = 4;
-    // let include_source_types = &[TokenSourceType::Symbol, TokenSourceType::CompanyName];
-    // let include_source_types = &[TokenSourceType::CompanyName];
-    let include_source_types = &[CompanyTokenSourceType::Symbol];
-    let results_iter = token_processor.filter_token_space(min_token_legnth, max_token_length, token_start_index, token_end_index, include_source_types );
+    // let min_token_legnth = 1;
+    // let max_token_length = 20;
+    // let token_start_index = 0;
+    // let token_end_index = 4;
+    // // let include_source_types = &[CompanyTokenSourceType::Symbol, TokenSourceType::CompanyName];
+    // // let include_source_types = &[CompanyTokenSourceType::CompanyName];
+    // let include_source_types = &[CompanyTokenSourceType::Symbol];
+    // let results_iter = token_processor.filter_token_space(
+    //     min_token_legnth,
+    //     max_token_length,
+    //     token_start_index,
+    //     token_end_index,
+    //     include_source_types
+    // );
 
-    for (index, result) in results_iter.enumerate() {
-        println!(
-            "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - String Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
-            index,
-            result.company_index,
-            result.token_index,
-            result.symbol,
-            charcode_vector_to_token(result.vector_token),
-            result.source_type,
-            result.company_tokenized_entries
-        
+    // for (index, result) in results_iter.enumerate() {
+    //     println!(
+    //         "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - String Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
+    //         index,
+    //         result.company_index,
+    //         result.token_index,
+    //         result.symbol,
+    //         charcode_vector_to_token(result.vector_token),
+    //         result.source_type,
+    //         result.company_tokenized_entries
+
+    //     );
+    // }
+
+    let query = "Alphabet is a company but it is not Apple.";
+    let tokenized_query_vectors = tokenize_to_charcode_vectors(&query);
+
+    let length_tolerance: usize = 2;
+    for (index, query_vector) in tokenized_query_vectors.iter().enumerate() {
+        let query_vector_length = query_vector.len();
+
+        let min_token_length =
+            (query_vector_length - length_tolerance).clamp(1, query_vector_length);
+        let max_token_length = query_vector_length + length_tolerance;
+
+        let token_start_index = 0;
+        let token_end_index = 2;
+
+        let include_source_types = &[CompanyTokenSourceType::CompanyName];
+
+        let results_iter = token_processor.filter_token_space(
+            min_token_length,
+            max_token_length,
+            token_start_index,
+            token_end_index,
+            include_source_types,
         );
+
+        for (index, result) in results_iter.enumerate() {
+            // println!(
+            //     "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - String Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
+            //     index,
+            //     result.company_index,
+            //     result.token_index,
+            //     result.symbol,
+            //     charcode_vector_to_token(result.vector_token),
+            //     result.source_type,
+            //     result.company_tokenized_entries
+            // );
+            println!(
+                "{:?}",
+                pad_vectors_to_match(query_vector, result.vector_token),
+            )
+        }
     }
 
-
+    println!("{:?}", tokenized_query_vectors);
 
     let results = vec![];
     let total_score = 0.0;

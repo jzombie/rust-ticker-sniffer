@@ -11,4 +11,4 @@ pub use tokenize::{
 };
 
 pub mod pad_vector;
-pub use pad_vector::pad_vector;
+pub use pad_vector::{pad_vector, pad_vectors_to_match};
