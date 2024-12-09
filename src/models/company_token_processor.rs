@@ -10,6 +10,7 @@ type CompanyIndex = usize;
 type CompanyTokenIndex = usize;
 
 type CompanyTokenBinEntry = (CompanyIndex, CompanyTokenIndex);
+type CompanyTokenBin = Vec<CompanyTokenBinEntry>;
 
 // For all nested vectors:
 //  - Outer vector elements are by company index
@@ -25,7 +26,7 @@ pub struct CompanyTokenProcessor<'a> {
     pub max_corpus_token_length: usize,
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
-    pub token_length_bins: Vec<Vec<CompanyTokenBinEntry>>,
+    pub token_length_bins: Vec<CompanyTokenBin>,
 }
 
 // TODO: Remove?
