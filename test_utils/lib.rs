@@ -3,7 +3,7 @@ use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
     extract_tickers_from_text_with_custom_weights, CompanySymbolsList, ResultBiasAdjuster,
-    TickerSymbol, Weights,
+    TickerExtractorWeights, TickerSymbol,
 };
 pub mod models;
 pub use models::EvaluationResult;
@@ -74,7 +74,7 @@ pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
 pub fn run_test_for_file(
     test_file_path: &str,
     use_assertions: bool,
-    weights: Weights,
+    weights: TickerExtractorWeights,
     result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (usize, f32, EvaluationResult) {
     // Load symbols from a test CSV file

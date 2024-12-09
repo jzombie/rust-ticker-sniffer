@@ -1,10 +1,30 @@
 use crate::models::CompanyTokenProcessor;
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
 use crate::utils::{charcode_vector_to_token, cosine_similarity, tokenize_to_charcode_vectors};
+use std::fmt;
 
 pub struct TickerExtractorWeights {
-    min_similarity_threshold: f32,
-    token_length_diff_tolerance: usize,
+    pub min_similarity_threshold: f32,
+    pub token_length_diff_tolerance: usize,
+}
+
+impl fmt::Display for TickerExtractorWeights {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let struct_name = stringify!(Weights);
+        let fields = vec![
+            ("min_similarity_threshold", self.min_similarity_threshold),
+            (
+                "token_length_diff_tolerance",
+                self.token_length_diff_tolerance as f32,
+            ),
+        ];
+
+        writeln!(f, "{} (", struct_name)?;
+        for (name, value) in fields {
+            writeln!(f, "\t{}: {},", name, value)?;
+        }
+        write!(f, ")") // Final closing parenthesis
+    }
 }
 
 pub struct TickerExtractor<'a> {
@@ -16,17 +36,17 @@ pub struct TickerExtractor<'a> {
 }
 
 impl<'a> TickerExtractor<'a> {
-    pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
+    pub fn new(
+        company_symbols_list: &'a CompanySymbolsList,
+        weights: TickerExtractorWeights,
+    ) -> Self {
         let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
         Self {
             company_token_processor,
             text: "".to_string(),
             // TODO: Apply default weights
-            weights: TickerExtractorWeights {
-                min_similarity_threshold: 0.0,
-                token_length_diff_tolerance: 0,
-            },
+            weights,
             tokenized_query_vectors: vec![],
             results: vec![],
         }

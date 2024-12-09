@@ -4,9 +4,9 @@ pub mod models;
 pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS, TLD_LIST,
 };
-use models::ticker_extractor;
 pub use models::{
-    CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, TickerExtractor, Weights,
+    CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, TickerExtractor,
+    TickerExtractorWeights,
 };
 pub mod utils;
 pub use utils::{
@@ -34,7 +34,7 @@ pub fn extract_tickers_from_text(
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
-    _weights: Weights,
+    weights: TickerExtractorWeights,
     _result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
     // let mut matches = HashSet::new();
@@ -128,7 +128,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
         "#;
 
-    let mut ticker_extractor = TickerExtractor::new(&company_symbols_list);
+    let mut ticker_extractor = TickerExtractor::new(&company_symbols_list, weights);
 
     // TODO: Handle results
     ticker_extractor.extract(&query);
