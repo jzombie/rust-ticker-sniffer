@@ -18,6 +18,7 @@ pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     pub company_symbols_list: &'a CompanySymbolsList,
+    pub company_name_lengths: Vec<usize>,
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub tokenized_entries: Vec<Vec<CompanyTokenizedEntry>>,
@@ -47,9 +48,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
             company_symbols_list,
-            tokenized_entries: Vec::new(),
+            company_name_lengths: vec![],
+            tokenized_entries: vec![],
             max_corpus_token_length: 0,
-            token_length_bins: Vec::new(),
+            token_length_bins: vec![],
         };
 
         instance.tokenize_all();
@@ -76,6 +78,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     /// Tokenize and populate tokenized_data and max_corpus_token_length
     fn tokenize_all(&mut self) {
+        self.company_name_lengths.clear();
         self.max_corpus_token_length = 0;
         self.tokenized_entries.clear();
 
@@ -94,12 +97,18 @@ impl<'a> CompanyTokenProcessor<'a> {
                 // Token from symbol
             }
 
-            if let Some(name) = company_name {
-                let name_tokens = self.text_doc_tokenizer.tokenize_to_charcode_vectors(name);
-                for token in name_tokens {
+            if let Some(company_name) = company_name {
+                self.company_name_lengths.push(company_name.len());
+
+                let company_name_token_vectors = self
+                    .text_doc_tokenizer
+                    .tokenize_to_charcode_vectors(company_name);
+                for token in company_name_token_vectors {
                     company_tokenized_entries.push((token, CompanyTokenSourceType::CompanyName));
                     // Token from company name
                 }
+            } else {
+                self.company_name_lengths.push(0);
             }
 
             // Store tokenized data for later use
