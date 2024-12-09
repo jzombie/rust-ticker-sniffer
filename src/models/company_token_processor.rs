@@ -20,15 +20,16 @@ pub struct CompanyTokenProcessor<'a> {
     pub token_length_bins: Vec<Vec<CompanyTokenBinEntry>>,
 }
 
-pub struct CompanyFilteredTokenResult<'a> {
-    pub company_index: CompanyIndex,
-    pub token_index: CompanyTokenIndex,
-    pub token_vector: &'a CompanyVectorTokenType,
-    pub source_type: CompanyTokenSourceType,
-    pub symbol: &'a str,
-    pub company_name: Option<&'a str>,
-    pub company_tokenized_entries: &'a Vec<CompanyTokenizedEntry>,
-}
+// pub struct CompanyFilteredTokenResult<'a> {
+//     pub company_index: CompanyIndex,
+//     pub token_index: CompanyTokenIndex,
+//     pub token_vector: &'a CompanyVectorTokenType,
+//     pub source_type: CompanyTokenSourceType,
+//     pub symbol: &'a str,
+//     pub company_name: Option<&'a str>,
+//     pub company_tokenized_entries: &'a Vec<CompanyTokenizedEntry>,
+// }
+
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
         let mut instance = Self {
@@ -100,21 +101,25 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
-    pub fn get_token_len_bins(
-        &self,
-        min_token_length: usize,
-        max_token_length: usize,
-    ) -> Vec<&CompanyTokenBinEntry> {
-        self.token_length_bins
-            .iter()
-            .enumerate()
-            .filter(|(length, bin)| {
-                *length >= min_token_length && *length <= max_token_length && !bin.is_empty()
-            })
-            .flat_map(|(_, bin)| bin.iter()) // Flatten all bins into a single iterator of references
-            .collect()
-    }
+    // TODO: Remove?
+    //
+    // pub fn get_token_len_bins(
+    //     &self,
+    //     min_token_length: usize,
+    //     max_token_length: usize,
+    // ) -> Vec<&CompanyTokenBinEntry> {
+    //     self.token_length_bins
+    //         .iter()
+    //         .enumerate()
+    //         .filter(|(length, bin)| {
+    //             *length >= min_token_length && *length <= max_token_length && !bin.is_empty()
+    //         })
+    //         .flat_map(|(_, bin)| bin.iter()) // Flatten all bins into a single iterator of references
+    //         .collect()
+    // }
 
+    // TODO: Maybe useful for debugging, but awful for performance
+    //
     // Note: An Iterator is used on the output for lazy execution, letting the
     // consumer decide whether or not to proceed to the next result.
     //

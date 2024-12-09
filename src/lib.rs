@@ -155,46 +155,47 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
         // let include_source_types = &[CompanyTokenSourceType::CompanyName];
 
-        // let token_length_bins = token_processor.token_length_bins.get(query_vector_length);
+        let token_length_bins = token_processor.token_length_bins.get(query_vector_length);
 
-        let token_length_bins =
-            token_processor.get_token_len_bins(min_token_length, max_token_length);
+        match token_length_bins {
+            Some(bins) => {
+                for (company_index, company_token_index) in bins {
+                    if company_token_index >= &token_start_index
+                        && company_token_index < &token_end_index
+                    {
+                        let (company_token_vector, company_token_type) = &token_processor
+                            .tokenized_entries[*company_index][*company_token_index];
 
-        if !token_length_bins.is_empty() {
-            for (company_index, company_token_index) in token_length_bins {
-                if company_token_index >= &token_start_index
-                    && company_token_index < &token_end_index
-                {
-                    let (company_token_vector, company_token_type) =
-                        &token_processor.tokenized_entries[*company_index][*company_token_index];
+                        // Uncomment this condition if filtering is needed
+                        if *company_token_type != CompanyTokenSourceType::CompanyName {
+                            continue;
+                        }
 
-                    // Uncomment this condition if filtering is needed
-                    if *company_token_type != CompanyTokenSourceType::CompanyName {
-                        continue;
-                    }
+                        let similarity = cosine_similarity(&query_vector, company_token_vector);
 
-                    let similarity = cosine_similarity(&query_vector, company_token_vector);
+                        // let (padded_query_vector, padded_company_token_vector) =
+                        //     pad_vectors_to_match(&query_vector, &company_token_vector);
+                        // let similarity =
+                        //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
 
-                    // let (padded_query_vector, padded_company_token_vector) =
-                    //     pad_vectors_to_match(&query_vector, &company_token_vector);
-                    // let similarity =
-                    //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
+                        if similarity == 1.0 {
+                            println!(
+                                "Matched company: {:?}",
+                                company_symbols_list.get(*company_index)
+                            );
 
-                    if similarity == 1.0 {
-                        println!(
-                            "Matched company: {:?}",
-                            company_symbols_list.get(*company_index)
-                        );
-
-                        match_count += 1;
+                            match_count += 1;
+                        }
                     }
                 }
             }
-        } else {
-            println!(
-                "No bins found for token lengths between {} and {}",
-                min_token_length, max_token_length
-            );
+
+            None => {
+                println!(
+                    "No bins found for token lengths between {} and {}",
+                    min_token_length, max_token_length
+                );
+            }
         }
 
         // let results_iter = token_processor.filter_token_space(
