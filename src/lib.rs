@@ -2,11 +2,11 @@ mod constants;
 // use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::{
-    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS, TLD_LIST,
+    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_CONFIG, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
 };
 pub use models::{
     CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, TickerExtractor,
-    TickerExtractorWeights, Tokenizer,
+    TickerExtractorConfig, Tokenizer,
 };
 pub mod utils;
 pub use utils::{cosine_similarity, pad_vector, pad_vectors_to_match};
@@ -25,7 +25,7 @@ pub fn extract_tickers_from_text(
     extract_tickers_from_text_with_custom_weights(
         &text,
         &company_symbols_list,
-        DEFAULT_WEIGHTS,
+        DEFAULT_CONFIG,
         &result_bias_adjuster,
     )
 }
@@ -33,7 +33,7 @@ pub fn extract_tickers_from_text(
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
-    weights: TickerExtractorWeights,
+    weights: TickerExtractorConfig,
     _result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
     // let mut matches = HashSet::new();

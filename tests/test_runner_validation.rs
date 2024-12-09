@@ -3,7 +3,7 @@ mod test_utils;
 
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
-use ticker_sniffer::{ResultBiasAdjuster, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS};
+use ticker_sniffer::{ResultBiasAdjuster, DEFAULT_CONFIG, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS};
 
 // Declare a module-level variable for ResultBiasAdjuster
 static mut CONTEXT_ATTENTION: Option<ResultBiasAdjuster> = None;
@@ -39,7 +39,7 @@ mod tests {
                     run_test_for_file(
                         file_path.to_str().unwrap(),
                         true,
-                        DEFAULT_WEIGHTS,
+                        DEFAULT_CONFIG,
                         result_bias_adjuster,
                     );
                 }

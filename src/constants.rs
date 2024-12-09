@@ -1,13 +1,13 @@
-use crate::models::TickerExtractorWeights;
+use crate::models::TickerExtractorConfig;
 
-pub const DEFAULT_WEIGHTS: TickerExtractorWeights = TickerExtractorWeights {
+pub const DEFAULT_CONFIG: TickerExtractorConfig = TickerExtractorConfig {
     min_similarity_threshold: 1.0,
     token_length_diff_tolerance: 0,
     token_window_size: 2,
 };
 
 // TODO: Remove
-// pub const DEFAULT_WEIGHTS: Weights = Weights {
+// pub const DEFAULT_CONFIG: Weights = Weights {
 //     consecutive_match_weight: 0.021446686,
 //     letter_mismatch_penalty: 0.85928243,
 //     word_mismatch_penalty: 0.25776097,

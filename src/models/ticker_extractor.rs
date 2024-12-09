@@ -3,14 +3,14 @@ use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
 // use std::fmt;
 
-pub struct TickerExtractorWeights {
+pub struct TickerExtractorConfig {
     pub min_similarity_threshold: f64,
     pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
 }
 
 // TODO: Is this needed?
-// impl fmt::Display for TickerExtractorWeights {
+// impl fmt::Display for TickerExtractorConfig {
 //     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 //         let struct_name = stringify!(Weights);
 //         let fields = vec![
@@ -37,7 +37,7 @@ pub struct TickerExtractor<'a> {
     text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
     text: Option<String>,
-    weights: TickerExtractorWeights,
+    weights: TickerExtractorConfig,
     tokenized_query_vectors: Vec<Vec<u32>>,
     results: Vec<TickerSymbol>,
 }
@@ -45,7 +45,7 @@ pub struct TickerExtractor<'a> {
 impl<'a> TickerExtractor<'a> {
     pub fn new(
         company_symbols_list: &'a CompanySymbolsList,
-        weights: TickerExtractorWeights,
+        weights: TickerExtractorConfig,
     ) -> Self {
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
         let text_doc_tokenizer = Tokenizer::text_doc_parser();

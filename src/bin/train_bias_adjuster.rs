@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs::read_dir;
-use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_WEIGHTS};
+use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_CONFIG};
 
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
@@ -36,7 +36,7 @@ fn train_result_bias_adjuster() {
     let tolerance = 1e-5;
 
     // Initialize weights and best scores
-    let weights = DEFAULT_WEIGHTS;
+    let weights = DEFAULT_CONFIG;
     let mut best_loss = f32::MAX;
     let mut no_improvement_count = 0;
 
