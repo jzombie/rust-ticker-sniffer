@@ -87,8 +87,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     //     );
     // }
 
-    let query =
-        "Alphabet is a company but it is not Apple.  It isn't WALmaR-T either, but you know.";
+    let query = "J.P. Morgan Exchange Traded Fund Trust";
     let tokenized_query_vectors = tokenize_to_charcode_vectors(&query, None);
 
     let length_tolerance: usize = 2;
@@ -135,7 +134,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
             let similarity = cosine_similarity(&padded_query_vector, &padded_result_vector);
 
             if similarity == 1.0 {
-                println!("{}", result.symbol);
+                println!(
+                    "Similarity: {}, {}, {:?}",
+                    similarity, result.symbol, result.company_name
+                );
             }
         }
     }
