@@ -135,7 +135,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
             .collect::<Vec<String>>()
     );
 
-    let length_tolerance: usize = 0;
+    // let length_tolerance: usize = 0;
     let mut match_count: usize = 0;
     for (index, query_vector) in tokenized_query_vectors.iter().enumerate() {
         // println!(
@@ -146,9 +146,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
         let query_vector_length = query_vector.len();
 
-        let min_token_length =
-            (query_vector_length - length_tolerance).clamp(1, query_vector_length);
-        let max_token_length = query_vector_length + length_tolerance;
+        // TODO: Use to help make queries like "Google" -> "GOOGL" work
+        // let min_token_length =
+        //     (query_vector_length - length_tolerance).clamp(1, query_vector_length);
+        // let max_token_length = query_vector_length + length_tolerance;
 
         let token_start_index = 0;
         let token_end_index = 3;
@@ -191,10 +192,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
             }
 
             None => {
-                println!(
-                    "No bins found for token lengths between {} and {}",
-                    min_token_length, max_token_length
-                );
+                // println!(
+                //     "No bins found for token lengths between {} and {}",
+                //     min_token_length, max_token_length
+                // );
             }
         }
 
