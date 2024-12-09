@@ -4,7 +4,11 @@ use crate::constants::TLD_LIST;
 /// Tokenizer function to split the text into individual tokens.
 ///
 /// Note: This explcitly does not modify the case of the text.
-pub fn tokenize(text: &str, min_uppercase_ratio: Option<f32>) -> Vec<String> {
+pub fn tokenize(
+    text: &str,
+    min_uppercase_ratio: Option<f32>,
+    hyphens_as_potential_multiple_words: bool,
+) -> Vec<String> {
     // Preprocess text: handle hyphenation, line breaks, and cleanup
     let cleaned_text = text
         .replace("-\n", "") // Merge hyphenated words across lines
@@ -40,6 +44,23 @@ pub fn tokenize(text: &str, min_uppercase_ratio: Option<f32>) -> Vec<String> {
         })
         .flat_map(|word| {
             let mut tokens = Vec::new();
+
+            if hyphens_as_potential_multiple_words {
+                // Handle hyphenated words
+                if word.contains('-') {
+                    let split_words: Vec<&str> = word.split('-').collect();
+                    tokens.push(word.replace('-', "").to_uppercase()); // Concatenated version
+                    for part in &split_words {
+                        tokens.push(
+                            part.chars()
+                                .filter(|c| c.is_alphanumeric())
+                                .collect::<String>()
+                                .to_uppercase(),
+                        ); // Add each part separately
+                    }
+                    return tokens;
+                }
+            }
 
             // Handle web addresses
             if let Some((base, tld)) = word.rsplit_once('.') {
@@ -88,11 +109,19 @@ pub fn charcode_vector_to_token(charcodes: &[u32]) -> String {
         .collect()
 }
 
-pub fn tokenize_to_charcode_vectors(text: &str, min_uppercase_ratio: Option<f32>) -> Vec<Vec<u32>> {
-    tokenize(text, min_uppercase_ratio)
-        .into_iter() // Use the existing `tokenize` function to get tokens
-        .map(|token| token_to_charcode_vector(&token)) // Convert each token to char code vectors
-        .collect()
+pub fn tokenize_to_charcode_vectors(
+    text: &str,
+    min_uppercase_ratio: Option<f32>,
+    hyphens_as_potential_multiple_words: bool,
+) -> Vec<Vec<u32>> {
+    tokenize(
+        text,
+        min_uppercase_ratio,
+        hyphens_as_potential_multiple_words,
+    )
+    .into_iter() // Use the existing `tokenize` function to get tokens
+    .map(|token| token_to_charcode_vector(&token)) // Convert each token to char code vectors
+    .collect()
 }
 
 // TODO: Remove
