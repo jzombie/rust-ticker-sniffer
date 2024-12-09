@@ -7,8 +7,8 @@ pub use constants::{
 pub use models::{CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, Weights};
 pub mod utils;
 pub use utils::{
-    charcode_vector_to_token, pad_vector, pad_vectors_to_match, token_to_charcode_vector, tokenize,
-    tokenize_to_charcode_vectors,
+    charcode_vector_to_token, cosine_similarity, pad_vector, pad_vectors_to_match,
+    token_to_charcode_vector, tokenize, tokenize_to_charcode_vectors,
 };
 pub mod types;
 pub use types::{CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
@@ -87,7 +87,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
     //     );
     // }
 
-    let query = "Alphabet is a company but it is not Apple.";
+    let query =
+        "Alphabet is a company but it is not Apple.  It isn't WALmaR-T either, but you know.";
     let tokenized_query_vectors = tokenize_to_charcode_vectors(&query);
 
     let length_tolerance: usize = 2;
@@ -122,10 +123,14 @@ pub fn extract_tickers_from_text_with_custom_weights(
             //     result.source_type,
             //     result.company_tokenized_entries
             // );
-            println!(
-                "{:?}",
-                pad_vectors_to_match(query_vector, result.token_vector),
-            )
+            let (padded_query_vector, padded_result_vector) =
+                pad_vectors_to_match(query_vector, &result.token_vector);
+
+            let similarity = cosine_similarity(&padded_query_vector, &padded_result_vector);
+
+            if similarity == 1.0 {
+                println!("{}", result.symbol);
+            }
         }
     }
 

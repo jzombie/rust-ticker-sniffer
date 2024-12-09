@@ -1,5 +1,8 @@
 // TODO: Clean up
 
+pub mod cosine_similarity;
+pub use cosine_similarity::cosine_similarity;
+
 // pub mod generate_alternative_symbols;
 // pub mod jaccard_similarity_chars;
 pub mod tokenize;
