@@ -23,6 +23,7 @@ pub struct CompanyTokenProcessor<'a> {
     pub token_length_bins: Vec<Vec<CompanyTokenBinEntry>>,
 }
 
+// TODO: Remove?
 // pub struct CompanyFilteredTokenResult<'a> {
 //     pub company_index: CompanyIndex,
 //     pub token_index: CompanyTokenIndex,
