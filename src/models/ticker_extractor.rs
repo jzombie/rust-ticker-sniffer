@@ -32,15 +32,24 @@ pub struct TickerExtractorConfig {
 //     }
 // }
 
+#[derive(Debug)]
+struct QueryVectorCompanySimilarityState {
+    query_token_index: usize,
+    company_index: usize,
+    company_token_index: usize,
+    similarity: f64,
+}
+
 pub struct TickerExtractor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
-    text: Option<String>,
     user_config: TickerExtractorConfig,
-    tokenized_query_vectors: Vec<Vec<u32>>,
-    results: Vec<TickerSymbol>,
     is_extracting: bool,
+    text: Option<String>,
+    tokenized_query_vectors: Vec<Vec<u32>>,
+    company_similarity_states: Vec<QueryVectorCompanySimilarityState>,
+    results: Vec<TickerSymbol>,
 }
 
 impl<'a> TickerExtractor<'a> {
@@ -57,12 +66,12 @@ impl<'a> TickerExtractor<'a> {
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
             company_token_processor,
-            text: Some("".to_string()),
-            // TODO: Apply default weights
             user_config,
-            tokenized_query_vectors: vec![],
-            results: vec![],
             is_extracting: false,
+            text: None,
+            tokenized_query_vectors: vec![],
+            company_similarity_states: vec![],
+            results: vec![],
         }
     }
 
@@ -73,10 +82,17 @@ impl<'a> TickerExtractor<'a> {
             self.is_extracting = true;
         }
 
+        self.company_similarity_states.clear();
+        self.results.clear();
+
         self.text = Some(text.to_string());
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
-        self.parse(0)
+        self.parse(0);
+
+        // for similarity_state in &self.company_similarity_states {
+        //     println!("Similarity state: {:?}", similarity_state);
+        // }
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
@@ -104,12 +120,28 @@ impl<'a> TickerExtractor<'a> {
             token_start_index, token_end_index
         );
 
-        let mut match_count: usize = 0;
+        // TODO: Remove; just for debugging
+        let mut window_match_count: usize = 0;
+
         for (query_token_index, query_vector) in self.tokenized_query_vectors.iter().enumerate() {
+            // // Ensure the vector has enough capacity to accommodate the current query_token_index
+            // if self.query_vector_states.len() <= query_token_index {
+            //     self.query_vector_states.resize(
+            //         query_token_index + 1,
+            //         QueryVectorState {
+            //             query_token_index: 0,
+            //             company_similarity_states: vec![],
+            //         },
+            //     );
+            // }
+
+            // // Access or create the state at the desired index
+            // let query_vector_state = &mut self.query_vector_states[query_token_index];
+            // query_vector_state.query_token_index = query_token_index; // Update if necessary
+
             // println!(
-            //     "index: {}, query: {}",
-            //     index,
-            //     charcode_vector_to_token(query_vector)
+            //     "index: {}, query_vector_state: {:?}",
+            //     query_token_index, query_vector_state
             // );
 
             let query_vector_length = query_vector.len();
@@ -166,8 +198,17 @@ impl<'a> TickerExtractor<'a> {
                                 //     query_token_index
                                 // );
 
-                                match_count += 1;
+                                // TODO: Remove; just for debugging
+                                window_match_count += 1;
                             }
+
+                            self.company_similarity_states
+                                .push(QueryVectorCompanySimilarityState {
+                                    query_token_index,
+                                    company_index: *company_index,
+                                    company_token_index: *company_token_index,
+                                    similarity,
+                                })
                         }
                     }
                 }
@@ -187,7 +228,11 @@ impl<'a> TickerExtractor<'a> {
         // and use the `continue` keyword in
         // ` self.tokenized_query_vectors.iter().enumerate()`.
 
-        // TODO: Handle
-        println!("Matches: {:?}", match_count);
+        // TODO: Remove; just for debugging
+        println!("Matches: {:?}", window_match_count);
+
+        if window_match_count > 0 {
+            self.parse(token_window_index + 1);
+        }
     }
 }
