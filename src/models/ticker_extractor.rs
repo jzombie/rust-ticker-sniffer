@@ -35,6 +35,7 @@ pub struct TickerExtractorConfig {
 
 #[derive(Debug)]
 struct QueryVectorCompanySimilarityState {
+    token_window_index: usize,
     query_token_index: usize,
     company_index: usize,
     company_token_index: usize,
@@ -171,14 +172,16 @@ impl<'a> TickerExtractor<'a> {
             match token_length_bins {
                 Some(bins) => {
                     for (company_index, company_token_index) in bins {
+                        // println!("company_token_index: {}", *company_token_index);
+
                         if token_window_index > 0
                             && !self.seen_company_indices.contains(company_index)
                         {
                             continue;
                         }
 
-                        if company_token_index >= &token_start_index
-                            && company_token_index < &token_end_index
+                        if *company_token_index >= token_start_index
+                            && *company_token_index < token_end_index
                         {
                             let (company_token_vector, company_token_type) = &self
                                 .company_token_processor
@@ -211,10 +214,12 @@ impl<'a> TickerExtractor<'a> {
 
                                 self.company_similarity_states.push(
                                     QueryVectorCompanySimilarityState {
+                                        token_window_index,
                                         query_token_index,
                                         company_index: *company_index,
                                         company_token_index: *company_token_index,
-                                        similarity: (similarity * token_window_index as f64 + 1.0),
+                                        similarity: similarity
+                                            * (*company_token_index as f64 + 1.0),
                                     },
                                 );
 
