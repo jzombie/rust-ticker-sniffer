@@ -30,6 +30,7 @@ pub fn cosine_similarity(v1: &[u32], v2: &[u32]) -> f64 {
 
 // TODO: Will this work in WASM?
 // use wide::u32x8;
+// https://docs.rs/wide/latest/wide/
 
 // /// Computes the cosine similarity between two vectors using SIMD.
 // ///
