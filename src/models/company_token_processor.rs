@@ -2,7 +2,9 @@ use crate::types::{CompanySymbolsList, CompanyTokenSourceType};
 use crate::utils::tokenize;
 
 // TODO: Use numeric data
-type TokenizedEntry = Vec<(String, CompanyTokenSourceType)>;
+type CompanyTokenType = String;
+
+type TokenizedEntry = Vec<(CompanyTokenType, CompanyTokenSourceType)>;
 
 /// Index of the company in the `company_symbols_list`
 type CompanyIndex = usize;
@@ -27,7 +29,7 @@ pub struct CompanyTokenQueryResult<'a> {
     pub source_type: CompanyTokenSourceType,
     pub symbol: &'a str,
     pub company_name: Option<&'a str>,
-    pub company_tokens: &'a [(String, CompanyTokenSourceType)],
+    pub company_tokens: &'a [(CompanyTokenType, CompanyTokenSourceType)],
 }
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
@@ -51,7 +53,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // First pass: Tokenize and determine the maximum token length
         for (symbol, company_name) in self.company_symbols_list.iter() {
-            let mut company_tokens: Vec<(String, CompanyTokenSourceType)> = Vec::new();
+            let mut company_tokens: Vec<(CompanyTokenType, CompanyTokenSourceType)> = Vec::new();
 
             // Handle the symbol token as a single token
             let symbol_token = tokenize(symbol).get(0).cloned(); // Take the first entry, if it exists
