@@ -171,39 +171,13 @@ impl<'a> TickerExtractor<'a> {
                     // );
                 }
             }
-
-            // let results_iter = token_processor.filter_token_space(
-            //     min_token_length,
-            //     max_token_length,
-            //     token_start_index,
-            //     token_end_index,
-            //     include_source_types,
-            // );
-
-            // for (index, result) in results_iter.enumerate() {
-            //     // println!(
-            //     //     "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - String Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
-            //     //     index,
-            //     //     result.company_index,
-            //     //     result.token_index,
-            //     //     result.symbol,
-            //     //     charcode_vector_to_token(result.token_vector),
-            //     //     result.source_type,
-            //     //     result.company_tokenized_entries
-            //     // );
-            //     let (padded_query_vector, padded_result_vector) =
-            //         pad_vectors_to_match(query_vector, &result.token_vector);
-
-            //     let similarity = cosine_similarity(&padded_query_vector, &padded_result_vector);
-
-            //     // if similarity == 1.0 {
-            //     //     println!(
-            //     //         "Similarity: {}, {}, {:?}",
-            //     //         similarity, result.symbol, result.company_name
-            //     //     );
-            //     // }
-            // }
         }
+
+        // TODO: After the first window, query tokens which didn't have a match
+        // can probably be completely discarded, as there is no point in
+        // querying them again. Perhaps just mark the indexes as "used up"
+        // and use the `continue` keyword in
+        // ` self.tokenized_query_vectors.iter().enumerate()`.
 
         // TODO: Handle
         println!("Matches: {:?}", match_count);
