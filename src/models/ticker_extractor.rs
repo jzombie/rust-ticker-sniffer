@@ -40,6 +40,7 @@ pub struct TickerExtractor<'a> {
     weights: TickerExtractorConfig,
     tokenized_query_vectors: Vec<Vec<u32>>,
     results: Vec<TickerSymbol>,
+    is_extracting: bool,
 }
 
 impl<'a> TickerExtractor<'a> {
@@ -61,10 +62,17 @@ impl<'a> TickerExtractor<'a> {
             weights,
             tokenized_query_vectors: vec![],
             results: vec![],
+            is_extracting: false,
         }
     }
 
     pub fn extract(&mut self, text: &str) {
+        if self.is_extracting {
+            panic!("Cannot perform multiple extractions concurrently from same `TickerExtractor` instance");
+        } else {
+            self.is_extracting = true;
+        }
+
         self.text = Some(text.to_string());
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
