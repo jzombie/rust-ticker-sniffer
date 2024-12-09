@@ -2,7 +2,7 @@ mod constants;
 // use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::{
-    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS,
+    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS,TLD_LIST
 };
 pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, CompanyTokenProcessor, Weights};
 pub mod utils;

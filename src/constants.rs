@@ -13,6 +13,8 @@ pub const DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS: &[(u64, f32)] = &[];
 
 pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
 
+pub const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
+
 pub const STOP_WORDS: &[&str] = &[
     "a",
     "about",

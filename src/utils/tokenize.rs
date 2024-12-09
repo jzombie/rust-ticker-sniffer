@@ -1,12 +1,10 @@
-// use crate::constants::STOP_WORDS;
+use crate::constants::TLD_LIST;
 
+// TODO: Provide optional STOP_WORD filtering
 /// Tokenizer function to split the text into individual tokens.
 ///
 /// Note: This explcitly does not modify the case of the text.
 pub fn tokenize(text: &str) -> Vec<String> {
-    // List of common TLDs for robust handling
-    const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
-
     // Preprocess text: handle hyphenation, line breaks, and cleanup
     let cleaned_text = text
         .replace("-\n", "") // Merge hyphenated words across lines
