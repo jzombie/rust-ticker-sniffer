@@ -21,7 +21,7 @@ pub struct CompanyTokenProcessor<'a> {
     pub token_length_bins: Vec<Vec<CompanyTokenBinEntry>>,
 }
 
-pub struct CompanyTokenQueryResult<'a> {
+pub struct CompanyFilteredTokenResult<'a> {
     pub company_index: CompanyIndex,
     pub token_index: CompanyTokenIndex,
     pub token: &'a str,
@@ -103,14 +103,14 @@ impl<'a> CompanyTokenProcessor<'a> {
     /// letting the consumer determine if it should proceed to the next result.
     ///
     /// Note: `token_end_index` is non-inclusive
-    pub fn search_token_space(
+    pub fn filter_token_space(
         &'a self,
         min_token_length: usize,
         max_token_length: usize,
         token_start_index: usize,
         token_end_index: usize,
         include_source_types: &'a [CompanyTokenSourceType],
-    ) -> impl Iterator<Item = CompanyTokenQueryResult<'a>> + 'a {
+    ) -> impl Iterator<Item = CompanyFilteredTokenResult<'a>> + 'a {
         // Iterate over the range of token lengths
         (min_token_length..=max_token_length)
             .filter_map(move |length| self.token_length_bins.get(length)) // Only process bins that exist
@@ -131,7 +131,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         let (symbol, company_name) = &self.company_symbols_list[company_index];
                         let company_tokenized_entries = &self.tokenized_entries[company_index];
 
-                        CompanyTokenQueryResult {
+                        CompanyFilteredTokenResult {
                             company_index,
                             token_index,
                             token,

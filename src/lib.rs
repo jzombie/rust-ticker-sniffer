@@ -62,7 +62,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // let include_source_types = &[TokenSourceType::Symbol, TokenSourceType::CompanyName];
     // let include_source_types = &[TokenSourceType::CompanyName];
     let include_source_types = &[CompanyTokenSourceType::Symbol];
-    let results_iter = token_processor.search_token_space(min_token_legnth, max_token_length, token_start_index, token_end_index, include_source_types );
+    let results_iter = token_processor.filter_token_space(min_token_legnth, max_token_length, token_start_index, token_end_index, include_source_types );
 
     for (index, result) in results_iter.enumerate() {
         println!(
