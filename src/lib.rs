@@ -4,7 +4,10 @@ pub mod models;
 pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS, TLD_LIST,
 };
-pub use models::{CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, Weights};
+use models::ticker_extractor;
+pub use models::{
+    CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, TickerExtractor, Weights,
+};
 pub mod utils;
 pub use utils::{
     charcode_vector_to_token, cosine_similarity, pad_vector, pad_vectors_to_match,
@@ -54,7 +57,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // eprintln!("vectors: {:?}", vectors);
 
-    let token_processor = CompanyTokenProcessor::new(&company_symbols_list);
+    // let token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
@@ -125,122 +128,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
     Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
         "#;
 
-    let tokenized_query_vectors = tokenize_to_charcode_vectors(&query, None, true);
+    let mut ticker_extractor = TickerExtractor::new(&company_symbols_list);
 
-    println!(
-        "Query tokens: {:?}",
-        tokenized_query_vectors
-            .iter()
-            .map(|vector| charcode_vector_to_token(vector))
-            .collect::<Vec<String>>()
-    );
-
-    // let length_tolerance: usize = 0;
-    let mut match_count: usize = 0;
-    for (query_token_index, query_vector) in tokenized_query_vectors.iter().enumerate() {
-        // println!(
-        //     "index: {}, query: {}",
-        //     index,
-        //     charcode_vector_to_token(query_vector)
-        // );
-
-        let query_vector_length = query_vector.len();
-
-        // TODO: Use to help make queries like "Google" -> "GOOGL" work
-        // let min_token_length =
-        //     (query_vector_length - length_tolerance).clamp(1, query_vector_length);
-        // let max_token_length = query_vector_length + length_tolerance;
-
-        // TODO: This should perform multiple passes, moving the window up as it goes; results that are no
-        // longer present in a subsequent pass should be capped off at that; each query token (at the
-        // relevant index) that is matched, should be stored, where the longest consecutive matches of tokens
-        // for a particular query should be scored higher than the others; where each token at each index,
-        // ultimately, should only be associated with a single company, if any at all.
-        //
-        let token_start_index = 0;
-        let token_end_index = 3;
-
-        // let include_source_types = &[CompanyTokenSourceType::CompanyName];
-
-        let token_length_bins = token_processor.token_length_bins.get(query_vector_length);
-
-        match token_length_bins {
-            Some(bins) => {
-                for (company_index, company_token_index) in bins {
-                    if company_token_index >= &token_start_index
-                        && company_token_index < &token_end_index
-                    {
-                        let (company_token_vector, company_token_type) = &token_processor
-                            .tokenized_entries[*company_index][*company_token_index];
-
-                        // Uncomment this condition if filtering is needed
-                        if *company_token_type != CompanyTokenSourceType::CompanyName {
-                            continue;
-                        }
-
-                        let similarity = cosine_similarity(&query_vector, company_token_vector);
-
-                        // let (padded_query_vector, padded_company_token_vector) =
-                        //     pad_vectors_to_match(&query_vector, &company_token_vector);
-                        // let similarity =
-                        //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
-
-                        // if similarity > 0.999 {
-                        if similarity == 1.0 {
-                            // println!(
-                            //     "Matched company: {:?}; Token Index: {}",
-                            //     company_symbols_list.get(*company_index),
-                            //     query_token_index
-                            // );
-
-                            match_count += 1;
-                        }
-                    }
-                }
-            }
-
-            None => {
-                // println!(
-                //     "No bins found for token lengths between {} and {}",
-                //     min_token_length, max_token_length
-                // );
-            }
-        }
-
-        // let results_iter = token_processor.filter_token_space(
-        //     min_token_length,
-        //     max_token_length,
-        //     token_start_index,
-        //     token_end_index,
-        //     include_source_types,
-        // );
-
-        // for (index, result) in results_iter.enumerate() {
-        //     // println!(
-        //     //     "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - String Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
-        //     //     index,
-        //     //     result.company_index,
-        //     //     result.token_index,
-        //     //     result.symbol,
-        //     //     charcode_vector_to_token(result.token_vector),
-        //     //     result.source_type,
-        //     //     result.company_tokenized_entries
-        //     // );
-        //     let (padded_query_vector, padded_result_vector) =
-        //         pad_vectors_to_match(query_vector, &result.token_vector);
-
-        //     let similarity = cosine_similarity(&padded_query_vector, &padded_result_vector);
-
-        //     // if similarity == 1.0 {
-        //     //     println!(
-        //     //         "Similarity: {}, {}, {:?}",
-        //     //         similarity, result.symbol, result.company_name
-        //     //     );
-        //     // }
-        // }
-    }
-
-    println!("Matches: {:?}", match_count);
+    // TODO: Handle results
+    ticker_extractor.extract(&query);
 
     let results = vec![];
     let total_score = 0.0;
