@@ -1,7 +1,13 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TokenizerVectorTokenType};
 use crate::Tokenizer;
 
-type CompanyTokenizedEntry = (TokenizerVectorTokenType, CompanyTokenSourceType);
+type CompanyTokenIndexBySourceType = usize;
+
+type CompanyTokenizedEntry = (
+    TokenizerVectorTokenType,
+    CompanyTokenSourceType,
+    CompanyTokenIndexBySourceType,
+);
 
 /// Index of the company in the `company_symbols_list`
 type CompanyIndex = usize;
@@ -94,7 +100,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                 .get(0)
                 .cloned(); // Take the first entry, if it exists
             if let Some(symbol_token) = symbol_token {
-                company_tokenized_entries.push((symbol_token, CompanyTokenSourceType::Symbol));
+                company_tokenized_entries.push((symbol_token, CompanyTokenSourceType::Symbol, 0));
                 // Token from symbol
             }
 
@@ -104,8 +110,12 @@ impl<'a> CompanyTokenProcessor<'a> {
                 let company_name_token_vectors = self
                     .text_doc_tokenizer
                     .tokenize_to_charcode_vectors(company_name);
-                for token in company_name_token_vectors {
-                    company_tokenized_entries.push((token, CompanyTokenSourceType::CompanyName));
+                for (index_by_source_type, token) in company_name_token_vectors.iter().enumerate() {
+                    company_tokenized_entries.push((
+                        token.to_vec(),
+                        CompanyTokenSourceType::CompanyName,
+                        index_by_source_type,
+                    ));
                     // Token from company name
                 }
             } else {
@@ -117,7 +127,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                 .push(company_tokenized_entries.clone());
 
             // Update the maximum token length
-            for (token, _) in &company_tokenized_entries {
+            for (token, _, _) in &company_tokenized_entries {
                 self.max_corpus_token_length = self.max_corpus_token_length.max(token.len());
             }
         }
@@ -131,7 +141,9 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Second pass: Populate the bins using stored tokenized data
         for (company_index, company_tokens) in self.tokenized_entries.iter().enumerate() {
-            for (token_index, (token, _token_source)) in company_tokens.iter().enumerate() {
+            for (token_index, (token, _token_source_type, _token_index_by_source_type)) in
+                company_tokens.iter().enumerate()
+            {
                 let token_length = token.len();
                 self.token_length_bins[token_length].push((company_index, token_index));
             }

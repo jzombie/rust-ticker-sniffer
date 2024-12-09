@@ -38,7 +38,8 @@ struct QueryVectorCompanySimilarityState {
     token_window_index: usize,
     query_token_index: usize,
     company_index: usize,
-    company_token_index: usize,
+    company_token_type: CompanyTokenSourceType,
+    company_token_index_by_source_type: usize,
     similarity: f64,
 }
 
@@ -98,9 +99,9 @@ impl<'a> TickerExtractor<'a> {
         self.parse(0);
 
         for similarity_state in &self.company_similarity_states {
-            let (company_token_vector, company_token_type) =
+            let (company_token_vector, company_token_type, index_of_type) =
                 &self.company_token_processor.tokenized_entries[similarity_state.company_index]
-                    [similarity_state.company_token_index];
+                    [similarity_state.company_token_index_by_source_type];
 
             println!(
                 "Similarity state: {:?}, Symbols entry: {:?}, Token: {:?}, Token Type: {:?}",
@@ -200,30 +201,21 @@ impl<'a> TickerExtractor<'a> {
                             continue;
                         }
 
-                        let (company_token_vector, company_token_type) = &self
-                            .company_token_processor
-                            .tokenized_entries[*company_index][*company_token_index];
+                        let (
+                            company_token_vector,
+                            company_token_type,
+                            company_token_index_by_source_type,
+                        ) = &self.company_token_processor.tokenized_entries[*company_index]
+                            [*company_token_index];
 
                         // Uncomment this condition if filtering is needed
                         if *company_token_type != CompanyTokenSourceType::CompanyName {
                             continue;
                         }
 
-                        // Bypass symbol token
-                        let paginated_company_token_index = if *company_token_index >= 1 {
-                            company_token_index - 1
-                        } else {
-                            continue;
-                        };
-
-                        if paginated_company_token_index >= token_start_index
-                            && paginated_company_token_index < token_end_index
+                        if *company_token_index_by_source_type >= token_start_index
+                            && *company_token_index_by_source_type < token_end_index
                         {
-                            // println!(
-                            //     "got here, {}, start_token_index: {}",
-                            //     shifted_company_token_index, token_start_index
-                            // );
-
                             // Note: Cosine similarity isn't used for "semantic relevance" in this context
                             // because these vectors are just simple vectors obtained from character codes.
                             // But the algorithm happens to be pretty efficient at what it does and seems
@@ -261,7 +253,9 @@ impl<'a> TickerExtractor<'a> {
                                                 token_window_index,
                                                 query_token_index,
                                                 company_index: *company_index,
-                                                company_token_index: *company_token_index,
+                                                company_token_type: *company_token_type,
+                                                company_token_index_by_source_type:
+                                                    *company_token_index_by_source_type,
                                                 similarity: similarity
                                                     / (company_name_length + 1) as f64,
                                             },
