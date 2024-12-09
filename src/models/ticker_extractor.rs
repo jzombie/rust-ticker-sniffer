@@ -105,6 +105,16 @@ impl<'a> TickerExtractor<'a> {
                     .get(similarity_state.company_index)
             );
         }
+
+        // TODO: Apply a penalty if the `company_token_index` for a given company is not consecutive
+        //
+        // Query: "Apple is not Walmart, but maybe Amazon.com is okay, REIT?"
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 0, company_index: 34, company_token_index: 1, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc.")))
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 0, company_index: 721, company_token_index: 1, similarity: 0.034482758620689655 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc.")))
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 1, company_index: 15433, company_token_index: 1, similarity: 0.07692307692307693 }, Symbols entry: Some(("WMT", Some("Walmart Inc.")))
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 2, company_index: 625, company_token_index: 1, similarity: 0.058823529411764705 }, Symbols entry: Some(("AMZN", Some("Amazon.com, Inc.")))
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 4, company_index: 11501, company_token_index: 1, similarity: 0.03703703703703704 }, Symbols entry: Some(("PW-PA", Some("Power REIT PFD SER A 7.75%")))
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 1, query_token_index: 4, company_index: 721, company_token_index: 3, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc.")))
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
@@ -222,8 +232,7 @@ impl<'a> TickerExtractor<'a> {
                                                 query_token_index,
                                                 company_index: *company_index,
                                                 company_token_index: *company_token_index,
-                                                similarity: (similarity
-                                                    * (*company_token_index as f64 + 1.0))
+                                                similarity: similarity
                                                     / (company_name_length + 1) as f64,
                                             },
                                         );
@@ -234,6 +243,8 @@ impl<'a> TickerExtractor<'a> {
                                 // TODO: Consider renaming
                                 // This is used to ensure that a company can progress to the next window round
                                 self.seen_company_indices.insert(*company_index);
+                            } else {
+                                self.seen_company_indices.remove(company_index);
                             }
                         }
                     }
