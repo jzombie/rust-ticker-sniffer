@@ -18,8 +18,12 @@ pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     pub company_symbols_list: &'a CompanySymbolsList,
+    // TODO: Using a flat buffer would be more performant, but something would
+    // need to handle the offsets accordingly
     pub tokenized_entries: Vec<Vec<CompanyTokenizedEntry>>,
     pub max_corpus_token_length: usize,
+    // TODO: Using a flat buffer would be more performant, but something would
+    // need to handle the offsets accordingly
     pub token_length_bins: Vec<Vec<CompanyTokenBinEntry>>,
 }
 
