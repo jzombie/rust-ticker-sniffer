@@ -73,7 +73,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
             result.symbol,
             result.token,
             result.source_type,
-            result.company_tokens
+            result.company_tokenized_entries
         
         );
     }

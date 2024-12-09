@@ -4,7 +4,7 @@ use crate::utils::tokenize;
 // TODO: Use numeric data
 type CompanyTokenType = String;
 
-type TokenizedEntry = Vec<(CompanyTokenType, CompanyTokenSourceType)>;
+type TokenizedEntry = (CompanyTokenType, CompanyTokenSourceType);
 
 /// Index of the company in the `company_symbols_list`
 type CompanyIndex = usize;
@@ -12,14 +12,13 @@ type CompanyIndex = usize;
 /// Index of the token within the company's tokens
 type TokenIndex = usize;
 
-/// A bin of tokens, where each token is represented by its company index and token index.
-type TokenBin = Vec<(CompanyIndex, TokenIndex)>;
+type TokenBinEntry = (CompanyIndex, TokenIndex);
 
 pub struct CompanyTokenProcessor<'a> {
     pub company_symbols_list: &'a CompanySymbolsList,
-    pub tokenized_entries: Vec<TokenizedEntry>,
+    pub tokenized_entries: Vec<Vec<TokenizedEntry>>,
     pub max_corpus_token_length: usize,
-    pub token_length_bins: Vec<TokenBin>,
+    pub token_length_bins: Vec<Vec<TokenBinEntry>>,
 }
 
 pub struct CompanyTokenQueryResult<'a> {
@@ -29,7 +28,7 @@ pub struct CompanyTokenQueryResult<'a> {
     pub source_type: CompanyTokenSourceType,
     pub symbol: &'a str,
     pub company_name: Option<&'a str>,
-    pub company_tokens: &'a [(CompanyTokenType, CompanyTokenSourceType)],
+    pub company_tokenized_entries: &'a Vec<TokenizedEntry>,
 }
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
@@ -53,28 +52,29 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // First pass: Tokenize and determine the maximum token length
         for (symbol, company_name) in self.company_symbols_list.iter() {
-            let mut company_tokens: Vec<(CompanyTokenType, CompanyTokenSourceType)> = Vec::new();
+            let mut company_tokenized_entries: Vec<TokenizedEntry> = Vec::new();
 
             // Handle the symbol token as a single token
             let symbol_token = tokenize(symbol).get(0).cloned(); // Take the first entry, if it exists
             if let Some(symbol_token) = symbol_token {
-                company_tokens.push((symbol_token, CompanyTokenSourceType::Symbol));
+                company_tokenized_entries.push((symbol_token, CompanyTokenSourceType::Symbol));
                 // Token from symbol
             }
 
             if let Some(name) = company_name {
                 let name_tokens = tokenize(name);
                 for token in name_tokens {
-                    company_tokens.push((token, CompanyTokenSourceType::CompanyName));
+                    company_tokenized_entries.push((token, CompanyTokenSourceType::CompanyName));
                     // Token from company name
                 }
             }
 
             // Store tokenized data for later use
-            self.tokenized_entries.push(company_tokens.clone());
+            self.tokenized_entries
+                .push(company_tokenized_entries.clone());
 
             // Update the maximum token length
-            for (token, _) in &company_tokens {
+            for (token, _) in &company_tokenized_entries {
                 self.max_corpus_token_length = self.max_corpus_token_length.max(token.len());
             }
         }
@@ -129,7 +129,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         let (token, source_type) =
                             &self.tokenized_entries[company_index][token_index];
                         let (symbol, company_name) = &self.company_symbols_list[company_index];
-                        let company_tokens = &self.tokenized_entries[company_index];
+                        let company_tokenized_entries = &self.tokenized_entries[company_index];
 
                         CompanyTokenQueryResult {
                             company_index,
@@ -138,7 +138,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                             source_type: *source_type,
                             symbol,
                             company_name: company_name.as_deref(),
-                            company_tokens,
+                            company_tokenized_entries,
                         }
                     })
             })
