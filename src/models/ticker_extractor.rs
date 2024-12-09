@@ -1,7 +1,7 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashMap, HashSet};
 // use std::fmt;
 
 pub struct TickerExtractorConfig {
@@ -33,7 +33,7 @@ pub struct TickerExtractorConfig {
 //     }
 // }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct QueryVectorIntermediateSimilarityState {
     token_window_index: usize,
     query_token_index: usize,
@@ -42,6 +42,11 @@ struct QueryVectorIntermediateSimilarityState {
     company_token_index_by_source_type: usize,
     similarity: f64,
 }
+
+type QueryTokenIndex = usize;
+
+type IntermediateSimilarityCollection =
+    HashMap<TickerSymbol, BTreeMap<QueryTokenIndex, Vec<QueryVectorIntermediateSimilarityState>>>;
 
 pub struct TickerExtractor<'a> {
     company_symbols_list: &'a CompanySymbolsList,
@@ -99,6 +104,8 @@ impl<'a> TickerExtractor<'a> {
         // Begin parsing at the first page
         self.parse(None);
 
+        let mut similarity_collection: IntermediateSimilarityCollection = HashMap::new();
+
         for similarity_state in &self.company_similarity_states {
             let (company_token_vector, company_token_type, _company_token_index_by_source_type) =
                 &self.company_token_processor.tokenized_entries[similarity_state.company_index]
@@ -114,12 +121,36 @@ impl<'a> TickerExtractor<'a> {
                 company_token_type
             );
 
+            // Retrieve the symbol for the given company index
+            let ticker_symbol = match self
+                .company_symbols_list
+                .get(similarity_state.company_index)
+            {
+                Some((ticker_symbol, _)) => ticker_symbol,
+                None => unreachable!("Could not obtain ticker symbol"),
+            };
+
+            // Get or insert the symbol group
+            let symbol_group = similarity_collection
+                .entry(ticker_symbol.clone())
+                .or_insert_with(BTreeMap::new);
+
+            // Get or insert the query token index group
+            let token_group = symbol_group
+                .entry(similarity_state.query_token_index)
+                .or_insert_with(Vec::new);
+
+            // Add the state to the token group
+            token_group.push(*similarity_state);
+
             // Token Order Bonus: Reward matches where the query_token_index aligns with the query sequence.
             // let order_bonus = if query_token_index == token_window_index { 1.0 } else { 0.5 };
 
             // Proximity Penalty: Penalize matches that span a large range of query tokens.
             // let proximity_penalty = 1.0 / (1.0 + (end_index - start_index) as f64);
         }
+
+        println!("\n\n\n{:?}\n\n\n", similarity_collection);
 
         // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
         // Query: REIT Hospitality Apple stuff
