@@ -31,7 +31,7 @@ pub struct TickerExtractor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
-    text: String,
+    text: Option<String>,
     weights: TickerExtractorWeights,
     tokenized_query_vectors: Vec<Vec<u32>>,
     results: Vec<TickerSymbol>,
@@ -51,7 +51,7 @@ impl<'a> TickerExtractor<'a> {
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
             company_token_processor,
-            text: "".to_string(),
+            text: Some("".to_string()),
             // TODO: Apply default weights
             weights,
             tokenized_query_vectors: vec![],
@@ -60,7 +60,7 @@ impl<'a> TickerExtractor<'a> {
     }
 
     pub fn extract(&mut self, text: &str) {
-        self.text = text.to_string();
+        self.text = Some(text.to_string());
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
         self.parse(0)
