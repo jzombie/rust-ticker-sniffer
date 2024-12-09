@@ -4,11 +4,11 @@ pub mod models;
 pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, DEFAULT_WEIGHTS,
 };
-pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, TokenProcessor, Weights};
+pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, CompanyTokenProcessor, Weights};
 pub mod utils;
 pub use utils::{token_to_charcode_vector, tokenize};
 pub mod types;
-pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, TokenSourceType};
+pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, CompanyTokenSourceType};
 
 pub fn extract_tickers_from_text(
     text: &str,
@@ -51,7 +51,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // eprintln!("vectors: {:?}", vectors);
 
-    let token_processor = TokenProcessor::new(&company_symbols_list);
+    let token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
@@ -61,8 +61,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let token_end_index = 4;
     // let include_source_types = &[TokenSourceType::Symbol, TokenSourceType::CompanyName];
     // let include_source_types = &[TokenSourceType::CompanyName];
-    let include_source_types = &[TokenSourceType::Symbol];
-    let results_iter = token_processor.query_tokens(min_token_legnth, max_token_length, token_start_index, token_end_index, include_source_types );
+    let include_source_types = &[CompanyTokenSourceType::Symbol];
+    let results_iter = token_processor.search_token_space(min_token_legnth, max_token_length, token_start_index, token_end_index, include_source_types );
 
     for (index, result) in results_iter.enumerate() {
         println!(
@@ -78,32 +78,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
         );
     }
 
-    // if let Some(bin) = token_processor.query_tokens_by_length(length_of_interest) {
-    //     println!("Items with tokens of length {}:", length_of_interest);
-    //     for &(company_index, token_index) in bin {
-    //         let (token, source_type) =
-    //             &token_processor.tokenized_entries[company_index][token_index];
-    //         let (symbol, company_name) = &company_symbols_list[company_index];
-    //         println!(
-    //          "  Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Name: {:?}",
-    //          company_index, token_index, symbol, token, source_type, company_name
-    //      );
-    //     }
-    // } else {
-    //     println!(
-    //         "No items found with tokens of length {}.",
-    //         length_of_interest
-    //     );
-    // }
 
-    // // Example: Access tokens of a specific length
-    // let length_of_interest = 15;
-    // if let Some(bin) = token_length_bins.get(length_of_interest) {
-    //     println!(
-    //         "Items with tokens of length {}: {:?}",
-    //         length_of_interest, bin
-    //     );
-    // }
 
     let results = vec![];
     let total_score = 0.0;
