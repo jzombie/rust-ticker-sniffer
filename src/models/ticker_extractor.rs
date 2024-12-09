@@ -288,12 +288,7 @@ impl<'a> TickerExtractor<'a> {
                     }
                 }
 
-                None => {
-                    // println!(
-                    //     "No bins found for token lengths between {} and {}",
-                    //     min_token_length, max_token_length
-                    // );
-                }
+                None => unreachable!(),
             }
         }
 
