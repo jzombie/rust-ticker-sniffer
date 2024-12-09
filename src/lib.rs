@@ -55,12 +55,14 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // TODO: Refactor
     // Query for tokens of a specific length (e.g., length 8)
-    let token_length = 4;
+    let min_token_legnth = 1;
+    let max_token_length = 20;
     let token_start_index = 0;
     let token_end_index = 4;
     // let include_source_types = &[TokenSourceType::Symbol, TokenSourceType::CompanyName];
-    let include_source_types = &[TokenSourceType::CompanyName];
-    let results_iter = token_processor.query_tokens(token_length, token_start_index, token_end_index, include_source_types );
+    // let include_source_types = &[TokenSourceType::CompanyName];
+    let include_source_types = &[TokenSourceType::Symbol];
+    let results_iter = token_processor.query_tokens(min_token_legnth, max_token_length, token_start_index, token_end_index, include_source_types );
 
     for (index, result) in results_iter.enumerate() {
         println!(

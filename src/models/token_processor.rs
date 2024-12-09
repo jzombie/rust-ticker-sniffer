@@ -97,16 +97,19 @@ impl<'a> TokenProcessor<'a> {
 
     /// Note: An Iterator is used on the output to prevent eager execution,
     /// letting the consumer determine if it should proceed to the next result.
+    ///
+    /// Note: `token_end_index` is non-inclusive
     pub fn query_tokens(
         &'a self,
-        token_length: usize,
+        min_token_length: usize,
+        max_token_length: usize,
         token_start_index: usize,
         token_end_index: usize,
         include_source_types: &'a [TokenSourceType],
     ) -> impl Iterator<Item = TokenQueryResult<'a>> + 'a {
-        self.token_length_bins
-            .get(token_length)
-            .into_iter()
+        // Iterate over the range of token lengths
+        (min_token_length..=max_token_length)
+            .filter_map(move |length| self.token_length_bins.get(length)) // Only process bins that exist
             .flat_map(move |bin| {
                 bin.iter()
                     // Filter tokens by their index within the specified range
