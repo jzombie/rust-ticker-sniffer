@@ -99,8 +99,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
-    /// Note: An Iterator is used on the output to prevent eager execution,
-    /// letting the consumer determine if it should proceed to the next result.
+    /// Note: An Iterator is used on the output for lazy execution, letting the
+    /// consumer decide whether or not to proceed to the next result.
     ///
     /// Note: `token_end_index` is non-inclusive
     pub fn filter_token_space(
