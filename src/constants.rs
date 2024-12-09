@@ -3,6 +3,7 @@ use crate::models::TickerExtractorWeights;
 pub const DEFAULT_WEIGHTS: TickerExtractorWeights = TickerExtractorWeights {
     min_similarity_threshold: 1.0,
     token_length_diff_tolerance: 0,
+    token_window_size: 2,
 };
 
 // TODO: Remove

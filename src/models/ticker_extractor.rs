@@ -1,31 +1,36 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
-use std::fmt;
+// use std::fmt;
 
 pub struct TickerExtractorWeights {
-    pub min_similarity_threshold: f32,
+    pub min_similarity_threshold: f64,
     pub token_length_diff_tolerance: usize,
+    pub token_window_size: usize,
 }
 
-impl fmt::Display for TickerExtractorWeights {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let struct_name = stringify!(Weights);
-        let fields = vec![
-            ("min_similarity_threshold", self.min_similarity_threshold),
-            (
-                "token_length_diff_tolerance",
-                self.token_length_diff_tolerance as f32,
-            ),
-        ];
+// TODO: Is this needed?
+// impl fmt::Display for TickerExtractorWeights {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         let struct_name = stringify!(Weights);
+//         let fields = vec![
+//             (
+//                 "min_similarity_threshold",
+//                 self.min_similarity_threshold as f32,
+//             ),
+//             (
+//                 "token_length_diff_tolerance",
+//                 self.token_length_diff_tolerance as f32,
+//             ),
+//         ];
 
-        writeln!(f, "{} (", struct_name)?;
-        for (name, value) in fields {
-            writeln!(f, "\t{}: {},", name, value)?;
-        }
-        write!(f, ")") // Final closing parenthesis
-    }
-}
+//         writeln!(f, "{} (", struct_name)?;
+//         for (name, value) in fields {
+//             writeln!(f, "\t{}: {},", name, value)?;
+//         }
+//         write!(f, ")") // Final closing parenthesis
+//     }
+// }
 
 pub struct TickerExtractor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
@@ -66,6 +71,13 @@ impl<'a> TickerExtractor<'a> {
         self.parse(0)
     }
 
+    fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
+        let token_start_index = token_window_index * self.weights.token_window_size;
+        let token_end_index = token_start_index + self.weights.token_window_size;
+
+        (token_start_index, token_end_index)
+    }
+
     // TODO: Handle "intermediate results collector"
     fn parse(&mut self, token_window_index: usize) {
         println!(
@@ -76,7 +88,14 @@ impl<'a> TickerExtractor<'a> {
                 .collect::<Vec<String>>()
         );
 
-        // let length_tolerance: usize = 0;
+        let (token_start_index, token_end_index) =
+            self.calc_token_window_indexes(token_window_index);
+
+        println!(
+            "Start index: {}, End index: {}",
+            token_start_index, token_end_index
+        );
+
         let mut match_count: usize = 0;
         for (query_token_index, query_vector) in self.tokenized_query_vectors.iter().enumerate() {
             // println!(
@@ -89,8 +108,8 @@ impl<'a> TickerExtractor<'a> {
 
             // TODO: Use to help make queries like "Google" -> "GOOGL" work
             // let min_token_length =
-            //     (query_vector_length - length_tolerance).clamp(1, query_vector_length);
-            // let max_token_length = query_vector_length + length_tolerance;
+            //     (query_vector_length - self.weights.token_length_diff_tolerance).clamp(1, query_vector_length);
+            // let max_token_length = query_vector_length + self.weights.token_length_diff_tolerance;
 
             // TODO: This should perform multiple passes, moving the window up as it goes; results that are no
             // longer present in a subsequent pass should be capped off at that; each query token (at the
@@ -98,8 +117,6 @@ impl<'a> TickerExtractor<'a> {
             // for a particular query should be scored higher than the others; where each token at each index,
             // ultimately, should only be associated with a single company, if any at all.
             //
-            let token_start_index = 0;
-            let token_end_index = 3;
 
             // let include_source_types = &[CompanyTokenSourceType::CompanyName];
 
@@ -134,8 +151,7 @@ impl<'a> TickerExtractor<'a> {
                             // let similarity =
                             //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
 
-                            // if similarity > 0.999 {
-                            if similarity == 1.0 {
+                            if similarity >= self.weights.min_similarity_threshold {
                                 // println!(
                                 //     "Matched company: {:?}; Token Index: {}",
                                 //     company_symbols_list.get(*company_index),
