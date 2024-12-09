@@ -99,7 +99,7 @@ impl<'a> TickerExtractor<'a> {
         self.parse(0);
 
         for similarity_state in &self.company_similarity_states {
-            let (company_token_vector, company_token_type, index_of_type) =
+            let (company_token_vector, company_token_type, _company_token_index_by_source_type) =
                 &self.company_token_processor.tokenized_entries[similarity_state.company_index]
                     [similarity_state.company_token_index_by_source_type];
 
@@ -112,6 +112,12 @@ impl<'a> TickerExtractor<'a> {
                     .charcode_vector_to_token(company_token_vector),
                 company_token_type
             );
+
+            // Token Order Bonus: Reward matches where the query_token_index aligns with the query sequence.
+            // let order_bonus = if query_token_index == token_window_index { 1.0 } else { 0.5 };
+
+            // Proximity Penalty: Penalize matches that span a large range of query tokens.
+            // let proximity_penalty = 1.0 / (1.0 + (end_index - start_index) as f64);
         }
 
         // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
