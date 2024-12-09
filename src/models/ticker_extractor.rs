@@ -147,16 +147,7 @@ impl<'a> TickerExtractor<'a> {
         (token_start_index, token_end_index)
     }
 
-    // TODO: Handle "intermediate results collector"
     fn parse(&mut self, token_window_index: usize) {
-        // println!(
-        //     "Query tokens: {:?}",
-        //     self.tokenized_query_vectors
-        //         .iter()
-        //         .map(|vector| self.text_doc_tokenizer.charcode_vector_to_token(vector))
-        //         .collect::<Vec<String>>()
-        // );
-
         let (token_start_index, token_end_index) =
             self.calc_token_window_indexes(token_window_index);
 
@@ -168,26 +159,6 @@ impl<'a> TickerExtractor<'a> {
         let mut window_match_count: usize = 0;
 
         for (query_token_index, query_vector) in self.tokenized_query_vectors.iter().enumerate() {
-            // // Ensure the vector has enough capacity to accommodate the current query_token_index
-            // if self.query_vector_states.len() <= query_token_index {
-            //     self.query_vector_states.resize(
-            //         query_token_index + 1,
-            //         QueryVectorState {
-            //             query_token_index: 0,
-            //             company_similarity_states: vec![],
-            //         },
-            //     );
-            // }
-
-            // // Access or create the state at the desired index
-            // let query_vector_state = &mut self.query_vector_states[query_token_index];
-            // query_vector_state.query_token_index = query_token_index; // Update if necessary
-
-            // println!(
-            //     "index: {}, query_vector_state: {:?}",
-            //     query_token_index, query_vector_state
-            // );
-
             let query_vector_length = query_vector.len();
 
             // TODO: Use to help make queries like "Google" -> "GOOGL" work
@@ -196,11 +167,6 @@ impl<'a> TickerExtractor<'a> {
             // let max_token_length = query_vector_length + self.weights.token_length_diff_tolerance;
 
             // let include_source_types = &[CompanyTokenSourceType::CompanyName];
-
-            // let token_length_bins = self
-            //     .company_token_processor
-            //     .token_length_bins
-            //     .get(query_vector_length);
 
             match self
                 .company_token_processor
@@ -222,7 +188,6 @@ impl<'a> TickerExtractor<'a> {
                         ) = &self.company_token_processor.tokenized_entries[*company_index]
                             [*tokenized_entry_index];
 
-                        // Uncomment this condition if filtering is needed
                         if *company_token_type != CompanyTokenSourceType::CompanyName {
                             continue;
                         }
@@ -235,17 +200,6 @@ impl<'a> TickerExtractor<'a> {
                             // But the algorithm happens to be pretty efficient at what it does and seems
                             // faster at making comparisons than other algorithms I have experimented with.
                             let similarity = cosine_similarity(&query_vector, company_token_vector);
-
-                            // println!(
-                            //     "Similarity, {:?}, {:?}",
-                            //     similarity,
-                            //     self.company_symbols_list.get(*company_index),
-                            // );
-
-                            // let (padded_query_vector, padded_company_token_vector) =
-                            //     pad_vectors_to_match(&query_vector, &company_token_vector);
-                            // let similarity =
-                            //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
 
                             if similarity >= self.user_config.min_text_doc_token_sim_threshold {
                                 println!(
@@ -288,19 +242,11 @@ impl<'a> TickerExtractor<'a> {
                     }
                 }
 
-                None => unreachable!(),
+                None => unreachable!("Could not access target bins"),
             }
         }
 
-        // TODO: After the first window, query tokens which didn't have a match
-        // can probably be completely discarded, as there is no point in
-        // querying them again. Perhaps just mark the indexes as "used up"
-        // and use the `continue` keyword in
-        // ` self.tokenized_query_vectors.iter().enumerate()`.
-
-        // TODO: Remove; just for debugging
-        println!("Matches: {:?}", window_match_count);
-
+        // Continue looping if new matches have been discovered
         if window_match_count > 0 {
             self.parse(token_window_index + 1);
         }
