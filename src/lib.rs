@@ -89,10 +89,16 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     let query =
         "Alphabet is a company but it is not Apple.  It isn't WALmaR-T either, but you know.";
-    let tokenized_query_vectors = tokenize_to_charcode_vectors(&query);
+    let tokenized_query_vectors = tokenize_to_charcode_vectors(&query, None);
 
     let length_tolerance: usize = 2;
     for (index, query_vector) in tokenized_query_vectors.iter().enumerate() {
+        println!(
+            "index: {}, query: {}",
+            index,
+            charcode_vector_to_token(query_vector)
+        );
+
         let query_vector_length = query_vector.len();
 
         let min_token_length =

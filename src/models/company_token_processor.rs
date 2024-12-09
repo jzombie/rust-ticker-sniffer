@@ -54,14 +54,14 @@ impl<'a> CompanyTokenProcessor<'a> {
             let mut company_tokenized_entries: Vec<CompanyTokenizedEntry> = Vec::new();
 
             // Handle the symbol token as a single token
-            let symbol_token = tokenize_to_charcode_vectors(symbol).get(0).cloned(); // Take the first entry, if it exists
+            let symbol_token = tokenize_to_charcode_vectors(symbol, None).get(0).cloned(); // Take the first entry, if it exists
             if let Some(symbol_token) = symbol_token {
                 company_tokenized_entries.push((symbol_token, CompanyTokenSourceType::Symbol));
                 // Token from symbol
             }
 
             if let Some(name) = company_name {
-                let name_tokens = tokenize_to_charcode_vectors(name);
+                let name_tokens = tokenize_to_charcode_vectors(name, None);
                 for token in name_tokens {
                     company_tokenized_entries.push((token, CompanyTokenSourceType::CompanyName));
                     // Token from company name

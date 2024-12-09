@@ -4,7 +4,7 @@ use crate::constants::TLD_LIST;
 /// Tokenizer function to split the text into individual tokens.
 ///
 /// Note: This explcitly does not modify the case of the text.
-pub fn tokenize(text: &str) -> Vec<String> {
+pub fn tokenize(text: &str, min_uppercase_ratio: Option<f32>) -> Vec<String> {
     // Preprocess text: handle hyphenation, line breaks, and cleanup
     let cleaned_text = text
         .replace("-\n", "") // Merge hyphenated words across lines
@@ -17,10 +17,27 @@ pub fn tokenize(text: &str) -> Vec<String> {
         .trim()
         .to_string();
 
+    // Helper function to calculate uppercase ratio
+    fn uppercase_ratio(word: &str) -> f32 {
+        let total_chars = word.chars().count() as f32;
+        if total_chars == 0.0 {
+            return 0.0;
+        }
+        let uppercase_chars = word.chars().filter(|c| c.is_uppercase()).count() as f32;
+        uppercase_chars / total_chars
+    }
+
     // Tokenize, process possessives, handle web addresses, and uppercase
     cleaned_text
         .split_whitespace()
-        .filter(|word| word.chars().any(|c| c.is_uppercase())) // Keep only words with at least one capital letter
+        // .filter(|word| word.chars().any(|c| c.is_uppercase())) // Keep only words with at least one capital letter
+        .filter(|word| {
+            if let Some(ratio) = min_uppercase_ratio {
+                uppercase_ratio(word) >= ratio
+            } else {
+                word.chars().any(|c| c.is_uppercase())
+            }
+        })
         .flat_map(|word| {
             let mut tokens = Vec::new();
 
@@ -71,8 +88,8 @@ pub fn charcode_vector_to_token(charcodes: &[u32]) -> String {
         .collect()
 }
 
-pub fn tokenize_to_charcode_vectors(text: &str) -> Vec<Vec<u32>> {
-    tokenize(text)
+pub fn tokenize_to_charcode_vectors(text: &str, min_uppercase_ratio: Option<f32>) -> Vec<Vec<u32>> {
+    tokenize(text, min_uppercase_ratio)
         .into_iter() // Use the existing `tokenize` function to get tokens
         .map(|token| token_to_charcode_vector(&token)) // Convert each token to char code vectors
         .collect()
