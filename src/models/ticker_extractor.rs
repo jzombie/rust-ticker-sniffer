@@ -5,7 +5,7 @@ use std::collections::HashSet;
 // use std::fmt;
 
 pub struct TickerExtractorConfig {
-    pub min_similarity_threshold: f64,
+    pub min_text_doc_token_sim_threshold: f64,
     pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
 }
@@ -16,8 +16,8 @@ pub struct TickerExtractorConfig {
 //         let struct_name = stringify!(Weights);
 //         let fields = vec![
 //             (
-//                 "min_similarity_threshold",
-//                 self.min_similarity_threshold as f32,
+//                 "min_text_doc_token_sim_threshold",
+//                 self.min_text_doc_token_sim_threshold as f32,
 //             ),
 //             (
 //                 "token_length_diff_tolerance",
@@ -211,7 +211,7 @@ impl<'a> TickerExtractor<'a> {
                             // let similarity =
                             //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
 
-                            if similarity >= self.user_config.min_similarity_threshold {
+                            if similarity >= self.user_config.min_text_doc_token_sim_threshold {
                                 // println!(
                                 //     "Matched company: {:?}; Token Index: {}",
                                 //     company_symbols_list.get(*company_index),
