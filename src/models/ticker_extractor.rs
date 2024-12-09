@@ -34,7 +34,7 @@ pub struct TickerExtractorConfig {
 // }
 
 #[derive(Debug)]
-struct QueryVectorCompanySimilarityState {
+struct QueryVectorIntermediateSimilarityState {
     token_window_index: usize,
     query_token_index: usize,
     company_index: usize,
@@ -52,7 +52,7 @@ pub struct TickerExtractor<'a> {
     is_extracting: bool,
     text: Option<String>,
     tokenized_query_vectors: Vec<Vec<u32>>,
-    company_similarity_states: Vec<QueryVectorCompanySimilarityState>,
+    company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     progressible_company_indices: HashSet<usize>,
     results: Vec<TickerSymbol>,
 }
@@ -134,10 +134,10 @@ impl<'a> TickerExtractor<'a> {
         // Matches: 1
         // Start index: 3, End index: 4
         // Matches: 0
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 2, company_index: 34, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc."))), Token: "AAPL", Token Type: Symbol
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 2, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.034482758620689655 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APLE", Token Type: Symbol
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 1, query_token_index: 1, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 1, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APPLE", Token Type: CompanyName
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 2, query_token_index: 0, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 2, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "HOSPITALITY", Token Type: CompanyName
+        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 0, query_token_index: 2, company_index: 34, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc."))), Token: "AAPL", Token Type: Symbol
+        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 0, query_token_index: 2, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.034482758620689655 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APLE", Token Type: Symbol
+        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 1, query_token_index: 1, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 1, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APPLE", Token Type: CompanyName
+        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 2, query_token_index: 0, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 2, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "HOSPITALITY", Token Type: CompanyName
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
@@ -217,7 +217,7 @@ impl<'a> TickerExtractor<'a> {
                                 {
                                     Some(company_name_length) => {
                                         self.company_similarity_states.push(
-                                            QueryVectorCompanySimilarityState {
+                                            QueryVectorIntermediateSimilarityState {
                                                 token_window_index,
                                                 query_token_index,
                                                 company_index: *company_index,
