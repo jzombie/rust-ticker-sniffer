@@ -98,11 +98,18 @@ impl<'a> TickerExtractor<'a> {
         self.parse(0);
 
         for similarity_state in &self.company_similarity_states {
+            let (company_token_vector, company_token_type) =
+                &self.company_token_processor.tokenized_entries[similarity_state.company_index]
+                    [similarity_state.company_token_index];
+
             println!(
-                "Similarity state: {:?}, Symbols entry: {:?}",
+                "Similarity state: {:?}, Symbols entry: {:?}, Token: {:?}, Token Type: {:?}",
                 similarity_state,
                 self.company_symbols_list
-                    .get(similarity_state.company_index)
+                    .get(similarity_state.company_index),
+                self.text_doc_tokenizer
+                    .charcode_vector_to_token(company_token_vector),
+                company_token_type
             );
         }
 
