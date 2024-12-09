@@ -212,16 +212,26 @@ impl<'a> TickerExtractor<'a> {
 
                                 window_match_count += 1;
 
-                                self.company_similarity_states.push(
-                                    QueryVectorCompanySimilarityState {
-                                        token_window_index,
-                                        query_token_index,
-                                        company_index: *company_index,
-                                        company_token_index: *company_token_index,
-                                        similarity: similarity
-                                            * (*company_token_index as f64 + 1.0),
-                                    },
-                                );
+                                if let Some((company_symbol, company_name)) =
+                                    self.company_symbols_list.get(*company_index)
+                                {
+                                    let company_name_length = match company_name {
+                                        Some(company_name) => &company_name.len(),
+                                        None => &0,
+                                    };
+
+                                    self.company_similarity_states.push(
+                                        QueryVectorCompanySimilarityState {
+                                            token_window_index,
+                                            query_token_index,
+                                            company_index: *company_index,
+                                            company_token_index: *company_token_index,
+                                            similarity: (similarity
+                                                * (*company_token_index as f64 + 1.0))
+                                                / (company_name_length + 1) as f64,
+                                        },
+                                    );
+                                }
 
                                 // TODO: Consider renaming
                                 // This is used to ensure that a company can progress to the next window round
