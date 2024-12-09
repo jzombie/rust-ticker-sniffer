@@ -114,16 +114,24 @@ impl<'a> TickerExtractor<'a> {
             );
         }
 
-        // TODO: Apply a penalty if the `company_token_index` for a given company is not consecutive
-        // I think the conclusion is to set `token_window_size` to 1
-        //
-        // Query: "Apple is not Walmart, but maybe Amazon.com is okay, REIT?"
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 0, company_index: 34, company_token_index: 1, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc.")))
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 0, company_index: 721, company_token_index: 1, similarity: 0.034482758620689655 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc.")))
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 1, company_index: 15433, company_token_index: 1, similarity: 0.07692307692307693 }, Symbols entry: Some(("WMT", Some("Walmart Inc.")))
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 2, company_index: 625, company_token_index: 1, similarity: 0.058823529411764705 }, Symbols entry: Some(("AMZN", Some("Amazon.com, Inc.")))
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 4, company_index: 11501, company_token_index: 1, similarity: 0.03703703703703704 }, Symbols entry: Some(("PW-PA", Some("Power REIT PFD SER A 7.75%")))
-        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 1, query_token_index: 4, company_index: 721, company_token_index: 3, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc.")))
+        // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
+        // Query: REIT Hospitality Apple stuff
+        // Start index: 0, End index: 1
+        // Matched company: Some(("AAPL", Some("Apple Inc."))); Token Index: 2
+        // Matched company: Some(("APLE", Some("Apple Hospitality REIT, Inc."))); Token Index: 2
+        // Matches: 2
+        // Start index: 1, End index: 2
+        // Matched company: Some(("APLE", Some("Apple Hospitality REIT, Inc."))); Token Index: 1
+        // Matches: 1
+        // Start index: 2, End index: 3
+        // Matched company: Some(("APLE", Some("Apple Hospitality REIT, Inc."))); Token Index: 0
+        // Matches: 1
+        // Start index: 3, End index: 4
+        // Matches: 0
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 2, company_index: 34, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc."))), Token: "AAPL", Token Type: Symbol
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 2, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.034482758620689655 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APLE", Token Type: Symbol
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 1, query_token_index: 1, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 1, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APPLE", Token Type: CompanyName
+        // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 2, query_token_index: 0, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 2, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "HOSPITALITY", Token Type: CompanyName
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
