@@ -123,6 +123,10 @@ impl<'a> TickerExtractor<'a> {
                                 continue;
                             }
 
+                            // Note: Cosine similarity isn't used for "semantic relevance" in this context
+                            // because these vectors are just simple vectors obtained from character codes.
+                            // But the algorithm happens to be pretty efficient at what it does and seems
+                            // faster at making comparisons that iterating through the vector elements.
                             let similarity = cosine_similarity(&query_vector, company_token_vector);
 
                             // let (padded_query_vector, padded_company_token_vector) =
