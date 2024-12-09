@@ -1,6 +1,7 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
+use std::collections::HashSet;
 // use std::fmt;
 
 pub struct TickerExtractorConfig {
@@ -41,6 +42,7 @@ struct QueryVectorCompanySimilarityState {
 }
 
 pub struct TickerExtractor<'a> {
+    company_symbols_list: &'a CompanySymbolsList,
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
@@ -49,6 +51,7 @@ pub struct TickerExtractor<'a> {
     text: Option<String>,
     tokenized_query_vectors: Vec<Vec<u32>>,
     company_similarity_states: Vec<QueryVectorCompanySimilarityState>,
+    seen_company_indices: HashSet<usize>,
     results: Vec<TickerSymbol>,
 }
 
@@ -63,6 +66,7 @@ impl<'a> TickerExtractor<'a> {
         let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
         Self {
+            company_symbols_list,
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
             company_token_processor,
@@ -71,6 +75,7 @@ impl<'a> TickerExtractor<'a> {
             text: None,
             tokenized_query_vectors: vec![],
             company_similarity_states: vec![],
+            seen_company_indices: HashSet::new(),
             results: vec![],
         }
     }
@@ -83,6 +88,7 @@ impl<'a> TickerExtractor<'a> {
         }
 
         self.company_similarity_states.clear();
+        self.seen_company_indices.clear();
         self.results.clear();
 
         self.text = Some(text.to_string());
@@ -90,9 +96,14 @@ impl<'a> TickerExtractor<'a> {
 
         self.parse(0);
 
-        // for similarity_state in &self.company_similarity_states {
-        //     println!("Similarity state: {:?}", similarity_state);
-        // }
+        for similarity_state in &self.company_similarity_states {
+            println!(
+                "Similarity state: {:?}, Symbols entry: {:?}",
+                similarity_state,
+                self.company_symbols_list
+                    .get(similarity_state.company_index)
+            );
+        }
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
@@ -104,13 +115,13 @@ impl<'a> TickerExtractor<'a> {
 
     // TODO: Handle "intermediate results collector"
     fn parse(&mut self, token_window_index: usize) {
-        println!(
-            "Query tokens: {:?}",
-            self.tokenized_query_vectors
-                .iter()
-                .map(|vector| self.text_doc_tokenizer.charcode_vector_to_token(vector))
-                .collect::<Vec<String>>()
-        );
+        // println!(
+        //     "Query tokens: {:?}",
+        //     self.tokenized_query_vectors
+        //         .iter()
+        //         .map(|vector| self.text_doc_tokenizer.charcode_vector_to_token(vector))
+        //         .collect::<Vec<String>>()
+        // );
 
         let (token_start_index, token_end_index) =
             self.calc_token_window_indexes(token_window_index);
@@ -120,7 +131,6 @@ impl<'a> TickerExtractor<'a> {
             token_start_index, token_end_index
         );
 
-        // TODO: Remove; just for debugging
         let mut window_match_count: usize = 0;
 
         for (query_token_index, query_vector) in self.tokenized_query_vectors.iter().enumerate() {
@@ -151,13 +161,6 @@ impl<'a> TickerExtractor<'a> {
             //     (query_vector_length - self.weights.token_length_diff_tolerance).clamp(1, query_vector_length);
             // let max_token_length = query_vector_length + self.weights.token_length_diff_tolerance;
 
-            // TODO: This should perform multiple passes, moving the window up as it goes; results that are no
-            // longer present in a subsequent pass should be capped off at that; each query token (at the
-            // relevant index) that is matched, should be stored, where the longest consecutive matches of tokens
-            // for a particular query should be scored higher than the others; where each token at each index,
-            // ultimately, should only be associated with a single company, if any at all.
-            //
-
             // let include_source_types = &[CompanyTokenSourceType::CompanyName];
 
             let token_length_bins = self
@@ -168,6 +171,12 @@ impl<'a> TickerExtractor<'a> {
             match token_length_bins {
                 Some(bins) => {
                     for (company_index, company_token_index) in bins {
+                        if token_window_index > 0
+                            && !self.seen_company_indices.contains(company_index)
+                        {
+                            continue;
+                        }
+
                         if company_token_index >= &token_start_index
                             && company_token_index < &token_end_index
                         {
@@ -198,17 +207,19 @@ impl<'a> TickerExtractor<'a> {
                                 //     query_token_index
                                 // );
 
-                                // TODO: Remove; just for debugging
                                 window_match_count += 1;
-                            }
 
-                            self.company_similarity_states
-                                .push(QueryVectorCompanySimilarityState {
-                                    query_token_index,
-                                    company_index: *company_index,
-                                    company_token_index: *company_token_index,
-                                    similarity,
-                                })
+                                self.company_similarity_states.push(
+                                    QueryVectorCompanySimilarityState {
+                                        query_token_index,
+                                        company_index: *company_index,
+                                        company_token_index: *company_token_index,
+                                        similarity: (similarity * token_window_index as f64 + 1.0),
+                                    },
+                                );
+
+                                self.seen_company_indices.insert(*company_index);
+                            }
                         }
                     }
                 }
