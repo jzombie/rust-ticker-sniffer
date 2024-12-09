@@ -6,13 +6,10 @@ pub use constants::{
 };
 pub use models::{
     CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, TickerExtractor,
-    TickerExtractorWeights,
+    TickerExtractorWeights, Tokenizer,
 };
 pub mod utils;
-pub use utils::{
-    charcode_vector_to_token, cosine_similarity, pad_vector, pad_vectors_to_match,
-    token_to_charcode_vector, tokenize, tokenize_to_charcode_vectors,
-};
+pub use utils::{cosine_similarity, pad_vector, pad_vectors_to_match};
 pub mod types;
 pub use types::{CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
 

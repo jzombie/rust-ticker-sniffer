@@ -1,5 +1,5 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType};
-use crate::utils::tokenize_to_charcode_vectors;
+use crate::Tokenizer;
 
 type CompanyVectorTokenType = Vec<u32>;
 
@@ -17,6 +17,8 @@ type CompanyTokenBinEntry = (CompanyIndex, CompanyTokenIndex);
 //  - Outer vector elements are by company index
 //  - Inner vector elements are for multiple entries, per company
 pub struct CompanyTokenProcessor<'a> {
+    ticker_symbol_tokenizer: Tokenizer,
+    text_doc_tokenizer: Tokenizer,
     pub company_symbols_list: &'a CompanySymbolsList,
     pub tokenized_entries: Vec<Vec<CompanyTokenizedEntry>>,
     pub max_corpus_token_length: usize,
@@ -35,7 +37,12 @@ pub struct CompanyTokenProcessor<'a> {
 
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
+        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
+        let text_doc_tokenizer = Tokenizer::text_doc_parser();
+
         let mut instance = Self {
+            ticker_symbol_tokenizer,
+            text_doc_tokenizer,
             company_symbols_list,
             tokenized_entries: Vec::new(),
             max_corpus_token_length: 0,
@@ -58,7 +65,9 @@ impl<'a> CompanyTokenProcessor<'a> {
             let mut company_tokenized_entries: Vec<CompanyTokenizedEntry> = Vec::new();
 
             // Handle the symbol token as a single token
-            let symbol_token = tokenize_to_charcode_vectors(symbol, None, false)
+            let symbol_token = self
+                .ticker_symbol_tokenizer
+                .tokenize_to_charcode_vectors(symbol)
                 .get(0)
                 .cloned(); // Take the first entry, if it exists
             if let Some(symbol_token) = symbol_token {
@@ -67,7 +76,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             if let Some(name) = company_name {
-                let name_tokens = tokenize_to_charcode_vectors(name, None, true);
+                let name_tokens = self.text_doc_tokenizer.tokenize_to_charcode_vectors(name);
                 for token in name_tokens {
                     company_tokenized_entries.push((token, CompanyTokenSourceType::CompanyName));
                     // Token from company name

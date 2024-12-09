@@ -1,6 +1,6 @@
-use crate::models::CompanyTokenProcessor;
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
-use crate::utils::{charcode_vector_to_token, cosine_similarity, tokenize_to_charcode_vectors};
+use crate::utils::cosine_similarity;
+use crate::{CompanyTokenProcessor, Tokenizer};
 use std::fmt;
 
 pub struct TickerExtractorWeights {
@@ -28,6 +28,8 @@ impl fmt::Display for TickerExtractorWeights {
 }
 
 pub struct TickerExtractor<'a> {
+    ticker_symbol_tokenizer: Tokenizer,
+    text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
     text: String,
     weights: TickerExtractorWeights,
@@ -40,9 +42,14 @@ impl<'a> TickerExtractor<'a> {
         company_symbols_list: &'a CompanySymbolsList,
         weights: TickerExtractorWeights,
     ) -> Self {
+        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
+        let text_doc_tokenizer = Tokenizer::text_doc_parser();
+
         let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
         Self {
+            ticker_symbol_tokenizer,
+            text_doc_tokenizer,
             company_token_processor,
             text: "".to_string(),
             // TODO: Apply default weights
@@ -55,13 +62,13 @@ impl<'a> TickerExtractor<'a> {
     pub fn extract(&mut self, text: &str) {
         self.text = text.to_string();
 
-        let tokenized_query_vectors = tokenize_to_charcode_vectors(&text, None, true);
+        let tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
         println!(
             "Query tokens: {:?}",
             tokenized_query_vectors
                 .iter()
-                .map(|vector| charcode_vector_to_token(vector))
+                .map(|vector| self.text_doc_tokenizer.charcode_vector_to_token(vector))
                 .collect::<Vec<String>>()
         );
 
