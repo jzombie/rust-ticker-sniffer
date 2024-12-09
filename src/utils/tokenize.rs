@@ -65,7 +65,14 @@ pub fn tokenize(text: &str) -> Vec<String> {
 pub fn token_to_charcode_vector(token: &str) -> Vec<u32> {
     token
         .chars()
-        .map(|c| c.to_ascii_lowercase() as u32) // Convert to lowercase and get char code
+        .map(|c| c.to_ascii_uppercase() as u32) // Convert to uppercase and get char code
+        .collect()
+}
+
+pub fn tokenize_to_charcode_vectors(text: &str) -> Vec<Vec<u32>> {
+    tokenize(text)
+        .into_iter() // Use the existing `tokenize` function to get tokens
+        .map(|token| token_to_charcode_vector(&token)) // Convert each token to char code vectors
         .collect()
 }
 

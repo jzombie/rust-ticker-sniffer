@@ -6,4 +6,4 @@ pub mod tokenize;
 
 // pub use generate_alternative_symbols::generate_alternative_symbols;
 //pub use jaccard_similarity_chars::jaccard_similarity_chars;
-pub use tokenize::{token_to_charcode_vector, tokenize};
+pub use tokenize::{token_to_charcode_vector, tokenize, tokenize_to_charcode_vectors};

@@ -1,8 +1,7 @@
 use crate::types::{CompanySymbolsList, CompanyTokenSourceType};
-use crate::utils::tokenize;
+use crate::utils::tokenize_to_charcode_vectors;
 
-// TODO: Use numeric data
-type CompanyTokenType = String;
+type CompanyTokenType = Vec<u32>;
 
 type CompanyTokenizedEntry = (CompanyTokenType, CompanyTokenSourceType);
 
@@ -24,7 +23,7 @@ pub struct CompanyTokenProcessor<'a> {
 pub struct CompanyFilteredTokenResult<'a> {
     pub company_index: CompanyIndex,
     pub token_index: CompanyTokenIndex,
-    pub token: &'a str,
+    pub token: &'a CompanyTokenType,
     pub source_type: CompanyTokenSourceType,
     pub symbol: &'a str,
     pub company_name: Option<&'a str>,
@@ -55,14 +54,14 @@ impl<'a> CompanyTokenProcessor<'a> {
             let mut company_tokenized_entries: Vec<CompanyTokenizedEntry> = Vec::new();
 
             // Handle the symbol token as a single token
-            let symbol_token = tokenize(symbol).get(0).cloned(); // Take the first entry, if it exists
+            let symbol_token = tokenize_to_charcode_vectors(symbol).get(0).cloned(); // Take the first entry, if it exists
             if let Some(symbol_token) = symbol_token {
                 company_tokenized_entries.push((symbol_token, CompanyTokenSourceType::Symbol));
                 // Token from symbol
             }
 
             if let Some(name) = company_name {
-                let name_tokens = tokenize(name);
+                let name_tokens = tokenize_to_charcode_vectors(name);
                 for token in name_tokens {
                     company_tokenized_entries.push((token, CompanyTokenSourceType::CompanyName));
                     // Token from company name

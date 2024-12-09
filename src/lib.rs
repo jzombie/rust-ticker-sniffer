@@ -6,7 +6,7 @@ pub use constants::{
 };
 pub use models::{CompanyNameTokenRanking, ResultBiasAdjuster, CompanyTokenProcessor, Weights};
 pub mod utils;
-pub use utils::{token_to_charcode_vector, tokenize};
+pub use utils::{token_to_charcode_vector, tokenize, tokenize_to_charcode_vectors};
 pub mod types;
 pub use types::{CompanyName, CompanySymbolsList, TickerSymbol, CompanyTokenSourceType};
 
@@ -66,7 +66,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     for (index, result) in results_iter.enumerate() {
         println!(
-            "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - Token: {} - Source Type: {:?} - Company Tokens: {:?}",
+            "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
             index,
             result.company_index,
             result.token_index,
