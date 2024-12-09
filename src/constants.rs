@@ -2,8 +2,8 @@ use crate::models::TickerExtractorConfig;
 
 pub const DEFAULT_CONFIG: TickerExtractorConfig = TickerExtractorConfig {
     min_text_doc_token_sim_threshold: 0.9999999999999999,
-    token_length_diff_tolerance: 0,
-    token_window_size: 2,
+    // token_length_diff_tolerance: 0,
+    token_window_size: 1,
 };
 
 // TODO: Remove

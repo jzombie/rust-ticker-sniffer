@@ -131,7 +131,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Second pass: Populate the bins using stored tokenized data
         for (company_index, company_tokens) in self.tokenized_entries.iter().enumerate() {
-            for (token_index, (token, _)) in company_tokens.iter().enumerate() {
+            for (token_index, (token, _token_source)) in company_tokens.iter().enumerate() {
                 let token_length = token.len();
                 self.token_length_bins[token_length].push((company_index, token_index));
             }

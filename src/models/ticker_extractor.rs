@@ -6,7 +6,7 @@ use std::collections::HashSet;
 
 pub struct TickerExtractorConfig {
     pub min_text_doc_token_sim_threshold: f64,
-    pub token_length_diff_tolerance: usize,
+    // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
 }
 
@@ -107,6 +107,7 @@ impl<'a> TickerExtractor<'a> {
         }
 
         // TODO: Apply a penalty if the `company_token_index` for a given company is not consecutive
+        // I think the conclusion is to set `token_window_size` to 1
         //
         // Query: "Apple is not Walmart, but maybe Amazon.com is okay, REIT?"
         // Similarity state: QueryVectorCompanySimilarityState { token_window_index: 0, query_token_index: 0, company_index: 34, company_token_index: 1, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc.")))
@@ -174,12 +175,16 @@ impl<'a> TickerExtractor<'a> {
 
             // let include_source_types = &[CompanyTokenSourceType::CompanyName];
 
-            let token_length_bins = self
+            // let token_length_bins = self
+            //     .company_token_processor
+            //     .token_length_bins
+            //     .get(query_vector_length);
+
+            match self
                 .company_token_processor
                 .token_length_bins
-                .get(query_vector_length);
-
-            match token_length_bins {
+                .get(query_vector_length)
+            {
                 Some(bins) => {
                     for (company_index, company_token_index) in bins {
                         if token_window_index > 0
@@ -188,17 +193,29 @@ impl<'a> TickerExtractor<'a> {
                             continue;
                         }
 
-                        if *company_token_index >= token_start_index
-                            && *company_token_index < token_end_index
-                        {
-                            let (company_token_vector, company_token_type) = &self
-                                .company_token_processor
-                                .tokenized_entries[*company_index][*company_token_index];
+                        let (company_token_vector, company_token_type) = &self
+                            .company_token_processor
+                            .tokenized_entries[*company_index][*company_token_index];
 
-                            // Uncomment this condition if filtering is needed
-                            if *company_token_type != CompanyTokenSourceType::CompanyName {
-                                continue;
-                            }
+                        // Uncomment this condition if filtering is needed
+                        if *company_token_type != CompanyTokenSourceType::CompanyName {
+                            continue;
+                        }
+
+                        // Bypass symbol token
+                        let paginated_company_token_index = if *company_token_index >= 1 {
+                            company_token_index - 1
+                        } else {
+                            continue;
+                        };
+
+                        if paginated_company_token_index >= token_start_index
+                            && paginated_company_token_index < token_end_index
+                        {
+                            // println!(
+                            //     "got here, {}, start_token_index: {}",
+                            //     shifted_company_token_index, token_start_index
+                            // );
 
                             // Note: Cosine similarity isn't used for "semantic relevance" in this context
                             // because these vectors are just simple vectors obtained from character codes.
@@ -206,17 +223,23 @@ impl<'a> TickerExtractor<'a> {
                             // faster at making comparisons than other algorithms I have experimented with.
                             let similarity = cosine_similarity(&query_vector, company_token_vector);
 
+                            // println!(
+                            //     "Similarity, {:?}, {:?}",
+                            //     similarity,
+                            //     self.company_symbols_list.get(*company_index),
+                            // );
+
                             // let (padded_query_vector, padded_company_token_vector) =
                             //     pad_vectors_to_match(&query_vector, &company_token_vector);
                             // let similarity =
                             //     cosine_similarity(&padded_query_vector, &padded_company_token_vector);
 
                             if similarity >= self.user_config.min_text_doc_token_sim_threshold {
-                                // println!(
-                                //     "Matched company: {:?}; Token Index: {}",
-                                //     company_symbols_list.get(*company_index),
-                                //     query_token_index
-                                // );
+                                println!(
+                                    "Matched company: {:?}; Token Index: {}",
+                                    self.company_symbols_list.get(*company_index),
+                                    query_token_index
+                                );
 
                                 window_match_count += 1;
 
@@ -237,7 +260,9 @@ impl<'a> TickerExtractor<'a> {
                                             },
                                         );
                                     }
-                                    None => unreachable!(),
+                                    None => {
+                                        unreachable!()
+                                    }
                                 }
 
                                 self.progressible_company_indices.insert(*company_index);
