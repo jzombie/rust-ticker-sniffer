@@ -1,4 +1,5 @@
 use crate::constants::TLD_LIST;
+use crate::types::TokenizerVectorTokenType;
 
 #[derive(Copy, Clone)]
 pub struct Tokenizer {
@@ -7,6 +8,7 @@ pub struct Tokenizer {
 }
 
 impl Tokenizer {
+    /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
         Self {
             min_uppercase_ratio: Some(0.9),
@@ -14,6 +16,7 @@ impl Tokenizer {
         }
     }
 
+    /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
         Self {
             min_uppercase_ratio: None,
@@ -115,18 +118,18 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn token_to_charcode_vector(self, token: &str) -> Vec<u32> {
+    pub fn token_to_charcode_vector(self, token: &str) -> TokenizerVectorTokenType {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn charcode_vector_to_token(self, charcodes: &[u32]) -> String {
+    pub fn charcode_vector_to_token(self, charcodes: &TokenizerVectorTokenType) -> String {
         charcodes
             .iter()
             .map(|&code| char::from_u32(code).unwrap_or('\u{FFFD}')) // Convert code to char, using '�' as a fallback
             .collect()
     }
 
-    pub fn tokenize_to_charcode_vectors(self, text: &str) -> Vec<Vec<u32>> {
+    pub fn tokenize_to_charcode_vectors(self, text: &str) -> Vec<TokenizerVectorTokenType> {
         self.tokenize(text)
             .into_iter() // Use the existing `tokenize` function to get tokens
             .map(|token| self.token_to_charcode_vector(&token)) // Convert each token to char code vectors

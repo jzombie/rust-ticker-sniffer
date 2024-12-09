@@ -11,7 +11,9 @@ pub use models::{
 pub mod utils;
 pub use utils::{cosine_similarity, pad_vector, pad_vectors_to_match};
 pub mod types;
-pub use types::{CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
+pub use types::{
+    CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
+};
 
 pub fn extract_tickers_from_text(
     text: &str,

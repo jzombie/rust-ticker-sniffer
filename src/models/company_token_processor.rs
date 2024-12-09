@@ -1,9 +1,7 @@
-use crate::types::{CompanySymbolsList, CompanyTokenSourceType};
+use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TokenizerVectorTokenType};
 use crate::Tokenizer;
 
-type CompanyVectorTokenType = Vec<u32>;
-
-type CompanyTokenizedEntry = (CompanyVectorTokenType, CompanyTokenSourceType);
+type CompanyTokenizedEntry = (TokenizerVectorTokenType, CompanyTokenSourceType);
 
 /// Index of the company in the `company_symbols_list`
 type CompanyIndex = usize;

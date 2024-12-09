@@ -9,3 +9,5 @@ pub enum CompanyTokenSourceType {
     Symbol = 0,      // Tokens derived from the symbol
     CompanyName = 1, // Tokens derived from the company name
 }
+
+pub type TokenizerVectorTokenType = Vec<u32>;
