@@ -35,17 +35,6 @@ pub struct CompanyTokenProcessor<'a> {
     pub token_length_bins: Vec<CompanyTokenBin>,
 }
 
-// TODO: Remove?
-// pub struct CompanyFilteredTokenResult<'a> {
-//     pub company_index: CompanyIndex,
-//     pub token_index: CompanyTokenIndex,
-//     pub token_vector: &'a CompanyVectorTokenType,
-//     pub source_type: CompanyTokenSourceType,
-//     pub symbol: &'a str,
-//     pub company_name: Option<&'a str>,
-//     pub company_tokenized_entries: &'a Vec<CompanyTokenizedEntry>,
-// }
-
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
@@ -66,22 +55,6 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         instance
     }
-
-    // pub fn get_company_name_token_vector_at_index(
-    //     &self,
-    //     company_index: usize,
-    //     company_token_index: usize,
-    // ) -> Option<&TokenizerVectorTokenType> {
-    //     // Retrieve tokenized entries for the specified company index
-    //     let company_tokenized_entries = self.tokenized_entries.get(company_index)?;
-
-    //     // Find the specific token entry matching the given token index and source type
-    //     company_tokenized_entries
-    //         .iter()
-    //         .filter(|entry| entry.1 == CompanyTokenSourceType::CompanyName)
-    //         .nth(company_token_index)
-    //         .map(|entry| &entry.0)
-    // }
 
     /// Tokenize and populate tokenized_data and max_corpus_token_length
     fn tokenize_all(&mut self) {
@@ -141,83 +114,12 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Second pass: Populate the bins using stored tokenized data
         for (company_index, company_tokens) in self.tokenized_entries.iter().enumerate() {
-            for (token_index, (token, _token_source_type, _token_index_by_source_type)) in
+            for (tokenized_entry_index, (token, _token_source_type, _token_index_by_source_type)) in
                 company_tokens.iter().enumerate()
             {
                 let token_length = token.len();
-                self.token_length_bins[token_length].push((company_index, token_index));
+                self.token_length_bins[token_length].push((company_index, tokenized_entry_index));
             }
         }
     }
-
-    // TODO: Remove?
-    //
-    // pub fn get_token_len_bins(
-    //     &self,
-    //     min_token_length: usize,
-    //     max_token_length: usize,
-    // ) -> Vec<&CompanyTokenBinEntry> {
-    //     self.token_length_bins
-    //         .iter()
-    //         .enumerate()
-    //         .filter(|(length, bin)| {
-    //             *length >= min_token_length && *length <= max_token_length && !bin.is_empty()
-    //         })
-    //         .flat_map(|(_, bin)| bin.iter()) // Flatten all bins into a single iterator of references
-    //         .collect()
-    // }
-
-    // TODO: Maybe useful for debugging, but awful for performance
-    //
-    // Note: An Iterator is used on the output for lazy execution, letting the
-    // consumer decide whether or not to proceed to the next result.
-    //
-    // Note: `token_end_index` is non-inclusive
-    // pub fn filter_token_space(
-    //     &'a self,
-    //     min_token_length: usize,
-    //     max_token_length: usize,
-    //     token_start_index: usize,
-    //     token_end_index: usize,
-    //     include_source_types: &'a [CompanyTokenSourceType],
-    // ) -> impl Iterator<Item = CompanyFilteredTokenResult<'a>> + 'a {
-    //     // Pre-filter token lengths with non-empty bins
-    //     self.token_length_bins
-    //         .iter()
-    //         .enumerate()
-    //         .filter(move |(length, bin)| {
-    //             *length >= min_token_length && *length <= max_token_length && !bin.is_empty()
-    //         })
-    //         .flat_map(move |(_, bin)| {
-    //             bin.iter()
-    //                 // Combine filters for better performance
-    //                 .filter(move |&&(company_index, token_index)| {
-    //                     token_index >= token_start_index
-    //                         && token_index < token_end_index
-    //                         && include_source_types
-    //                             .contains(&self.tokenized_entries[company_index][token_index].1)
-    //                 })
-    //                 .map(move |&(company_index, token_index)| {
-    //                     // Minimize repeated lookups
-    //                     let (token_vector, source_type) =
-    //                         &self.tokenized_entries[company_index][token_index];
-    //                     let (symbol, company_name) = &self.company_symbols_list[company_index];
-    //                     let company_tokenized_entries = &self.tokenized_entries[company_index];
-
-    //                     CompanyFilteredTokenResult {
-    //                         company_index,
-    //                         token_index,
-    //                         token_vector,
-    //                         source_type: *source_type,
-    //                         symbol,
-    //                         company_name: company_name.as_deref(),
-    //                         company_tokenized_entries,
-    //                     }
-    //                 })
-    //         })
-    // }
-
-    // pub fn query_tokens_by_length(&self, length: usize) -> Option<&TokenBin> {
-    //     self.token_length_bins.get(length)
-    // }
 }

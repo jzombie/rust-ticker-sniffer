@@ -194,7 +194,7 @@ impl<'a> TickerExtractor<'a> {
                 .get(query_vector_length)
             {
                 Some(bins) => {
-                    for (company_index, company_token_index) in bins {
+                    for (company_index, tokenized_entry_index) in bins {
                         if token_window_index > 0
                             && !self.progressible_company_indices.contains(company_index)
                         {
@@ -206,7 +206,7 @@ impl<'a> TickerExtractor<'a> {
                             company_token_type,
                             company_token_index_by_source_type,
                         ) = &self.company_token_processor.tokenized_entries[*company_index]
-                            [*company_token_index];
+                            [*tokenized_entry_index];
 
                         // Uncomment this condition if filtering is needed
                         if *company_token_type != CompanyTokenSourceType::CompanyName {
