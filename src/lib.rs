@@ -80,7 +80,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     //         result.company_index,
     //         result.token_index,
     //         result.symbol,
-    //         charcode_vector_to_token(result.vector_token),
+    //         charcode_vector_to_token(result.token_vector),
     //         result.source_type,
     //         result.company_tokenized_entries
 
@@ -118,13 +118,13 @@ pub fn extract_tickers_from_text_with_custom_weights(
             //     result.company_index,
             //     result.token_index,
             //     result.symbol,
-            //     charcode_vector_to_token(result.vector_token),
+            //     charcode_vector_to_token(result.token_vector),
             //     result.source_type,
             //     result.company_tokenized_entries
             // );
             println!(
                 "{:?}",
-                pad_vectors_to_match(query_vector, result.vector_token),
+                pad_vectors_to_match(query_vector, result.token_vector),
             )
         }
     }

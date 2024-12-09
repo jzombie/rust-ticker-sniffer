@@ -23,7 +23,7 @@ pub struct CompanyTokenProcessor<'a> {
 pub struct CompanyFilteredTokenResult<'a> {
     pub company_index: CompanyIndex,
     pub token_index: CompanyTokenIndex,
-    pub vector_token: &'a CompanyVectorTokenType,
+    pub token_vector: &'a CompanyVectorTokenType,
     pub source_type: CompanyTokenSourceType,
     pub symbol: &'a str,
     pub company_name: Option<&'a str>,
@@ -125,7 +125,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         include_source_types.contains(source_type)
                     })
                     .map(move |&(company_index, token_index)| {
-                        let (vector_token, source_type) =
+                        let (token_vector, source_type) =
                             &self.tokenized_entries[company_index][token_index];
                         let (symbol, company_name) = &self.company_symbols_list[company_index];
                         let company_tokenized_entries = &self.tokenized_entries[company_index];
@@ -133,7 +133,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         CompanyFilteredTokenResult {
                             company_index,
                             token_index,
-                            vector_token,
+                            token_vector,
                             source_type: *source_type,
                             symbol,
                             company_name: company_name.as_deref(),
