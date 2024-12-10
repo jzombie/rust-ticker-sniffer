@@ -1,6 +1,6 @@
-use crate::models::TickerExtractorConfig;
+use crate::models::DocumentCompanyNameExtractorConfig;
 
-pub const DEFAULT_CONFIG: TickerExtractorConfig = TickerExtractorConfig {
+pub const DEFAULT_CONFIG: DocumentCompanyNameExtractorConfig = DocumentCompanyNameExtractorConfig {
     min_text_doc_token_sim_threshold: 0.9999999999999999,
     // token_length_diff_tolerance: 0,
     token_window_size: 1,

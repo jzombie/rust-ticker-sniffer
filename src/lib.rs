@@ -5,8 +5,8 @@ pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_CONFIG, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
 };
 pub use models::{
-    CompanyNameTokenRanking, CompanyTokenProcessor, ResultBiasAdjuster, TickerExtractor,
-    TickerExtractorConfig, Tokenizer,
+    CompanyNameTokenRanking, CompanyTokenProcessor, DocumentCompanyNameExtractor,
+    DocumentCompanyNameExtractorConfig, ResultBiasAdjuster, Tokenizer,
 };
 pub mod utils;
 pub use utils::{cosine_similarity, pad_vector, pad_vectors_to_match};
@@ -33,7 +33,7 @@ pub fn extract_tickers_from_text(
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
-    weights: TickerExtractorConfig,
+    weights: DocumentCompanyNameExtractorConfig,
     _result_bias_adjuster: &ResultBiasAdjuster,
 ) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
     // let mut matches = HashSet::new();
@@ -191,7 +191,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     println!("Query: {}", query);
 
-    let mut ticker_extractor = TickerExtractor::new(&company_symbols_list, weights);
+    let mut ticker_extractor = DocumentCompanyNameExtractor::new(&company_symbols_list, weights);
 
     // TODO: Handle results
     ticker_extractor.extract(&query);

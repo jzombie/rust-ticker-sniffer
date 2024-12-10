@@ -10,7 +10,7 @@ use std::thread::current;
 type QueryTokenIndex = usize;
 type TokenWindowIndex = usize;
 
-pub struct TickerExtractorConfig {
+pub struct DocumentCompanyNameExtractorConfig {
     pub min_text_doc_token_sim_threshold: f64,
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
@@ -30,12 +30,12 @@ struct QueryVectorIntermediateSimilarityState {
     company_name_similarity_at_index: f64,
 }
 
-pub struct TickerExtractor<'a> {
+pub struct DocumentCompanyNameExtractor<'a> {
     company_symbols_list: &'a CompanySymbolsList,
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     company_token_processor: CompanyTokenProcessor<'a>,
-    user_config: TickerExtractorConfig,
+    user_config: DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
     text: Option<String>,
     tokenized_query_vectors: Vec<Vec<u32>>,
@@ -44,10 +44,10 @@ pub struct TickerExtractor<'a> {
     results: Vec<TickerSymbol>,
 }
 
-impl<'a> TickerExtractor<'a> {
+impl<'a> DocumentCompanyNameExtractor<'a> {
     pub fn new(
         company_symbols_list: &'a CompanySymbolsList,
-        user_config: TickerExtractorConfig,
+        user_config: DocumentCompanyNameExtractorConfig,
     ) -> Self {
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
         let text_doc_tokenizer = Tokenizer::text_doc_parser();
@@ -71,7 +71,7 @@ impl<'a> TickerExtractor<'a> {
 
     pub fn extract(&mut self, text: &str) {
         if self.is_extracting {
-            panic!("Cannot perform multiple extractions concurrently from same `TickerExtractor` instance");
+            panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
         } else {
             self.is_extracting = true;
         }
