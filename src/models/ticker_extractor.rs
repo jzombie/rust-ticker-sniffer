@@ -5,6 +5,7 @@ use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use core::f64;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::thread::current;
 
 type QueryTokenIndex = usize;
 type TokenWindowIndex = usize;
@@ -25,7 +26,6 @@ struct QueryVectorIntermediateSimilarityState {
     company_token_index_by_source_type: usize,
     company_token_vector: TokenizerVectorTokenType,
     company_name_similarity_at_index: f64,
-    accumulated_company_name_coverage: f64,
 }
 
 pub struct TickerExtractor<'a> {
@@ -114,7 +114,6 @@ impl<'a> TickerExtractor<'a> {
                         Query Token Index: {}
                         Token Window Index: {}
                         Company Name Similarity at Index: {},
-                        Accumulated Company Name Coverage at Index: {},
                         State: {:?}
                     "#,
                     query_token,
@@ -124,11 +123,12 @@ impl<'a> TickerExtractor<'a> {
                     state.query_token_index,
                     state.token_window_index,
                     state.company_name_similarity_at_index,
-                    state.accumulated_company_name_coverage,
                     state
                 );
             }
         }
+
+        // TODO: For each query token index, take the symbol with the highest confidence score
     }
 
     fn collect_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
@@ -138,35 +138,12 @@ impl<'a> TickerExtractor<'a> {
 
         for (symbol, states) in coverage_grouped_results {
             let mut combined_similarity: f64 = 0.0;
-            let mut total_name_coverage: f64 = 0.0;
 
             for state in states {
                 combined_similarity += state.company_name_similarity_at_index;
-
-                total_name_coverage = state.accumulated_company_name_coverage;
             }
 
-            // Confidence is calculated as the harmonic mean of normalized similarity and coverage.
-            // This approach penalizes imbalanced values, ensuring a balanced contribution from both metrics.
-            // The formula is as follows:
-            //
-            // Confidence = 2 × normalized_similarity × normalized_coverage
-            //              --------------------------------------------
-            //              normalized_similarity + normalized_coverage
-            //
-            // Both `normalized_similarity` and `normalized_coverage` are assumed to be in the range [0, 1].
-
-            let confidence_score = if combined_similarity + total_name_coverage > 0.0 {
-                (2.0 * combined_similarity * total_name_coverage)
-                    / (combined_similarity + total_name_coverage)
-            } else {
-                0.0
-            };
-
-            println!(
-                "Symbol: {}, , coverage: {}, combined_similarity: {}",
-                symbol, total_name_coverage, combined_similarity
-            );
+            let confidence_score = combined_similarity;
 
             confidence_scores.insert(symbol, confidence_score);
         }
@@ -218,6 +195,7 @@ impl<'a> TickerExtractor<'a> {
         coverage_grouped
     }
 
+    // TODO: Remove?
     // fn find_highest_accumulated_coverage_states(&self) -> HashMap<TickerSymbol, f64> {
     //     let mut max_coverages = HashMap::new();
 
@@ -273,18 +251,13 @@ impl<'a> TickerExtractor<'a> {
         let mut results = HashMap::new();
 
         for (symbol, states) in self.group_by_symbol() {
-            let mut last_coverage: f64 = 0.0;
+            let mut last_coverage: usize = 0;
             let mut increasing_range = Vec::new();
 
             for (i, state) in states.iter().enumerate() {
-                let current_coverage = state.accumulated_company_name_coverage;
+                let current_coverage = state.token_window_index + 1;
 
                 if i > 0 && current_coverage > last_coverage {
-                    println!(
-                        "Determined increase: {}, query token index: {}",
-                        symbol, state.query_token_index
-                    );
-
                     // Add the previous index to the range if starting a new range
                     if increasing_range.is_empty() && i > 0 {
                         increasing_range.push(states[i - 1].query_token_index);
@@ -370,38 +343,16 @@ impl<'a> TickerExtractor<'a> {
                     let similarity = cosine_similarity(&query_vector, company_token_vector);
 
                     if similarity >= self.user_config.min_text_doc_token_sim_threshold {
-                        // println!(
-                        //     "Matched company: {:?}; Token Index: {}",
-                        //     self.company_symbols_list.get(*company_index),
-                        //     query_token_index
-                        // );
-
                         window_match_count += 1;
 
-                        let company_name_length = self
+                        // let company_name_length = company_name.len();
+
+                        let total_company_name_tokens_length = self
                             .company_token_processor
-                            .company_name_lengths
-                            .get(*company_index)
-                            .expect("Could not obtain company name length");
+                            .get_company_name_tokens_length(*company_index);
 
-                        let company_name_token_count = self
-                            .company_token_processor
-                            .company_name_token_counts
-                            .get(*company_index)
-                            .expect("Could not obtain company name token count");
-
-                        // TODO: Remove
-                        // let company_name_similarity_at_index = similarity
-                        //     / (*company_name_length as f64
-                        //         / *company_token_index_by_source_type as f64
-                        //         + f64::EPSILON);
-
-                        let company_name_similarity_at_index =
-                            similarity / (*company_name_length / query_vector.len()) as f64;
-
-                        let accumulated_company_name_coverage = 1.0
-                            / (*company_name_token_count as f64
-                                / (*company_token_index_by_source_type as f64 + 1.0));
+                        let company_name_similarity_at_index = similarity
+                            * (query_vector.len() as f64 / total_company_name_tokens_length as f64);
 
                         self.company_similarity_states.push(
                             QueryVectorIntermediateSimilarityState {
@@ -414,7 +365,6 @@ impl<'a> TickerExtractor<'a> {
                                     *company_token_index_by_source_type,
                                 company_token_vector: company_token_vector.clone(),
                                 company_name_similarity_at_index,
-                                accumulated_company_name_coverage,
                             },
                         );
 

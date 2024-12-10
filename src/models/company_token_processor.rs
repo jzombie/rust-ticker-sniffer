@@ -25,8 +25,6 @@ pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     pub company_symbols_list: &'a CompanySymbolsList,
-    pub company_name_lengths: Vec<usize>,
-    pub company_name_token_counts: Vec<usize>,
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub tokenized_entries: Vec<Vec<CompanyTokenizedEntry>>,
@@ -45,8 +43,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
             company_symbols_list,
-            company_name_lengths: vec![],
-            company_name_token_counts: vec![],
             tokenized_entries: vec![],
             max_corpus_token_length: 0,
             token_length_bins: vec![],
@@ -60,8 +56,6 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     /// Tokenize and populate tokenized_data and max_corpus_token_length
     fn tokenize_all(&mut self) {
-        self.company_name_lengths.clear();
-        self.company_name_token_counts.clear();
         self.max_corpus_token_length = 0;
         self.tokenized_entries.clear();
 
@@ -81,8 +75,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             if let Some(company_name) = company_name {
-                self.company_name_lengths.push(company_name.len());
-
                 let mut company_name_token_count: usize = 0;
 
                 let company_name_token_vectors = self
@@ -98,12 +90,6 @@ impl<'a> CompanyTokenProcessor<'a> {
                     company_name_token_count += 1;
                     // Token from company name
                 }
-
-                self.company_name_token_counts
-                    .push(company_name_token_count);
-            } else {
-                self.company_name_lengths.push(0);
-                self.company_name_token_counts.push(0);
             }
 
             // Store tokenized data for later use
@@ -156,6 +142,19 @@ impl<'a> CompanyTokenProcessor<'a> {
             None
         } else {
             Some(company_name_tokens)
+        }
+    }
+
+    pub fn get_company_name_tokens_length(&self, company_index: usize) -> usize {
+        match self.get_company_name_tokens(company_index) {
+            Some(company_name_tokens) => {
+                let mut total_token_length = 0;
+                for token in company_name_tokens {
+                    total_token_length += token.len()
+                }
+                total_token_length
+            }
+            None => 0,
         }
     }
 }

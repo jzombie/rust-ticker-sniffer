@@ -90,13 +90,14 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // }
 
     // let query = "The stuff IT dreams are made of, but you know, Agilent is interesting.";
-    // let query = "Apple is not Walmart, but maybe Amazon.com is okay, REIT?";
+    let query = "Apple is not Walmart, but maybe Amazon.com is okay, REIT?";
     // let query = "Ashford";
     // let query = "Power REIT";
-    let query = "REIT Hospitality Apple stuff";
+    // let query = "REIT Hospitality Apple stuff";
     // let query = "Arbor";
     // let query = "Arbor Realty";
-    let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
+    // let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
+    // let query = "Apple";
 
     // let query = "Apple";
     // let query = "Berkshire";
