@@ -15,6 +15,7 @@ pub struct TickerExtractorConfig {
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
     pub token_gap_penalty: f64,
+    pub low_confidence_penalty_factor: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -136,8 +137,10 @@ impl<'a> TickerExtractor<'a> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
         let mut confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
+        let mut all_scores = Vec::new();
 
-        for (symbol, states) in coverage_grouped_results {
+        // First pass: Calculate initial confidence scores
+        for (symbol, states) in &coverage_grouped_results {
             let mut combined_similarity: f64 = 0.0;
 
             for (i, state) in states.iter().enumerate() {
@@ -146,17 +149,52 @@ impl<'a> TickerExtractor<'a> {
                 if i > 0 {
                     // Calculate the gap between the current and previous indices
                     let prev_query_token_index = states[i - 1].query_token_index;
-                    let gap = state.query_token_index as isize - prev_query_token_index as isize;
+                    let gap = (state.query_token_index as isize - prev_query_token_index as isize)
+                        .abs() as usize;
 
                     // Apply a penalty for larger gaps (e.g., inverse weighting)
-                    inverse_weight = 1.0 / (self.user_config.token_gap_penalty + gap.abs() as f64);
+                    inverse_weight = if gap > 1 {
+                        1.0 / (self.user_config.token_gap_penalty + gap as f64)
+                    } else {
+                        1.0
+                    };
                 }
 
                 // Weigh the similarity score based on the calculated weight
                 combined_similarity += state.company_name_similarity_at_index * inverse_weight;
             }
 
-            confidence_scores.insert(symbol, combined_similarity);
+            confidence_scores.insert(symbol.clone(), combined_similarity);
+            all_scores.push(combined_similarity);
+        }
+
+        // ------------------
+
+        // Analyze the distribution of scores
+        let mean_score: f64 = all_scores.iter().copied().sum::<f64>() / all_scores.len() as f64;
+        let std_dev: f64 = (all_scores
+            .iter()
+            .map(|&score| (score - mean_score).powi(2))
+            .sum::<f64>()
+            / all_scores.len() as f64)
+            .sqrt();
+        let threshold = mean_score - std_dev; // Scores below this threshold are penalized further
+
+        // Calculate the sum of all scores below the threshold
+        let total_low_scores: f64 = confidence_scores
+            .values()
+            .filter(|&&score| score < threshold)
+            .sum::<f64>();
+
+        // Second pass: Penalize scores below the threshold based on their proportion
+        for (_symbol, score) in &mut confidence_scores {
+            if *score < threshold && total_low_scores > 0.0 {
+                // Calculate the proportion of this score relative to the total low scores
+                let proportion = *score / total_low_scores;
+
+                // Penalize the score based on its proportion
+                *score *= proportion * self.user_config.low_confidence_penalty_factor;
+            }
         }
 
         confidence_scores

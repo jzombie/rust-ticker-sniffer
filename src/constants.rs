@@ -6,6 +6,7 @@ pub const DEFAULT_CONFIG: TickerExtractorConfig = TickerExtractorConfig {
     token_window_size: 1,
     // Used when calculating confidence scores
     token_gap_penalty: 2.5,
+    low_confidence_penalty_factor: 0.5,
 };
 
 // TODO: Remove
