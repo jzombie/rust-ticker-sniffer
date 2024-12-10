@@ -107,7 +107,20 @@ impl<'a> TickerExtractor<'a> {
                 symbol, highest_accumulated_coverage_state, coverage_increase
             );
 
+            let has_coverage_increase = coverage_increase.len() > 0;
+            let min_coverage_increase_query_token_index = if has_coverage_increase {
+                coverage_increase[0]
+            } else {
+                usize::MAX
+            };
+
             for state in states {
+                if has_coverage_increase
+                    && state.query_token_index < min_coverage_increase_query_token_index
+                {
+                    continue;
+                }
+
                 let query_token = self
                     .text_doc_tokenizer
                     .charcode_vector_to_token(&state.query_vector);
@@ -136,35 +149,31 @@ impl<'a> TickerExtractor<'a> {
                     state.accumulated_company_name_coverage,
                     state
                 );
+
+                // Skip progressing if no coverage increase
+                if !has_coverage_increase {
+                    break;
+                }
             }
         }
     }
 
-    fn find_highest_accumulated_coverage_states(
-        &self,
-    ) -> HashMap<TickerSymbol, (f64, Vec<QueryTokenIndex>)> {
-        let mut top_matches = HashMap::new();
+    fn find_highest_accumulated_coverage_states(&self) -> HashMap<TickerSymbol, f64> {
+        let mut max_coverages = HashMap::new();
 
         for (symbol, states) in self.group_by_symbol() {
             let mut max_coverage = 0.0;
-            let mut token_indices = Vec::new();
 
             for state in states {
                 if state.accumulated_company_name_coverage > max_coverage {
                     max_coverage = state.accumulated_company_name_coverage;
-                    token_indices.clear();
-                    token_indices.push(state.query_token_index);
-                } else if (state.accumulated_company_name_coverage - max_coverage).abs()
-                    < f64::EPSILON
-                {
-                    token_indices.push(state.query_token_index);
                 }
             }
 
-            top_matches.insert(symbol, (max_coverage, token_indices));
+            max_coverages.insert(symbol, max_coverage);
         }
 
-        top_matches
+        max_coverages
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
