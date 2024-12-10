@@ -81,7 +81,7 @@ impl<'a> TickerExtractor<'a> {
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
         // Begin parsing at the first page
-        self.parse(None);
+        self.parse_company_names(None);
 
         self.collect_results();
     }
@@ -334,7 +334,7 @@ impl<'a> TickerExtractor<'a> {
         results
     }
 
-    fn parse(&mut self, token_window_index: Option<usize>) {
+    fn parse_company_names(&mut self, token_window_index: Option<usize>) {
         let token_window_index = match token_window_index {
             Some(token_window_index) => token_window_index,
             None => 0,
@@ -443,7 +443,7 @@ impl<'a> TickerExtractor<'a> {
 
         // Continue looping if new matches have been discovered
         if window_match_count > 0 {
-            self.parse(Some(token_window_index + 1));
+            self.parse_company_names(Some(token_window_index + 1));
         }
     }
 }
