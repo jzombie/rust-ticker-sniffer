@@ -44,6 +44,9 @@ pub struct DocumentCompanyNameExtractor<'a> {
 }
 
 impl<'a> DocumentCompanyNameExtractor<'a> {
+    /// Creates a new instance of the `DocumentCompanyNameExtractor`
+    /// with the provided company symbols list and configuration.
+    /// Initializes the necessary tokenizers and token processors.
     pub fn new(
         company_symbols_list: &'a CompanySymbolsList,
         user_config: DocumentCompanyNameExtractorConfig,
@@ -68,6 +71,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
     }
 
+    /// Extracts ticker symbols from the given text document by tokenizing
+    /// and comparing against known company names. Ensures only one extraction
+    /// process runs at a time.
     pub fn extract(&mut self, text: &str) {
         if self.is_extracting {
             panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
@@ -88,6 +94,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         self.collect_results();
     }
 
+    /// Aggregates and prints the extracted ticker symbols along with their
+    /// confidence scores. Prepares the final results from intermediate states.
     fn collect_results(&self) {
         let symbols_with_confidence = self.get_symbols_with_confidence();
 
@@ -134,6 +142,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // TODO: For each query token index, take the symbol with the highest confidence score
     }
 
+    /// Maps the highest-ranking ticker symbols to their corresponding query
+    /// tokens based on confidence scores. Ensures no overlapping token indices
+    /// unless they share the same confidence score.
     fn map_highest_ranking_symbols_to_query_tokens(
         &self,
     ) -> HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> {
@@ -195,6 +206,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         query_token_rankings
     }
 
+    /// Retrieves a map of ticker symbols and their highest confidence scores.
+    /// Ensures that only the highest confidence score is retained for each symbol.
     fn get_symbols_with_confidence(&self) -> HashMap<TickerSymbol, f64> {
         let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
 
@@ -217,6 +230,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         symbols_with_confidence
     }
 
+    /// Calculates confidence scores for each ticker symbol by weighing
+    /// their similarity states. Applies penalties for large token gaps
+    /// and normalizes scores based on the overall distribution.
     fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
@@ -284,6 +300,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         confidence_scores
     }
 
+    /// Groups intermediate similarity states by ticker symbol, ensuring
+    /// only states that contribute to coverage increases are retained.
     fn collect_coverage_filtered_results(
         &self,
     ) -> HashMap<TickerSymbol, Vec<QueryVectorIntermediateSimilarityState>> {
@@ -328,7 +346,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         coverage_grouped
     }
 
-    /// Calculates the query indexes for the given `token_window_index`.
+    /// Calculates the start and end token indices for a given window
+    /// based on the configured token window size.
     fn calc_token_window_indexes(
         &self,
         token_window_index: TokenWindowIndex,
@@ -406,8 +425,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         results
     }
 
-    /// Parses company names from the linked document, where `token_window_index` refers to a
-    /// subset of the company name tokens.
+    /// Parses company names from the text document, processing a specific
+    /// range of tokens defined by the token window index. Filters and evaluates
+    /// token similarity for potential ticker symbol matches.
     fn parse_company_names(&mut self, token_window_index: Option<TokenWindowIndex>) {
         let token_window_index = match token_window_index {
             Some(token_window_index) => token_window_index,
