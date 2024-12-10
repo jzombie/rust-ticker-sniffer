@@ -87,57 +87,10 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn collect_results(&self) {
-        // Group similarity states by ticker symbol then order them by `query_token_index`
-        let mut ordered_collection: HashMap<
-            TickerSymbol,
-            BTreeMap<QueryTokenIndex, QueryVectorIntermediateSimilarityState>,
-        > = HashMap::new();
-
-        // Collect state into ordered collection
-        for similarity_state in &self.company_similarity_states {
-            let (company_token_vector, company_token_type, _company_token_index_by_source_type) =
-                &self.company_token_processor.tokenized_entries[similarity_state.company_index]
-                    [similarity_state.company_token_index_by_source_type];
-
-            // println!(
-            //     "Similarity state: {:?}, Symbols entry: {:?}, Token: {:?}, Token Type: {:?}",
-            //     similarity_state,
-            //     self.company_symbols_list
-            //         .get(similarity_state.company_index),
-            //     self.text_doc_tokenizer
-            //         .charcode_vector_to_token(company_token_vector),
-            //     company_token_type
-            // );
-
-            // Retrieve the symbol for the given company index
-            let (ticker_symbol, _) = self
-                .company_symbols_list
-                .get(similarity_state.company_index)
-                .expect("Could not locate ticker symbol");
-
-            // Get or insert the symbol group (BTreeMap for query token index -> similarity state)
-            let symbol_group = ordered_collection
-                .entry(ticker_symbol.clone())
-                .or_insert_with(BTreeMap::new);
-
-            // Insert the similarity state directly for the given query token index
-            symbol_group.insert(similarity_state.query_token_index, similarity_state.clone());
-
-            // Token Order Bonus: Reward matches where the query_token_index aligns with the query sequence.
-            // let order_bonus = if query_token_index == token_window_index { 1.0 } else { 0.5 };
-
-            // Proximity Penalty: Penalize matches that span a large range of query tokens.
-            // let proximity_penalty = 1.0 / (1.0 + (end_index - start_index) as f64);
-        }
-
-        // println!("\n\n\n{:?}\n\n\n", ordered_collection);
-
-        // TODO: Locate the results with the highest token window index and figure out which query token indexes make it up,
-        // ensuring that a query like "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT."
-        // correctly identifies, "BRK-A", "BRK-B", "AAPL", and "APLE" as top matches
+        let grouped_states = self.group_by_symbol();
         let highest_accumulated_coverage_states = self.find_highest_accumulated_coverage_states();
 
-        for (symbol, intermediate_states) in ordered_collection {
+        for (symbol, states) in grouped_states {
             let highest_accumulated_coverage_state = highest_accumulated_coverage_states
                 .get(&symbol)
                 .expect(&format!(
@@ -150,7 +103,7 @@ impl<'a> TickerExtractor<'a> {
                 symbol, highest_accumulated_coverage_state
             );
 
-            for (state_index, state) in intermediate_states {
+            for state in states {
                 let query_token = self
                     .text_doc_tokenizer
                     .charcode_vector_to_token(&state.query_vector);
@@ -173,21 +126,12 @@ impl<'a> TickerExtractor<'a> {
                     company_token,
                     self.company_token_processor
                         .get_company_name_tokens(state.company_index),
-                    state_index,
+                    state.query_token_index,
                     state.token_window_index,
                     state.company_name_similarity_at_index,
                     state.accumulated_company_name_coverage,
                     state
                 );
-
-                // println!("\n");
-
-                // let tokenized_query_vectors = self.tokenized_query_vectors.get(state.company_index);
-
-                // println!(
-                //     "\t\tWord: {:?}",
-
-                // );
             }
         }
 
@@ -198,30 +142,25 @@ impl<'a> TickerExtractor<'a> {
     fn find_highest_accumulated_coverage_states(
         &self,
     ) -> HashMap<TickerSymbol, (f64, Vec<QueryTokenIndex>)> {
-        // Group by symbol, then by the highest accumulated company name coverage
-        let mut top_matches: HashMap<TickerSymbol, (f64, Vec<QueryTokenIndex>)> = HashMap::new();
+        let mut top_matches = HashMap::new();
 
-        for similarity_state in &self.company_similarity_states {
-            let ticker_symbol = self
-                .company_symbols_list
-                .get(similarity_state.company_index)
-                .map(|(symbol, _)| symbol.clone())
-                .expect("Failed to retrieve ticker symbol for the given company index");
+        for (symbol, states) in self.group_by_symbol() {
+            let mut max_coverage = 0.0;
+            let mut token_indices = Vec::new();
 
-            let entry = top_matches
-                .entry(ticker_symbol.clone())
-                .or_insert((0.0, Vec::new()));
-
-            // If this state has higher accumulated coverage, update the entry
-            if similarity_state.accumulated_company_name_coverage > entry.0 {
-                entry.0 = similarity_state.accumulated_company_name_coverage;
-                entry.1 = vec![similarity_state.query_token_index];
-            } else if (similarity_state.accumulated_company_name_coverage - entry.0).abs()
-                < f64::EPSILON
-            {
-                // If the coverage is equal to the current max, append the query_token_index
-                entry.1.push(similarity_state.query_token_index);
+            for state in states {
+                if state.accumulated_company_name_coverage > max_coverage {
+                    max_coverage = state.accumulated_company_name_coverage;
+                    token_indices.clear();
+                    token_indices.push(state.query_token_index);
+                } else if (state.accumulated_company_name_coverage - max_coverage).abs()
+                    < f64::EPSILON
+                {
+                    token_indices.push(state.query_token_index);
+                }
             }
+
+            top_matches.insert(symbol, (max_coverage, token_indices));
         }
 
         top_matches
