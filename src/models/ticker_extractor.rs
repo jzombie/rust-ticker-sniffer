@@ -88,9 +88,14 @@ impl<'a> TickerExtractor<'a> {
 
     fn collect_results(&self) {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
+        let confidence_scores = self.collect_confidence_scores();
 
         for (symbol, states) in coverage_grouped_results {
-            println!("Symbol: {}", symbol);
+            let confidence = confidence_scores
+                .get(&symbol)
+                .expect("Could not obtain confidence score");
+
+            println!("Symbol: {}, Confidence: {}", symbol, confidence);
 
             for state in states {
                 let query_token = self
@@ -123,76 +128,34 @@ impl<'a> TickerExtractor<'a> {
                 );
             }
         }
+    }
 
-        // let grouped_states = self.group_by_symbol();
-        // let highest_accumulated_coverage_states = self.find_highest_accumulated_coverage_states();
-        // let coverage_increase_states = self.analyze_coverage_increase();
+    fn collect_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
+        let coverage_grouped_results = self.collect_coverage_filtered_results();
 
-        // for (symbol, states) in grouped_states {
-        //     let highest_accumulated_coverage_state = highest_accumulated_coverage_states
-        //         .get(&symbol)
-        //         .expect(&format!(
-        //             "Highest accumulated coverage state not found for symbol: {}",
-        //             symbol
-        //         ));
+        let mut confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
 
-        //     let empty_vec = Vec::new();
-        //     let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
+        for (symbol, states) in coverage_grouped_results {
+            let mut combined_similarity: f64 = 0.0;
+            let mut total_name_coverage: f64 = 0.0;
 
-        //     println!(
-        //         "Symbol: {}, Highest accumulated coverage: {:?}, Coverage Increase: {:?}",
-        //         symbol, highest_accumulated_coverage_state, coverage_increase
-        //     );
+            for state in states {
+                combined_similarity += state.company_name_similarity_at_index;
 
-        //     let has_coverage_increase = coverage_increase.len() > 0;
-        //     let min_coverage_increase_query_token_index = if has_coverage_increase {
-        //         coverage_increase[0]
-        //     } else {
-        //         usize::MAX
-        //     };
+                total_name_coverage = state.accumulated_company_name_coverage;
+            }
 
-        //     for state in states {
-        //         if has_coverage_increase
-        //             && state.query_token_index < min_coverage_increase_query_token_index
-        //         {
-        //             continue;
-        //         }
+            let confidence_score = 1.0 - (combined_similarity / total_name_coverage);
 
-        //         let query_token = self
-        //             .text_doc_tokenizer
-        //             .charcode_vector_to_token(&state.query_vector);
+            println!(
+                "Symbol: {}, , coverage: {}, combined_similarity: {}",
+                symbol, total_name_coverage, combined_similarity
+            );
 
-        //         let company_token = self
-        //             .text_doc_tokenizer
-        //             .charcode_vector_to_token(&state.company_token_vector);
+            confidence_scores.insert(symbol, confidence_score);
+        }
 
-        //         println!(
-        //             r#"
-        //                 {} : {}
-        //                 Tokenized Entries: {:?},
-        //                 Query Token Index: {}
-        //                 Token Window Index: {}
-        //                 Company Name Similarity at Index: {},
-        //                 Accumulated Company Name Coverage at Index: {},
-        //                 State: {:?}
-        //             "#,
-        //             query_token,
-        //             company_token,
-        //             self.company_token_processor
-        //                 .get_company_name_tokens(state.company_index),
-        //             state.query_token_index,
-        //             state.token_window_index,
-        //             state.company_name_similarity_at_index,
-        //             state.accumulated_company_name_coverage,
-        //             state
-        //         );
-
-        //         // Skip progressing if no coverage increase
-        //         if !has_coverage_increase {
-        //             break;
-        //         }
-        //     }
-        // }
+        confidence_scores
     }
 
     fn collect_coverage_filtered_results(
