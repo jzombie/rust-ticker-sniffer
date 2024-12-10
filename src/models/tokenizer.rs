@@ -28,19 +28,8 @@ impl Tokenizer {
     /// Tokenizer function to split the text into individual tokens.
     ///
     /// Note: This explcitly does not modify the case of the text.
-    pub fn tokenize(self, text: &str) -> Vec<String> {
-        // Preprocess text: handle hyphenation, line breaks, and cleanup
-        let cleaned_text = text
-            .replace("-\n", "") // Merge hyphenated words across lines
-            .replace('\n', " ") // Normalize line breaks to spaces
-            .replace('\r', " ") // Handle potential carriage returns
-            .replace("--", " ") // Replace standalone double hyphens
-            .split_whitespace()
-            .collect::<Vec<_>>()
-            .join(" ") // Ensure proper spacing
-            .trim()
-            .to_string();
 
+    pub fn tokenize(self, text: &str) -> Vec<String> {
         // Helper function to calculate uppercase ratio
         fn uppercase_ratio(word: &str) -> f32 {
             let total_chars = word.chars().count() as f32;
@@ -51,70 +40,49 @@ impl Tokenizer {
             uppercase_chars / total_chars
         }
 
-        // Tokenize, process possessives, handle web addresses, and uppercase
-        cleaned_text
-            .split_whitespace()
-            // .filter(|word| word.chars().any(|c| c.is_uppercase())) // Keep only words with at least one capital letter
+        // Preprocess and tokenize the text
+        text.replace("-\n", "") // Merge hyphenated words across lines
+            .replace('\n', " ") // Normalize line breaks to spaces
+            .replace('\r', " ") // Handle potential carriage returns
+            .replace("--", " ") // Replace standalone double hyphens
+            .replace(",", ".") // Normalize commas to periods
+            .split_whitespace() // Split into words
             .filter(|word| {
-                if let Some(ratio) = self.min_uppercase_ratio {
-                    uppercase_ratio(word) >= ratio
-                } else {
-                    word.chars().any(|c| c.is_uppercase())
-                }
+                // Apply uppercase ratio filter
+                self.min_uppercase_ratio
+                    .map_or(true, |ratio| uppercase_ratio(word) >= ratio)
+            })
+            .map(|word| {
+                // Normalize TLDs and lowercase the base word
+                word.rsplit_once('.')
+                    .filter(|(_, tld)| TLD_LIST.contains(&tld.to_lowercase().as_str()))
+                    .map_or_else(|| word.to_lowercase(), |(base, _)| base.to_lowercase())
             })
             .flat_map(|word| {
-                let mut tokens = Vec::new();
-
-                if self.hyphens_as_potential_multiple_words {
-                    // Handle hyphenated words
-                    if word.contains('-') {
-                        let split_words: Vec<&str> = word.split('-').collect();
-                        tokens.push(word.replace('-', "").to_uppercase()); // Concatenated version
-                        for part in &split_words {
-                            tokens.push(
-                                part.chars()
-                                    .filter(|c| c.is_alphanumeric())
-                                    .collect::<String>()
-                                    .to_uppercase(),
-                            ); // Add each part separately
-                        }
-                        return tokens;
-                    }
-                }
-
-                // Handle web addresses
-                if let Some((base, tld)) = word.rsplit_once('.') {
-                    if TLD_LIST.contains(&tld.to_lowercase().as_str()) {
-                        let cleaned_word: String = format!("{}{}", base, tld); // Concatenate base and TLD
-                        tokens.push(cleaned_word.to_uppercase());
-
-                        // Add the base word as another token
-                        tokens.push(
-                            base.chars()
-                                .filter(|c| c.is_alphanumeric())
-                                .collect::<String>()
-                                .to_uppercase(),
-                        );
-
-                        return tokens;
-                    }
-                }
-
-                // Handle possessive endings `'s` or `s'`
-                let clean_word: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
-                if word.ends_with("'s") || word.ends_with("s'") {
-                    let base_word: String = word
-                        .trim_end_matches("'s")
-                        .trim_end_matches("s'")
-                        .chars()
-                        .filter(|c| c.is_alphanumeric())
-                        .collect();
-                    tokens.push(base_word.to_uppercase()); // Add the base word
-                }
-
-                tokens.push(clean_word.to_uppercase()); // Add the original word
-                tokens
+                // Handle hyphenated words
+                word.split('-')
+                    .map(|part| {
+                        part.chars()
+                            .filter(|c| c.is_alphanumeric())
+                            .collect::<String>()
+                    })
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .chain(if self.hyphens_as_potential_multiple_words {
+                        Vec::new().into_iter()
+                    } else {
+                        vec![word.replace('-', "")].into_iter()
+                    })
             })
+            .map(|word| {
+                // Remove possessive endings and normalize
+                word.trim_end_matches("'s")
+                    .trim_end_matches("s'")
+                    .chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>()
+            })
+            .map(|word| word.to_uppercase()) // Convert to uppercase
             .collect()
     }
 
