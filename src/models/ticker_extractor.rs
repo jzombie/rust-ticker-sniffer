@@ -4,36 +4,15 @@ use crate::types::{
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use std::collections::{BTreeMap, HashMap, HashSet};
-// use std::fmt;
+
+type QueryTokenIndex = usize;
+type TokenWindowIndex = usize;
 
 pub struct TickerExtractorConfig {
     pub min_text_doc_token_sim_threshold: f64,
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
 }
-
-// TODO: Is this needed?
-// impl fmt::Display for TickerExtractorConfig {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         let struct_name = stringify!(Weights);
-//         let fields = vec![
-//             (
-//                 "min_text_doc_token_sim_threshold",
-//                 self.min_text_doc_token_sim_threshold as f32,
-//             ),
-//             (
-//                 "token_length_diff_tolerance",
-//                 self.token_length_diff_tolerance as f32,
-//             ),
-//         ];
-
-//         writeln!(f, "{} (", struct_name)?;
-//         for (name, value) in fields {
-//             writeln!(f, "\t{}: {},", name, value)?;
-//         }
-//         write!(f, ")") // Final closing parenthesis
-//     }
-// }
 
 #[derive(Debug, Clone)]
 struct QueryVectorIntermediateSimilarityState {
@@ -108,8 +87,6 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn collect_results(&self) {
-        type QueryTokenIndex = usize;
-
         // Group similarity states by ticker symbol then order them by `query_token_index`
         let mut ordered_collection: HashMap<
             TickerSymbol,
@@ -217,9 +194,6 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn find_highest_token_window_states(&self) -> HashMap<TickerSymbol, (usize, Vec<usize>)> {
-        type QueryTokenIndex = usize;
-        type TokenWindowIndex = usize;
-
         // Group by symbol, then by the highest token_window_index
         let mut top_matches: HashMap<TickerSymbol, (TokenWindowIndex, Vec<QueryTokenIndex>)> =
             HashMap::new();
