@@ -45,7 +45,7 @@ impl Tokenizer {
             .replace('\n', " ") // Normalize line breaks to spaces
             .replace('\r', " ") // Handle potential carriage returns
             .replace("--", " ") // Replace standalone double hyphens
-            .replace(",", ".") // Normalize commas to periods
+            .replace(",", " ") // Normalize commas to periods
             .split_whitespace() // Split into words
             .filter(|word| {
                 // Apply uppercase ratio filter
