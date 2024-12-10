@@ -44,7 +44,7 @@ struct QueryVectorIntermediateSimilarityState {
     company_token_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize,
     company_token_vector: TokenizerVectorTokenType,
-    similarity: f64,
+    similarity_at_index: f64,
 }
 
 pub struct TickerExtractor<'a> {
@@ -197,7 +197,7 @@ impl<'a> TickerExtractor<'a> {
                         .get_company_name_tokens(state.company_index),
                     state_index,
                     state.token_window_index,
-                    state.similarity,
+                    state.similarity_at_index,
                     state
                 );
 
@@ -345,8 +345,9 @@ impl<'a> TickerExtractor<'a> {
                                                 company_token_index_by_source_type:
                                                     *company_token_index_by_source_type,
                                                 company_token_vector: company_token_vector.clone(),
-                                                similarity: similarity
+                                                similarity_at_index: similarity
                                                     / (company_name_length + 1) as f64,
+                                                // TODO: Add coverage_at_index
                                             },
                                         );
                                     }
