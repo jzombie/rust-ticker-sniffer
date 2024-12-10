@@ -1,12 +1,12 @@
+use std::collections::HashMap;
 mod constants;
-// use crate::constants::STOP_WORDS;
 pub mod models;
 pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_CONFIG, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
 };
 pub use models::{
     CompanyNameTokenRanking, CompanyTokenProcessor, DocumentCompanyNameExtractor,
-    DocumentCompanyNameExtractorConfig, ResultBiasAdjuster, Tokenizer,
+    DocumentCompanyNameExtractorConfig, Tokenizer,
 };
 pub mod utils;
 pub use utils::{cosine_similarity, pad_vector, pad_vectors_to_match};
@@ -15,27 +15,22 @@ pub use types::{
     CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
 
+// TODO: Add dedicated type instead of f64
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
-) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
-    let result_bias_adjuster =
-        ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
+) -> HashMap<TickerSymbol, f64> {
+    // let result_bias_adjuster =
+    //     ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
 
-    extract_tickers_from_text_with_custom_weights(
-        &text,
-        &company_symbols_list,
-        DEFAULT_CONFIG,
-        &result_bias_adjuster,
-    )
+    extract_tickers_from_text_with_custom_weights(&text, &company_symbols_list, DEFAULT_CONFIG)
 }
 
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
     weights: DocumentCompanyNameExtractorConfig,
-    _result_bias_adjuster: &ResultBiasAdjuster,
-) -> (Vec<TickerSymbol>, f32, Vec<CompanyNameTokenRanking>) {
+) -> HashMap<TickerSymbol, f64> {
     // let mut matches = HashSet::new();
 
     // TODO: Commit to tests; expect: Tokens: ["WELL", "IPHONE", "DEVELOPMENT", "EBAY", "DEVELOPMENT", "WALMART", "WALMARTS"]
@@ -92,7 +87,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // let query = "The stuff IT dreams are made of, but you know, Agilent is interesting.";
 
     // TODO: Testing this should indicate that Apple Hospitality REIT has a very low confidence score (and also includes Amazon)
-    let query = "Apple is not Walmart, but maybe Amazon is okay, Hospitality REIT?";
+    // let query = "Apple is not Walmart, but maybe Amazon is okay, Hospitality REIT?";
 
     // TODO: Testing this should pull up Amazon (it's listed as Amazon.com)
     // let query = "Amazon";
@@ -189,18 +184,11 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // Goodarzi said in Monday’s release that the company is bringing its “AI-driven expert platform to help sellers boost their revenue and profitability, save time, and grow with confidence.”
     // "#;
 
-    println!("Query: {}", query);
-
     let mut ticker_extractor = DocumentCompanyNameExtractor::new(&company_symbols_list, weights);
 
-    // TODO: Handle results
-    ticker_extractor.extract(&query);
+    let symbols_with_confidence = ticker_extractor.extract(&text);
 
-    let results = vec![];
-    let total_score = 0.0;
-    let company_rankings = vec![];
-
-    (results, total_score, company_rankings)
+    symbols_with_confidence
 }
 
 // pub fn extract_tickers_from_text_with_custom_weights(

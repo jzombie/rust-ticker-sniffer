@@ -1,12 +1,13 @@
 use csv::Reader;
+use std::collections::HashMap;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
     extract_tickers_from_text_with_custom_weights, CompanySymbolsList,
-    DocumentCompanyNameExtractorConfig, ResultBiasAdjuster, TickerSymbol,
+    DocumentCompanyNameExtractorConfig, TickerSymbol,
 };
 pub mod models;
-pub use models::EvaluationResult;
+// pub use models::EvaluationResult;
 pub mod constants;
 use constants::TEST_SYMBOLS_CSV_PATH;
 
@@ -73,10 +74,12 @@ pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
 // Helper function to run the test for each file in the directory
 pub fn run_test_for_file(
     test_file_path: &str,
-    use_assertions: bool,
-    weights: DocumentCompanyNameExtractorConfig,
-    result_bias_adjuster: &ResultBiasAdjuster,
-) -> (usize, f32, EvaluationResult) {
+    company_name_extractor_config: DocumentCompanyNameExtractorConfig,
+) -> (
+    HashMap<TickerSymbol, f64>,
+    Vec<TickerSymbol>,
+    Vec<TickerSymbol>,
+) {
     // Load symbols from a test CSV file
     let symbols_map =
         load_symbols_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols from CSV");
@@ -95,197 +98,62 @@ pub fn run_test_for_file(
         .collect::<Vec<&str>>()
         .join("\n");
 
-    // Log the filtered text
-    eprintln!("Filtered text: {}", filtered_text);
-
     // Extract tickers from the filtered text
-    let (results, total_score, company_rankings) = extract_tickers_from_text_with_custom_weights(
+    let results_with_confidence = extract_tickers_from_text_with_custom_weights(
         &filtered_text,
         &symbols_map,
-        weights,
-        result_bias_adjuster,
+        company_name_extractor_config,
     );
 
-    // Get the expected tickers and failure reason
+    // Get the expected tickers from the file
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
-    let expected_failure = get_expected_failure(&Path::new(test_file_path));
 
-    // Log the file being processed
-    eprintln!("Testing file: {}", test_file_path);
+    // Separate actual results into a vector of just tickers
+    let actual_tickers: Vec<TickerSymbol> = results_with_confidence.keys().cloned().collect();
 
-    // Check for duplicate tickers in the results
-    let mut ticker_counts = std::collections::HashMap::new();
-    for ticker in &results {
-        *ticker_counts.entry(ticker).or_insert(0) += 1;
-    }
-    let duplicate_tickers: Vec<&String> = ticker_counts
+    // Determine unexpected and missing tickers
+    let unexpected_tickers: Vec<TickerSymbol> = actual_tickers
         .iter()
-        .filter(|(_, &count)| count > 1)
-        .map(|(ticker, _)| *ticker)
+        .filter(|ticker| !expected_tickers.contains(ticker))
+        .cloned()
         .collect();
 
-    let mut error_count = 0;
+    let missing_tickers: Vec<TickerSymbol> = expected_tickers
+        .iter()
+        .filter(|ticker| !actual_tickers.contains(ticker))
+        .cloned()
+        .collect();
 
-    if let Some(expected_failure_message) = expected_failure {
-        eprintln!("Testing expected failure: {}", expected_failure_message);
-
-        // Determine actual failure reason dynamically
-        let unexpected_tickers: Vec<String> = results
-            .iter()
-            .filter(|ticker| !expected_tickers.contains(ticker))
-            .cloned()
-            .collect();
-
-        let missing_tickers: Vec<String> = expected_tickers
-            .iter()
-            .filter(|ticker| !results.contains(ticker))
-            .cloned()
-            .collect();
-
-        let actual_failure_reason = if !unexpected_tickers.is_empty() {
-            format!("Unexpected tickers found: {:?}.", unexpected_tickers)
-        } else if !missing_tickers.is_empty() {
-            format!("Missing expected tickers: {:?}.", missing_tickers)
-        } else if !duplicate_tickers.is_empty() {
-            format!("Duplicate tickers found: {:?}.", duplicate_tickers)
-        } else {
-            "No discrepancies found, but a failure was expected.".to_string()
-        };
-
-        if expected_failure_message != actual_failure_reason {
-            error_count += 1; // Increment error count for failure reason mismatch
-        }
-
-        if use_assertions {
-            // Validate that the actual failure reason matches the expected failure message
-            assert_eq!(
-                expected_failure_message, actual_failure_reason,
-                "{} - Failure reason mismatch. Expected: '{}', but got: '{}'.",
-                test_file_path, expected_failure_message, actual_failure_reason
-            );
-        }
-
-        // Skip further checks since failure was validated
-        return (
-            error_count,
-            total_score,
-            EvaluationResult::new(&[].to_vec(), &[].to_vec(), &[].to_vec()),
-        );
-    }
-
-    // Regular success case validation
-    if results.len() != expected_tickers.len() {
-        error_count += 1; // Increment error count for length mismatch
-    }
+    // Assertions for correctness
+    assert_eq!(
+        actual_tickers.len(),
+        expected_tickers.len(),
+        "{} - Expected {} tickers but found {}. Missing: {:?}, Unexpected: {:?}",
+        test_file_path,
+        expected_tickers.len(),
+        actual_tickers.len(),
+        missing_tickers,
+        unexpected_tickers
+    );
 
     for ticker in &expected_tickers {
-        if !results.contains(ticker) {
-            error_count += 1; // Increment error count for missing expected tickers
-        }
-    }
-
-    if !duplicate_tickers.is_empty() {
-        error_count += duplicate_tickers.len(); // Increment for duplicate tickers
-    }
-
-    for ticker in &results {
-        if !expected_tickers.contains(ticker) {
-            error_count += 1; // Increment error count for unexpected tickers
-        }
-    }
-
-    if use_assertions {
-        // Keep all existing assertions intact
-        assert_eq!(
-            results.len(),
-            expected_tickers.len(),
-            "{} - Expected: {:?}, but got: {:?}",
-            test_file_path,
-            expected_tickers,
-            results
-        );
-
-        for ticker in &expected_tickers {
-            assert!(
-                results.contains(ticker),
-                "{} - Expected ticker {:?} was not found in results.",
-                test_file_path,
-                ticker
-            );
-        }
-
         assert!(
-            duplicate_tickers.is_empty(),
-            "{} - Duplicate tickers found in results: {:?}",
+            actual_tickers.contains(ticker),
+            "{} - Expected ticker {:?} was not found in results.",
             test_file_path,
-            duplicate_tickers
+            ticker
         );
-
-        for ticker in &results {
-            assert!(
-                expected_tickers.contains(ticker),
-                "{} - Unexpected ticker {:?} found in results.",
-                test_file_path,
-                ticker
-            );
-        }
     }
 
-    // Use EvaluationResult to determine false positives and false negatives
-    let evaluation_result = EvaluationResult::new(&expected_tickers, &results, &company_rankings);
+    for ticker in &unexpected_tickers {
+        assert!(
+            !expected_tickers.contains(ticker),
+            "{} - Unexpected ticker {:?} found in results.",
+            test_file_path,
+            ticker
+        );
+    }
 
-    (error_count, total_score, evaluation_result)
+    // Return the results along with the lists of unexpected and missing tickers
+    (results_with_confidence, unexpected_tickers, missing_tickers)
 }
-
-// TODO: Remove
-// pub fn compute_mse(expected_tickers: &[String], results: &[String]) -> f32 {
-//     // Get the universe of all unique tickers
-//     let all_tickers: HashSet<_> = expected_tickers.iter().chain(results.iter()).collect();
-
-//     // TODO: Make these configurable
-//     //
-//     // Assign weights to false negatives and false positives
-//     let false_negative_weight = 2.0; // Higher penalty for missing tickers
-//     let false_positive_weight = 1.0; // Lower penalty for unexpected tickers
-
-//     let evaluation_result = EvaluationResult::new(&expected_tickers, &results);
-//     eprintln!("Summary: {}", evaluation_result.summary());
-
-//     // Create binary arrays for expected and actual results
-//     let expected_binary: Vec<f32> = all_tickers
-//         .iter()
-//         .map(|ticker| {
-//             if expected_tickers.contains(ticker) {
-//                 1.0
-//             } else {
-//                 0.0
-//             }
-//         })
-//         .collect();
-
-//     let results_binary: Vec<f32> = all_tickers
-//         .iter()
-//         .map(|ticker| if results.contains(ticker) { 1.0 } else { 0.0 })
-//         .collect();
-
-//     // Compute weighted squared differences
-//     let weighted_squared_differences: f32 = expected_binary
-//         .iter()
-//         .zip(results_binary.iter())
-//         .map(|(expected, result)| {
-//             if *expected == 1.0 && *result == 0.0 {
-//                 // False negative: missing an expected ticker
-//                 false_negative_weight * (expected - result).powi(2)
-//             } else if *expected == 0.0 && *result == 1.0 {
-//                 // False positive: unexpected ticker included
-//                 false_positive_weight * (expected - result).powi(2)
-//             } else {
-//                 // True positive or true negative
-//                 (expected - result).powi(2)
-//             }
-//         })
-//         .sum();
-
-//     // Calculate the mean squared error
-//     weighted_squared_differences / all_tickers.len() as f32
-// }

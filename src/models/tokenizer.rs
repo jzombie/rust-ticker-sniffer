@@ -24,7 +24,7 @@ impl Tokenizer {
         }
     }
 
-    // TODO: Provide optional STOP_WORD filtering
+    // TODO: Provide optional STOP_WORD filtering?
     /// Tokenizer function to split the text into individual tokens.
     ///
     /// Note: This explcitly does not modify the case of the text.
@@ -47,6 +47,15 @@ impl Tokenizer {
             .replace("--", " ") // Replace standalone double hyphens
             .replace(",", " ") // Normalize commas to periods
             .split_whitespace() // Split into words
+            .map(|word| {
+                // Remove possessive endings ('s or s') and normalize
+                let stripped = word.replace("'s", "").replace("s'", "");
+
+                stripped
+                    .chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>()
+            })
             .filter(|word| {
                 // Apply uppercase ratio filter
                 self.min_uppercase_ratio
@@ -73,14 +82,6 @@ impl Tokenizer {
                     } else {
                         vec![word.replace('-', "")].into_iter()
                     })
-            })
-            .map(|word| {
-                // Remove possessive endings and normalize
-                word.trim_end_matches("'s")
-                    .trim_end_matches("s'")
-                    .chars()
-                    .filter(|c| c.is_alphanumeric())
-                    .collect::<String>()
             })
             .map(|word| word.to_uppercase()) // Convert to uppercase
             .collect()

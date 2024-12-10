@@ -74,7 +74,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Extracts ticker symbols from the given text document by tokenizing
     /// and comparing against known company names. Ensures only one extraction
     /// process runs at a time.
-    pub fn extract(&mut self, text: &str) {
+    pub fn extract(&mut self, text: &str) -> HashMap<TickerSymbol, f64> {
         if self.is_extracting {
             panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
         } else {
@@ -91,55 +91,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Begin parsing at the first page
         self.parse_company_names(None);
 
-        self.collect_results();
-    }
-
-    /// Aggregates and prints the extracted ticker symbols along with their
-    /// confidence scores. Prepares the final results from intermediate states.
-    fn collect_results(&self) {
-        let symbols_with_confidence = self.get_symbols_with_confidence();
-
-        println!("symbols with confidence: {:?}", symbols_with_confidence);
-
-        // let confidence_scores = self.calc_confidence_scores();
-
-        // for (symbol, states) in coverage_grouped_results {
-        //     let confidence = confidence_scores
-        //         .get(&symbol)
-        //         .expect("Could not obtain confidence score");
-
-        //     println!("Symbol: {}, Confidence: {}", symbol, confidence);
-
-        //     for state in states {
-        //         let query_token = self
-        //             .text_doc_tokenizer
-        //             .charcode_vector_to_token(&state.query_vector);
-
-        //         let company_token = self
-        //             .text_doc_tokenizer
-        //             .charcode_vector_to_token(&state.company_token_vector);
-
-        //         println!(
-        //             r#"
-        //                 {} : {}
-        //                 Tokenized Entries: {:?},
-        //                 Query Token Index: {}
-        //                 Token Window Index: {}
-        //                 Company Name Similarity at Index: {},
-        //                 State: {:?}
-        //             "#,
-        //             query_token,
-        //             company_token,
-        //             self.company_token_processor
-        //                 .get_company_name_tokens(state.company_index),
-        //             state.query_token_index,
-        //             state.token_window_index,
-        //             state.company_name_similarity_at_index,
-        //             state
-        //         );
-        //     }
-
-        // TODO: For each query token index, take the symbol with the highest confidence score
+        self.get_symbols_with_confidence()
     }
 
     /// Maps the highest-ranking ticker symbols to their corresponding query
