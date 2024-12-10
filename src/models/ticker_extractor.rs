@@ -43,11 +43,6 @@ struct QueryVectorIntermediateSimilarityState {
     similarity: f64,
 }
 
-type QueryTokenIndex = usize;
-
-type IntermediateSimilarityCollection =
-    HashMap<TickerSymbol, BTreeMap<QueryTokenIndex, Vec<QueryVectorIntermediateSimilarityState>>>;
-
 pub struct TickerExtractor<'a> {
     company_symbols_list: &'a CompanySymbolsList,
     ticker_symbol_tokenizer: Tokenizer,
@@ -108,7 +103,13 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn collect_results(&self) {
-        let mut similarity_collection: IntermediateSimilarityCollection = HashMap::new();
+        type QueryTokenIndex = usize;
+
+        // Group similarity states by ticker symbol then order them by `query_token_index`
+        let mut ordered_collection: HashMap<
+            TickerSymbol,
+            BTreeMap<QueryTokenIndex, Vec<QueryVectorIntermediateSimilarityState>>,
+        > = HashMap::new();
 
         for similarity_state in &self.company_similarity_states {
             let (company_token_vector, company_token_type, _company_token_index_by_source_type) =
@@ -135,7 +136,7 @@ impl<'a> TickerExtractor<'a> {
             };
 
             // Get or insert the symbol group
-            let symbol_group = similarity_collection
+            let symbol_group = ordered_collection
                 .entry(ticker_symbol.clone())
                 .or_insert_with(BTreeMap::new);
 
@@ -154,7 +155,11 @@ impl<'a> TickerExtractor<'a> {
             // let proximity_penalty = 1.0 / (1.0 + (end_index - start_index) as f64);
         }
 
-        println!("\n\n\n{:?}\n\n\n", similarity_collection);
+        println!("\n\n\n{:?}\n\n\n", ordered_collection);
+
+        for (symbol, state) in ordered_collection {
+            println!("Symbol: {}, state: {:?}", symbol, state);
+        }
 
         // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
         // Query: REIT Hospitality Apple stuff
