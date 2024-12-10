@@ -84,6 +84,11 @@ impl Tokenizer {
                     })
             })
             .map(|word| word.to_uppercase()) // Convert to uppercase
+            // TODO: Remove
+            // .map(|word| {
+            //     println!("{}", word);
+            //     word
+            // })
             .collect()
     }
 

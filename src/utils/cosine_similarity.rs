@@ -1,32 +1,45 @@
-/// Calculate cosine similarity between two vectors
+use std::collections::HashSet;
+
+// pub fn index_difference_similarity(v1: &[u32], v2: &[u32]) -> f32 {
+// TODO: Refactor; this isn't cosine!
 pub fn cosine_similarity(v1: &[u32], v2: &[u32]) -> f64 {
-    assert_eq!(
-        v1.len(),
-        v2.len(),
-        "Vectors must have the same length for cosine similarity"
-    );
+    assert_eq!(v1.len(), v2.len(), "Vectors must have the same length.");
 
-    // Use iterators to reduce redundant passes through the vectors
-    let (dot_product, magnitude_v1_sq, magnitude_v2_sq) =
-        v1.iter()
-            .zip(v2)
-            .fold((0u64, 0u64, 0u64), |(dot, mag1, mag2), (&a, &b)| {
-                (
-                    dot + (a as u64 * b as u64),
-                    mag1 + (a as u64 * a as u64),
-                    mag2 + (b as u64 * b as u64),
-                )
-            });
+    let total_elements = v1.len();
+    let differing_elements = v1.iter().zip(v2.iter()).filter(|(a, b)| a != b).count();
 
-    let magnitude_v1 = (magnitude_v1_sq as f64).sqrt();
-    let magnitude_v2 = (magnitude_v2_sq as f64).sqrt();
-
-    if magnitude_v1 == 0.0 || magnitude_v2 == 0.0 {
-        return 0.0;
-    }
-
-    dot_product as f64 / (magnitude_v1 * magnitude_v2)
+    1.0 - differing_elements as f64 / total_elements as f64
 }
+
+// Calculate cosine similarity between two vectors
+// pub fn cosine_similarity(v1: &[u32], v2: &[u32]) -> f64 {
+//     assert_eq!(
+//         v1.len(),
+//         v2.len(),
+//         "Vectors must have the same length for cosine similarity"
+//     );
+
+//     // Use iterators to reduce redundant passes through the vectors
+//     let (dot_product, magnitude_v1_sq, magnitude_v2_sq) =
+//         v1.iter()
+//             .zip(v2)
+//             .fold((0u64, 0u64, 0u64), |(dot, mag1, mag2), (&a, &b)| {
+//                 (
+//                     dot + (a as u64 * b as u64),
+//                     mag1 + (a as u64 * a as u64),
+//                     mag2 + (b as u64 * b as u64),
+//                 )
+//             });
+
+//     let magnitude_v1 = (magnitude_v1_sq as f64).sqrt();
+//     let magnitude_v2 = (magnitude_v2_sq as f64).sqrt();
+
+//     if magnitude_v1 == 0.0 || magnitude_v2 == 0.0 {
+//         return 0.0;
+//     }
+
+//     dot_product as f64 / (magnitude_v1 * magnitude_v2)
+// }
 
 // TODO: Will this work in WASM?
 // use wide::u32x8;

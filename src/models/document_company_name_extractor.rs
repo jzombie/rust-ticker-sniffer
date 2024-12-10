@@ -15,6 +15,7 @@ pub struct DocumentCompanyNameExtractorConfig {
     pub token_window_size: usize,
     pub token_gap_penalty: f64,
     pub low_confidence_penalty_factor: f64,
+    pub min_confidence_level_threshold: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -110,6 +111,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .get(&symbol)
                 .expect("Confidence score not found for symbol");
 
+            // TODO: Remove
+            if symbol == "NVDA" {
+                println!(" ... VALID.. {}, {}", symbol, confidence_score);
+            }
+
             let token_indices: HashSet<QueryTokenIndex> =
                 states.iter().map(|state| state.query_token_index).collect();
 
@@ -126,13 +132,27 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Filter results to ensure no overlapping token indices unless they share the same score
         let mut used_indices: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = HashMap::new();
 
+        // TODO: Remove
+        println!("Used indices: {:?}", used_indices);
+
         for (symbol, token_indices, confidence_score) in valid_symbols {
+            // TODO: Remove
+            if symbol == "NVDA" || symbol == "NUMG" {
+                println!(
+                    " ... VALID2.. {}, {}, {:?}",
+                    symbol, confidence_score, token_indices
+                );
+            }
+
             let mut is_valid = true;
 
             for &index in &token_indices {
                 if let Some((existing_symbols, existing_score)) = used_indices.get(&index) {
                     // Ensure the confidence score matches and token indices are identical
                     if *existing_score != confidence_score {
+                        // TODO: Remove
+                        // println!("...... discarded existing: {:?}", existing_symbols);
+
                         is_valid = false;
                         break;
                     }
@@ -155,6 +175,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Convert used_indices to query token rankings
         let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = used_indices;
 
+        println!("   QUERY TOKEN RANKINGS: {:?}", query_token_rankings);
+
         query_token_rankings
     }
 
@@ -163,19 +185,29 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     fn get_symbols_with_confidence(&self) -> HashMap<TickerSymbol, f64> {
         let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
 
+        // TODO: Remove
+        println!("{:?}", query_token_rankings);
+
         // Prepare a map for symbols and their highest confidence scores
         let mut symbols_with_confidence: HashMap<TickerSymbol, f64> = HashMap::new();
 
-        for (_query_token_index, (symbols, score)) in query_token_rankings {
+        for (_query_token_index, (symbols, confidence_level)) in query_token_rankings {
+            if confidence_level < self.user_config.min_confidence_level_threshold {
+                continue;
+            }
+
             for symbol in symbols {
+                // TODO: Remove
+                println!("symbol: {}, score: {}", symbol, confidence_level);
+
                 symbols_with_confidence
                     .entry(symbol.clone())
                     .and_modify(|existing_score| {
-                        if *existing_score < score {
-                            *existing_score = score; // Update with higher score
+                        if *existing_score < confidence_level {
+                            *existing_score = confidence_level; // Update with higher score
                         }
                     })
-                    .or_insert(score);
+                    .or_insert(confidence_level);
             }
         }
 
@@ -195,7 +227,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         for (symbol, states) in &coverage_grouped_results {
             let mut combined_similarity: f64 = 0.0;
 
+            let mut seen_query_token_indexes: Vec<QueryTokenIndex> = Vec::new();
+
             for (i, state) in states.iter().enumerate() {
+                if seen_query_token_indexes.contains(&state.query_token_index) {
+                    continue;
+                } else {
+                    seen_query_token_indexes.push(state.query_token_index);
+                }
+
                 let mut inverse_weight = 1.0;
 
                 if i > 0 {
@@ -212,8 +252,25 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     };
                 }
 
+                // TODO: Remove
+                if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
+                    println!(
+                        "calc_confidence_scores similarity at index --------- symbol: {} {} {} : inverse weight: {} : {:?}",
+                        symbol, i, state.company_name_similarity_at_index, inverse_weight, state
+                    );
+                }
+
                 // Weigh the similarity score based on the calculated weight
                 combined_similarity += state.company_name_similarity_at_index * inverse_weight;
+            }
+
+            // TODO: Remove
+            // if symbol == "NVDA" || symbol == "NUMG" {
+            if combined_similarity > 0.99 {
+                println!(
+                    "calc_confidence_scores --------- symbol: {} {}",
+                    symbol, combined_similarity
+                );
             }
 
             confidence_scores.insert(symbol.clone(), combined_similarity);
@@ -266,6 +323,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         > = HashMap::new();
 
         for (symbol, states) in grouped_states {
+            // TODO: Remove
+            if symbol == "NVDA" {
+                println!("----- filtered; symbol: {}", symbol);
+            }
+
             let empty_vec = Vec::new();
             let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
 
@@ -436,14 +498,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     // faster at making comparisons than other algorithms I have experimented with.
                     let similarity = cosine_similarity(&query_vector, company_token_vector);
 
-                    // let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;
+                    // TODO: Remove
+                    let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;
+                    if ticker_symbol == "NVDA" {
+                        println!("hello??");
 
-                    // // TODO: Remove
-                    // if ticker_symbol == "AMZN" {
-                    //     println!("hello??");
-
-                    //     println!("{}", similarity);
-                    // }
+                        println!("{}", similarity);
+                    }
 
                     if similarity >= self.user_config.min_text_doc_token_sim_threshold {
                         window_match_count += 1;
