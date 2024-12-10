@@ -190,6 +190,9 @@ impl<'a> TickerExtractor<'a> {
                 // );
             }
         }
+
+        let coverage = self.analyze_coverage();
+        println!("Coverage report: {:?}", coverage);
     }
 
     fn find_highest_accumulated_coverage_states(
@@ -229,6 +232,76 @@ impl<'a> TickerExtractor<'a> {
         let token_end_index = token_start_index + self.user_config.token_window_size;
 
         (token_start_index, token_end_index)
+    }
+
+    fn group_by_symbol(
+        &self,
+    ) -> HashMap<TickerSymbol, Vec<QueryVectorIntermediateSimilarityState>> {
+        let mut grouped = HashMap::new();
+
+        for state in &self.company_similarity_states {
+            let symbol = self
+                .company_symbols_list
+                .get(state.company_index)
+                .map(|(s, _)| s.clone())
+                .expect("Failed to retrieve symbol for company index");
+
+            grouped
+                .entry(symbol)
+                .or_insert_with(Vec::new)
+                .push(state.clone());
+        }
+
+        // Sort each group by query_token_index
+        for states in grouped.values_mut() {
+            states.sort_by_key(|state| state.query_token_index);
+        }
+
+        grouped
+    }
+
+    fn analyze_coverage(&self) -> HashMap<TickerSymbol, Vec<QueryTokenIndex>> {
+        let mut results = HashMap::new();
+
+        for (symbol, states) in self.group_by_symbol() {
+            let mut last_coverage: f64 = 0.0;
+            let mut increasing_range = Vec::new();
+
+            for (i, state) in states.iter().enumerate() {
+                let current_coverage = state.accumulated_company_name_coverage;
+
+                if i > 0 && current_coverage > last_coverage {
+                    println!(
+                        "Determined increase: {}, query token index: {}",
+                        symbol, state.query_token_index
+                    );
+
+                    // Add the previous index to the range if starting a new range
+                    if increasing_range.is_empty() && i > 0 {
+                        increasing_range.push(states[i - 1].query_token_index);
+                    }
+
+                    // Add the current index to the increasing range
+                    increasing_range.push(state.query_token_index);
+                } else if current_coverage < last_coverage {
+                    // Coverage decreased; store the current range and reset
+                    if !increasing_range.is_empty() {
+                        results.insert(symbol.clone(), increasing_range.clone());
+                        increasing_range.clear();
+                    }
+                }
+
+                // Update the last coverage value
+                last_coverage = current_coverage;
+            }
+
+            // Store any remaining increasing range
+            if !increasing_range.is_empty() {
+                results.insert(symbol, increasing_range);
+            }
+        }
+
+        results
     }
 
     fn parse(&mut self, token_window_index: Option<usize>) {
