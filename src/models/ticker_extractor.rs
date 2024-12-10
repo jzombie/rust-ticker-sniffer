@@ -203,7 +203,7 @@ impl<'a> TickerExtractor<'a> {
                 .company_symbols_list
                 .get(similarity_state.company_index)
                 .map(|(symbol, _)| symbol.clone())
-                .unwrap_or_else(|| "Unknown".to_string());
+                .expect("Failed to retrieve ticker symbol for the given company index");
 
             let entry = top_matches
                 .entry(ticker_symbol.clone())
