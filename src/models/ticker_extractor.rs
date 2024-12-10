@@ -195,25 +195,6 @@ impl<'a> TickerExtractor<'a> {
         coverage_grouped
     }
 
-    // TODO: Remove?
-    // fn find_highest_accumulated_coverage_states(&self) -> HashMap<TickerSymbol, f64> {
-    //     let mut max_coverages = HashMap::new();
-
-    //     for (symbol, states) in self.group_by_symbol() {
-    //         let mut max_coverage = 0.0;
-
-    //         for state in states {
-    //             if state.accumulated_company_name_coverage > max_coverage {
-    //                 max_coverage = state.accumulated_company_name_coverage;
-    //             }
-    //         }
-
-    //         max_coverages.insert(symbol, max_coverage);
-    //     }
-
-    //     max_coverages
-    // }
-
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
         let token_start_index = token_window_index * self.user_config.token_window_size;
         let token_end_index = token_start_index + self.user_config.token_window_size;
