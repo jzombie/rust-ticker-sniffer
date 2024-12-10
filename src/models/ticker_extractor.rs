@@ -199,6 +199,10 @@ impl<'a> TickerExtractor<'a> {
             }
         }
 
+        // TODO: Locate the results with the highest token window index and figure out which query token indexes make it up,
+        // ensuring that a query like "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT."
+        // correctly identifies, "BRK-A", "BRK-B", "AAPL", and "APLE" as top matches
+
         // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
         // Query: REIT Hospitality Apple stuff
         // Start index: 0, End index: 1
