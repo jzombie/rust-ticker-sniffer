@@ -108,7 +108,7 @@ impl<'a> TickerExtractor<'a> {
         // Group similarity states by ticker symbol then order them by `query_token_index`
         let mut ordered_collection: HashMap<
             TickerSymbol,
-            BTreeMap<QueryTokenIndex, Vec<QueryVectorIntermediateSimilarityState>>,
+            BTreeMap<QueryTokenIndex, QueryVectorIntermediateSimilarityState>,
         > = HashMap::new();
 
         for similarity_state in &self.company_similarity_states {
@@ -135,18 +135,13 @@ impl<'a> TickerExtractor<'a> {
                 None => unreachable!("Could not obtain ticker symbol"),
             };
 
-            // Get or insert the symbol group
+            // Get or insert the symbol group (BTreeMap for query token index -> similarity state)
             let symbol_group = ordered_collection
                 .entry(ticker_symbol.clone())
                 .or_insert_with(BTreeMap::new);
 
-            // Get or insert the query token index group
-            let token_group = symbol_group
-                .entry(similarity_state.query_token_index)
-                .or_insert_with(Vec::new);
-
-            // Add the state to the token group
-            token_group.push(*similarity_state);
+            // Insert the similarity state directly for the given query token index
+            symbol_group.insert(similarity_state.query_token_index, *similarity_state);
 
             // Token Order Bonus: Reward matches where the query_token_index aligns with the query sequence.
             // let order_bonus = if query_token_index == token_window_index { 1.0 } else { 0.5 };
@@ -157,8 +152,16 @@ impl<'a> TickerExtractor<'a> {
 
         println!("\n\n\n{:?}\n\n\n", ordered_collection);
 
-        for (symbol, state) in ordered_collection {
-            println!("Symbol: {}, state: {:?}", symbol, state);
+        for (symbol, intermediate_states) in ordered_collection {
+            println!("Symbol: {}", symbol);
+
+            for (state_index, state) in intermediate_states {
+                println!("\t{} State: {:?}", state_index, state);
+                //     println!(
+                //         "\t\t{:?}",
+                //         self.company_symbols_list.get(state.company_index)
+                //     );
+            }
         }
 
         // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
