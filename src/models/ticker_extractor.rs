@@ -1,4 +1,6 @@
-use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TickerSymbol};
+use crate::types::{
+    CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
+};
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -33,13 +35,15 @@ pub struct TickerExtractorConfig {
 //     }
 // }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 struct QueryVectorIntermediateSimilarityState {
     token_window_index: usize,
     query_token_index: usize,
+    query_vector: TokenizerVectorTokenType,
     company_index: usize,
     company_token_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize,
+    company_token_vector: TokenizerVectorTokenType,
     similarity: f64,
 }
 
@@ -141,7 +145,7 @@ impl<'a> TickerExtractor<'a> {
                 .or_insert_with(BTreeMap::new);
 
             // Insert the similarity state directly for the given query token index
-            symbol_group.insert(similarity_state.query_token_index, *similarity_state);
+            symbol_group.insert(similarity_state.query_token_index, similarity_state.clone());
 
             // Token Order Bonus: Reward matches where the query_token_index aligns with the query sequence.
             // let order_bonus = if query_token_index == token_window_index { 1.0 } else { 0.5 };
@@ -156,11 +160,39 @@ impl<'a> TickerExtractor<'a> {
             println!("Symbol: {}", symbol);
 
             for (state_index, state) in intermediate_states {
-                println!("\t{} State: {:?}", state_index, state);
-                //     println!(
-                //         "\t\t{:?}",
-                //         self.company_symbols_list.get(state.company_index)
-                //     );
+                let query_token = self
+                    .text_doc_tokenizer
+                    .charcode_vector_to_token(&state.query_vector);
+
+                let company_token = self
+                    .text_doc_tokenizer
+                    .charcode_vector_to_token(&state.company_token_vector);
+
+                println!(
+                    r#"
+                        Query Token Index: {}
+                        Query token: {}
+                        Token Window Index: {}
+                        Company Token: {}
+                        Similarity at Index: {},
+                        State: {:?}
+                    "#,
+                    state_index,
+                    query_token,
+                    state.token_window_index,
+                    company_token,
+                    state.similarity,
+                    state
+                );
+
+                println!("\n");
+
+                // let tokenized_query_vectors = self.tokenized_query_vectors.get(state.company_index);
+
+                // println!(
+                //     "\t\tWord: {:?}",
+
+                // );
             }
         }
 
@@ -269,10 +301,12 @@ impl<'a> TickerExtractor<'a> {
                                             QueryVectorIntermediateSimilarityState {
                                                 token_window_index,
                                                 query_token_index,
+                                                query_vector: query_vector.clone(),
                                                 company_index: *company_index,
                                                 company_token_type: *company_token_type,
                                                 company_token_index_by_source_type:
                                                     *company_token_index_by_source_type,
+                                                company_token_vector: company_token_vector.clone(),
                                                 similarity: similarity
                                                     / (company_name_length + 1) as f64,
                                             },
