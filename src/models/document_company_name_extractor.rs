@@ -4,11 +4,10 @@ use crate::types::{
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use core::f64;
-use std::collections::{BTreeMap, HashMap, HashSet};
-use std::thread::current;
+use std::collections::{HashMap, HashSet};
 
-type QueryTokenIndex = usize;
 type TokenWindowIndex = usize;
+type QueryTokenIndex = usize;
 
 pub struct DocumentCompanyNameExtractorConfig {
     pub min_text_doc_token_sim_threshold: f64,
@@ -20,12 +19,12 @@ pub struct DocumentCompanyNameExtractorConfig {
 
 #[derive(Debug, Clone)]
 struct QueryVectorIntermediateSimilarityState {
-    token_window_index: usize,
-    query_token_index: usize,
+    token_window_index: TokenWindowIndex,
+    query_token_index: QueryTokenIndex,
     query_vector: TokenizerVectorTokenType,
-    company_index: usize,
+    company_index: usize, // TODO: Add type
     company_token_type: CompanyTokenSourceType,
-    company_token_index_by_source_type: usize,
+    company_token_index_by_source_type: usize, // TODO: Add type
     company_token_vector: TokenizerVectorTokenType,
     company_name_similarity_at_index: f64,
 }
@@ -40,7 +39,7 @@ pub struct DocumentCompanyNameExtractor<'a> {
     text: Option<String>,
     tokenized_query_vectors: Vec<Vec<u32>>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
-    progressible_company_indices: HashSet<usize>,
+    progressible_company_indices: HashSet<usize>, // TODO: Add type
     results: Vec<TickerSymbol>,
 }
 
@@ -90,8 +89,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     }
 
     fn collect_results(&self) {
-        // let coverage_grouped_results = self.collect_coverage_filtered_results();
-
         let symbols_with_confidence = self.get_symbols_with_confidence();
 
         println!("symbols with confidence: {:?}", symbols_with_confidence);
@@ -291,7 +288,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         &self,
     ) -> HashMap<TickerSymbol, Vec<QueryVectorIntermediateSimilarityState>> {
         let grouped_states = self.group_by_symbol();
-        let coverage_increase_states = self.analyze_coverage_increase();
+        let coverage_increase_states = self.analyze_coverage_increases();
 
         let mut coverage_grouped: HashMap<
             TickerSymbol,
@@ -331,13 +328,18 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         coverage_grouped
     }
 
-    fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
+    /// Calculates the query indexes for the given `token_window_index`.
+    fn calc_token_window_indexes(
+        &self,
+        token_window_index: TokenWindowIndex,
+    ) -> (TokenWindowIndex, TokenWindowIndex) {
         let token_start_index = token_window_index * self.user_config.token_window_size;
         let token_end_index = token_start_index + self.user_config.token_window_size;
 
         (token_start_index, token_end_index)
     }
 
+    /// Groups company similarity states by symbol.
     fn group_by_symbol(
         &self,
     ) -> HashMap<TickerSymbol, Vec<QueryVectorIntermediateSimilarityState>> {
@@ -364,7 +366,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         grouped
     }
 
-    fn analyze_coverage_increase(&self) -> HashMap<TickerSymbol, Vec<QueryTokenIndex>> {
+    /// Determines the query token indexes which contribute to company name coverage increases.
+    fn analyze_coverage_increases(&self) -> HashMap<TickerSymbol, Vec<QueryTokenIndex>> {
         let mut results = HashMap::new();
 
         for (symbol, states) in self.group_by_symbol() {
@@ -403,7 +406,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         results
     }
 
-    fn parse_company_names(&mut self, token_window_index: Option<usize>) {
+    /// Parses company names from the linked document, where `token_window_index` refers to a
+    /// subset of the company name tokens.
+    fn parse_company_names(&mut self, token_window_index: Option<TokenWindowIndex>) {
         let token_window_index = match token_window_index {
             Some(token_window_index) => token_window_index,
             None => 0,
