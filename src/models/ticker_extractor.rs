@@ -3,6 +3,7 @@ use crate::types::{
 };
 use crate::utils::cosine_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
+use core::f64;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
 type QueryTokenIndex = usize;
@@ -145,7 +146,22 @@ impl<'a> TickerExtractor<'a> {
                 total_name_coverage = state.accumulated_company_name_coverage;
             }
 
-            let confidence_score = 1.0 - (combined_similarity / total_name_coverage);
+            // Confidence is calculated as the harmonic mean of normalized similarity and coverage.
+            // This approach penalizes imbalanced values, ensuring a balanced contribution from both metrics.
+            // The formula is as follows:
+            //
+            // Confidence = 2 × normalized_similarity × normalized_coverage
+            //              --------------------------------------------
+            //              normalized_similarity + normalized_coverage
+            //
+            // Both `normalized_similarity` and `normalized_coverage` are assumed to be in the range [0, 1].
+
+            let confidence_score = if combined_similarity + total_name_coverage > 0.0 {
+                (2.0 * combined_similarity * total_name_coverage)
+                    / (combined_similarity + total_name_coverage)
+            } else {
+                0.0
+            };
 
             println!(
                 "Symbol: {}, , coverage: {}, combined_similarity: {}",
@@ -374,8 +390,14 @@ impl<'a> TickerExtractor<'a> {
                             .get(*company_index)
                             .expect("Could not obtain company name token count");
 
+                        // TODO: Remove
+                        // let company_name_similarity_at_index = similarity
+                        //     / (*company_name_length as f64
+                        //         / *company_token_index_by_source_type as f64
+                        //         + f64::EPSILON);
+
                         let company_name_similarity_at_index =
-                            similarity / (*company_name_length as f64 + f64::EPSILON) as f64;
+                            similarity / (*company_name_length / query_vector.len()) as f64;
 
                         let accumulated_company_name_coverage = 1.0
                             / (*company_name_token_count as f64

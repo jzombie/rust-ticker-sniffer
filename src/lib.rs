@@ -97,6 +97,8 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // let query = "Arbor";
     // let query = "Arbor Realty";
     let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
+
+    // let query = "Apple";
     // let query = "Berkshire";
     // let query = "Berkshire Hathaway";
     // let query = "Apple";
