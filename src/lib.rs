@@ -137,6 +137,40 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
     //     "#;
 
+    // TODO: This includes a lot of repeated "Capital" entries, with only initial 0 window indexes.
+    // This type of pattern should be filtered out so it effectively removes them entirely.
+    let query = r#"
+    Amazon
+    has for years counted on millions of third-party sellers to provide the bulk of the inventory that consumers buy. But keeping track of their finances has long been a challenge for outside merchants, particularly smaller mom-and-pop shops.
+
+    Amazon said Monday that it’s partnering with Intuit
+    to bring the software company’s online accounting tools to its vast network of sellers in mid-2025. Intuit QuickBooks will be available on Amazon Seller Central, the hub sellers use to manage their Amazon businesses, the companies said. Eligible sellers will also have access to loans through QuickBooks Capital.
+
+    “Together with Intuit, we’re working to equip our selling partners with additional financial tools and access to capital to help them scale efficiently,” Dharmesh Mehta, Amazon’s vice president of worldwide selling partner services, said in the joint release.
+
+    The companies said sellers will see a real-time view of the financial health of their business, getting a clear picture of profitability, cash flow and tax estimates.
+
+    While the Intuit integration isn’t expected to go live until the middle of next year, the announcement comes as sellers ramp up their businesses for the holiday season, the busiest time of the year for most retailers.
+
+    Representatives from both companies declined to provide specific terms of the agreement, including how revenue will be shared.
+
+    The marketplace is a critical part of Amazon’s retail strategy. In addition to accounting for about 60% of products sold, Amazon generates fees from providing fulfillment and shipping services as well as by offering customer support to sellers and charging them to advertise on the site.
+
+    In the third quarter, seller services revenue increased 10% to $37.9 billion, accounting for 24% of total revenue, a number that’s steadily increased in recent years. Amazon CEO Andy Jassy said on the earnings call that ”[third-party] demand is still strong and unit volumes are strong.”
+
+    Amazon shares are up almost 50% this year, climbing to a fresh record Friday, and topping the Nasdaq’s 31% gain for the year. Meanwhile, Intuit has underperformed the broader tech index, with its stock up less than 4% in 2024.
+
+    Intuit shares dropped 5% on Nov. 19 after The Washington Post reported that President-elect Donald Trump’s government efficiency team is considering creating a free tax-filing app. They fell almost 6% three days later after the company issued a revenue forecast for the current quarter that trailed analysts’ estimates due to some sales being delayed.
+
+    QuickBooks, which is particularly popular as an all-in-one accounting, expense management and payroll tool for small businesses, has been one of Intuit’s key drivers for growth. The company said in November that its QuickBooks Online Accounting segment expanded by 21% in the latest quarter, while total revenue increased 10% to $3.28 billion.
+
+    Intuit has been adding generative artificial intelligence tools into QuickBooks and other small business services, such as its Mailchimp email marketing offering, to provide more automated insights for users.
+
+    “You can imagine, as we look ahead, our goal is to create a done-for-you experience across the entire platform, across Mailchimp and QuickBooks and all of the services,” Intuit CEO Sasan Goodarzi said on the fiscal first-quarter earnings call.
+
+    Goodarzi said in Monday’s release that the company is bringing its “AI-driven expert platform to help sellers boost their revenue and profitability, save time, and grow with confidence.”
+    "#;
+
     println!("Query: {}", query);
 
     let mut ticker_extractor = TickerExtractor::new(&company_symbols_list, weights);

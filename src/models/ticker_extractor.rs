@@ -121,15 +121,15 @@ impl<'a> TickerExtractor<'a> {
                 &self.company_token_processor.tokenized_entries[similarity_state.company_index]
                     [similarity_state.company_token_index_by_source_type];
 
-            println!(
-                "Similarity state: {:?}, Symbols entry: {:?}, Token: {:?}, Token Type: {:?}",
-                similarity_state,
-                self.company_symbols_list
-                    .get(similarity_state.company_index),
-                self.text_doc_tokenizer
-                    .charcode_vector_to_token(company_token_vector),
-                company_token_type
-            );
+            // println!(
+            //     "Similarity state: {:?}, Symbols entry: {:?}, Token: {:?}, Token Type: {:?}",
+            //     similarity_state,
+            //     self.company_symbols_list
+            //         .get(similarity_state.company_index),
+            //     self.text_doc_tokenizer
+            //         .charcode_vector_to_token(company_token_vector),
+            //     company_token_type
+            // );
 
             // Retrieve the symbol for the given company index
             let ticker_symbol = match self
@@ -155,7 +155,7 @@ impl<'a> TickerExtractor<'a> {
             // let proximity_penalty = 1.0 / (1.0 + (end_index - start_index) as f64);
         }
 
-        println!("\n\n\n{:?}\n\n\n", ordered_collection);
+        // println!("\n\n\n{:?}\n\n\n", ordered_collection);
 
         // TODO: Locate the results with the highest token window index and figure out which query token indexes make it up,
         // ensuring that a query like "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT."
@@ -201,7 +201,7 @@ impl<'a> TickerExtractor<'a> {
                     state
                 );
 
-                println!("\n");
+                // println!("\n");
 
                 // let tokenized_query_vectors = self.tokenized_query_vectors.get(state.company_index);
 
@@ -243,13 +243,13 @@ impl<'a> TickerExtractor<'a> {
         }
 
         // Display the results
-        println!("Results by token window index:");
-        for (symbol, (max_window_index, query_indexes)) in &top_matches {
-            println!(
-                "Symbol: {}, Highest Token Window Index: {}, Query Token Indexes: {:?}",
-                symbol, max_window_index, query_indexes
-            );
-        }
+        // println!("Results by token window index:");
+        // for (symbol, (max_window_index, query_indexes)) in &top_matches {
+        //     println!(
+        //         "Symbol: {}, Highest Token Window Index: {}, Query Token Indexes: {:?}",
+        //         symbol, max_window_index, query_indexes
+        //     );
+        // }
 
         top_matches
     }
@@ -321,11 +321,11 @@ impl<'a> TickerExtractor<'a> {
                             let similarity = cosine_similarity(&query_vector, company_token_vector);
 
                             if similarity >= self.user_config.min_text_doc_token_sim_threshold {
-                                println!(
-                                    "Matched company: {:?}; Token Index: {}",
-                                    self.company_symbols_list.get(*company_index),
-                                    query_token_index
-                                );
+                                // println!(
+                                //     "Matched company: {:?}; Token Index: {}",
+                                //     self.company_symbols_list.get(*company_index),
+                                //     query_token_index
+                                // );
 
                                 window_match_count += 1;
 
