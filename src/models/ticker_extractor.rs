@@ -44,7 +44,8 @@ struct QueryVectorIntermediateSimilarityState {
     company_token_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize,
     company_token_vector: TokenizerVectorTokenType,
-    similarity_at_index: f64,
+    company_name_similarity_at_index: f64,
+    accumulated_company_name_coverage: f64,
 }
 
 pub struct TickerExtractor<'a> {
@@ -188,7 +189,8 @@ impl<'a> TickerExtractor<'a> {
                         Tokenized Entries: {:?},
                         Query Token Index: {}
                         Token Window Index: {}
-                        Similarity at Index: {},
+                        Company Name Similarity at Index: {},
+                        Accumulated Company Name Coverage at Index: {},
                         State: {:?}
                     "#,
                     query_token,
@@ -197,7 +199,8 @@ impl<'a> TickerExtractor<'a> {
                         .get_company_name_tokens(state.company_index),
                     state_index,
                     state.token_window_index,
-                    state.similarity_at_index,
+                    state.company_name_similarity_at_index,
+                    state.accumulated_company_name_coverage,
                     state
                 );
 
@@ -329,33 +332,47 @@ impl<'a> TickerExtractor<'a> {
 
                                 window_match_count += 1;
 
-                                match self
+                                let company_name_length = match self
                                     .company_token_processor
                                     .company_name_lengths
                                     .get(*company_index)
                                 {
-                                    Some(company_name_length) => {
-                                        self.company_similarity_states.push(
-                                            QueryVectorIntermediateSimilarityState {
-                                                token_window_index,
-                                                query_token_index,
-                                                query_vector: query_vector.clone(),
-                                                company_index: *company_index,
-                                                company_token_type: *company_token_type,
-                                                company_token_index_by_source_type:
-                                                    *company_token_index_by_source_type,
-                                                company_token_vector: company_token_vector.clone(),
-                                                similarity_at_index: similarity
-                                                    / (*company_name_length as f64 + f64::EPSILON)
-                                                        as f64,
-                                                // TODO: Add coverage_at_index
-                                            },
-                                        );
-                                    }
+                                    Some(company_name_length) => company_name_length,
+                                    None => unreachable!("Could not obtain company name length"),
+                                };
+
+                                let company_name_token_count = match self
+                                    .company_token_processor
+                                    .company_name_token_counts
+                                    .get(*company_index)
+                                {
+                                    Some(company_name_token_count) => company_name_token_count,
                                     None => {
-                                        unreachable!()
+                                        unreachable!("Could not obtain company name token count")
                                     }
-                                }
+                                };
+
+                                let company_name_similarity_at_index = similarity
+                                    / (*company_name_length as f64 + f64::EPSILON) as f64;
+
+                                let accumulated_company_name_coverage = 1.0
+                                    / (*company_name_token_count as f64
+                                        / (*company_token_index_by_source_type as f64 + 1.0));
+
+                                self.company_similarity_states.push(
+                                    QueryVectorIntermediateSimilarityState {
+                                        token_window_index,
+                                        query_token_index,
+                                        query_vector: query_vector.clone(),
+                                        company_index: *company_index,
+                                        company_token_type: *company_token_type,
+                                        company_token_index_by_source_type:
+                                            *company_token_index_by_source_type,
+                                        company_token_vector: company_token_vector.clone(),
+                                        company_name_similarity_at_index,
+                                        accumulated_company_name_coverage,
+                                    },
+                                );
 
                                 self.progressible_company_indices.insert(*company_index);
                             } else {
