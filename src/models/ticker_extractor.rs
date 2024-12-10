@@ -89,7 +89,7 @@ impl<'a> TickerExtractor<'a> {
 
     fn collect_results(&self) {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
-        let confidence_scores = self.collect_confidence_scores();
+        let confidence_scores = self.calculate_confidence_scores();
 
         for (symbol, states) in coverage_grouped_results {
             let confidence = confidence_scores
@@ -131,7 +131,11 @@ impl<'a> TickerExtractor<'a> {
         // TODO: For each query token index, take the symbol with the highest confidence score
     }
 
-    fn collect_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
+    fn calculate_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
+        // TODO: Configure as param
+        // Increasing this value applies higher penalty
+        const GAP_PENALTY: f64 = 2.5;
+
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
         let mut confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
@@ -139,13 +143,23 @@ impl<'a> TickerExtractor<'a> {
         for (symbol, states) in coverage_grouped_results {
             let mut combined_similarity: f64 = 0.0;
 
-            for state in states {
-                combined_similarity += state.company_name_similarity_at_index;
+            for (i, state) in states.iter().enumerate() {
+                let mut inverse_weight = 1.0;
+
+                if i > 0 {
+                    // Calculate the gap between the current and previous indices
+                    let prev_query_token_index = states[i - 1].query_token_index;
+                    let gap = state.query_token_index as isize - prev_query_token_index as isize;
+
+                    // Apply a penalty for larger gaps (e.g., inverse weighting)
+                    inverse_weight = 1.0 / (GAP_PENALTY + gap.abs() as f64);
+                }
+
+                // Weigh the similarity score based on the calculated weight
+                combined_similarity += state.company_name_similarity_at_index * inverse_weight;
             }
 
-            let confidence_score = combined_similarity;
-
-            confidence_scores.insert(symbol, confidence_score);
+            confidence_scores.insert(symbol, combined_similarity);
         }
 
         confidence_scores

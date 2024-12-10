@@ -90,7 +90,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // }
 
     // let query = "The stuff IT dreams are made of, but you know, Agilent is interesting.";
-    let query = "Apple is not Walmart, but maybe Amazon.com is okay, REIT?";
+
+    // TODO: Testing this should indicate that Apple Hospitality REIT has a very low confidence score
+    let query = "Apple is not Walmart, but maybe Amazon.com is okay, Hospitality REIT?";
+
     // let query = "Ashford";
     // let query = "Power REIT";
     // let query = "REIT Hospitality Apple stuff";
