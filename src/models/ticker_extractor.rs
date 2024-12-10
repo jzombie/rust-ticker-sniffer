@@ -143,34 +143,57 @@ impl<'a> TickerExtractor<'a> {
         // Calculate confidence scores for each symbol
         let confidence_scores = self.calc_confidence_scores();
 
-        // Prepare a map to associate query tokens with the highest-ranked symbols
-        let mut query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> =
-            HashMap::new();
-
-        // Iterate through each symbol and its associated states
+        // Collect all valid symbols and their token indices
+        let mut valid_symbols: Vec<(TickerSymbol, HashSet<QueryTokenIndex>, f64)> = Vec::new();
         for (symbol, states) in self.collect_coverage_filtered_results() {
-            // Retrieve the confidence score for the current symbol
             let confidence_score = *confidence_scores
                 .get(&symbol)
                 .expect("Confidence score not found for symbol");
 
-            // Map the confidence score to each associated query token index
-            for state in states {
-                query_token_rankings
-                    .entry(state.query_token_index)
-                    .and_modify(|(existing_symbols, existing_score)| {
-                        if confidence_score > *existing_score {
-                            // New highest score, replace the symbols
-                            *existing_symbols = vec![symbol.clone()];
-                            *existing_score = confidence_score;
-                        } else if (confidence_score - *existing_score).abs() < f64::EPSILON {
-                            // Tie, append the symbol
+            let token_indices: HashSet<QueryTokenIndex> =
+                states.iter().map(|state| state.query_token_index).collect();
+
+            valid_symbols.push((symbol, token_indices, confidence_score));
+        }
+
+        // Sort by confidence score (descending) and then by match length (descending)
+        valid_symbols.sort_by(|a, b| {
+            b.2.partial_cmp(&a.2)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| b.1.len().cmp(&a.1.len()))
+        });
+
+        // Filter results to ensure no overlapping token indices unless they share the same score
+        let mut used_indices: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = HashMap::new();
+
+        for (symbol, token_indices, confidence_score) in valid_symbols {
+            let mut is_valid = true;
+
+            for &index in &token_indices {
+                if let Some((existing_symbols, existing_score)) = used_indices.get(&index) {
+                    // Ensure the confidence score matches and token indices are identical
+                    if *existing_score != confidence_score {
+                        is_valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if is_valid {
+                // Retain this symbol
+                for &index in &token_indices {
+                    used_indices
+                        .entry(index)
+                        .and_modify(|(existing_symbols, _)| {
                             existing_symbols.push(symbol.clone());
-                        }
-                    })
-                    .or_insert((vec![symbol.clone()], confidence_score));
+                        })
+                        .or_insert((vec![symbol.clone()], confidence_score));
+                }
             }
         }
+
+        // Convert used_indices to query token rankings
+        let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = used_indices;
 
         query_token_rankings
     }
