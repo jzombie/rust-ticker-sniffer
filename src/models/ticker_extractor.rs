@@ -157,8 +157,21 @@ impl<'a> TickerExtractor<'a> {
 
         println!("\n\n\n{:?}\n\n\n", ordered_collection);
 
+        // TODO: Locate the results with the highest token window index and figure out which query token indexes make it up,
+        // ensuring that a query like "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT."
+        // correctly identifies, "BRK-A", "BRK-B", "AAPL", and "APLE" as top matches
+        let highest_token_window_states = self.find_highest_token_window_states();
+
         for (symbol, intermediate_states) in ordered_collection {
-            println!("Symbol: {}", symbol);
+            let highest_token_window_index = match highest_token_window_states.get(&symbol) {
+                Some((highest_token_window_index, _)) => highest_token_window_index,
+                None => unreachable!("Could not obtain highest window index"),
+            };
+
+            println!(
+                "Symbol: {}, Highest token window index: {:?}",
+                symbol, highest_token_window_index
+            );
 
             for (state_index, state) in intermediate_states {
                 let query_token = self
@@ -199,29 +212,47 @@ impl<'a> TickerExtractor<'a> {
                 // );
             }
         }
+    }
 
-        // TODO: Locate the results with the highest token window index and figure out which query token indexes make it up,
-        // ensuring that a query like "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT."
-        // correctly identifies, "BRK-A", "BRK-B", "AAPL", and "APLE" as top matches
+    fn find_highest_token_window_states(&self) -> HashMap<TickerSymbol, (usize, Vec<usize>)> {
+        type QueryTokenIndex = usize;
+        type TokenWindowIndex = usize;
 
-        // TODO: Apply a penalty if the `query_token_type` and `query_token_index` are not in order of constituents
-        // Query: REIT Hospitality Apple stuff
-        // Start index: 0, End index: 1
-        // Matched company: Some(("AAPL", Some("Apple Inc."))); Token Index: 2
-        // Matched company: Some(("APLE", Some("Apple Hospitality REIT, Inc."))); Token Index: 2
-        // Matches: 2
-        // Start index: 1, End index: 2
-        // Matched company: Some(("APLE", Some("Apple Hospitality REIT, Inc."))); Token Index: 1
-        // Matches: 1
-        // Start index: 2, End index: 3
-        // Matched company: Some(("APLE", Some("Apple Hospitality REIT, Inc."))); Token Index: 0
-        // Matches: 1
-        // Start index: 3, End index: 4
-        // Matches: 0
-        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 0, query_token_index: 2, company_index: 34, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.09090909090909091 }, Symbols entry: Some(("AAPL", Some("Apple Inc."))), Token: "AAPL", Token Type: Symbol
-        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 0, query_token_index: 2, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 0, similarity: 0.034482758620689655 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APLE", Token Type: Symbol
-        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 1, query_token_index: 1, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 1, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "APPLE", Token Type: CompanyName
-        // Similarity state: QueryVectorIntermediateSimilarityState { token_window_index: 2, query_token_index: 0, company_index: 721, company_token_type: CompanyName, company_token_index_by_source_type: 2, similarity: 0.03448275862068966 }, Symbols entry: Some(("APLE", Some("Apple Hospitality REIT, Inc."))), Token: "HOSPITALITY", Token Type: CompanyName
+        // Group by symbol, then by the highest token_window_index
+        let mut top_matches: HashMap<TickerSymbol, (TokenWindowIndex, Vec<QueryTokenIndex>)> =
+            HashMap::new();
+
+        for similarity_state in &self.company_similarity_states {
+            let ticker_symbol = self
+                .company_symbols_list
+                .get(similarity_state.company_index)
+                .map(|(symbol, _)| symbol.clone())
+                .unwrap_or_else(|| "Unknown".to_string());
+
+            let entry = top_matches
+                .entry(ticker_symbol.clone())
+                .or_insert((0, Vec::new()));
+
+            // If this state has a higher token_window_index, update the entry
+            if similarity_state.token_window_index > entry.0 {
+                entry.0 = similarity_state.token_window_index;
+                entry.1 = vec![similarity_state.query_token_index];
+            } else if similarity_state.token_window_index == entry.0 {
+                // If the token_window_index matches the current max, append the query_token_index
+                entry.1.push(similarity_state.query_token_index);
+            }
+        }
+
+        // Display the results
+        println!("Results by token window index:");
+        for (symbol, (max_window_index, query_indexes)) in &top_matches {
+            println!(
+                "Symbol: {}, Highest Token Window Index: {}, Query Token Indexes: {:?}",
+                symbol, max_window_index, query_indexes
+            );
+        }
+
+        top_matches
     }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
