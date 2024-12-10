@@ -87,40 +87,12 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn collect_results(&self) {
-        let grouped_states = self.group_by_symbol();
-        let highest_accumulated_coverage_states = self.find_highest_accumulated_coverage_states();
-        let coverage_increase_states = self.analyze_coverage_increase();
+        let coverage_grouped_results = self.collect_coverage_filtered_results();
 
-        for (symbol, states) in grouped_states {
-            let highest_accumulated_coverage_state = highest_accumulated_coverage_states
-                .get(&symbol)
-                .expect(&format!(
-                    "Highest accumulated coverage state not found for symbol: {}",
-                    symbol
-                ));
-
-            let empty_vec = Vec::new();
-            let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
-
-            println!(
-                "Symbol: {}, Highest accumulated coverage: {:?}, Coverage Increase: {:?}",
-                symbol, highest_accumulated_coverage_state, coverage_increase
-            );
-
-            let has_coverage_increase = coverage_increase.len() > 0;
-            let min_coverage_increase_query_token_index = if has_coverage_increase {
-                coverage_increase[0]
-            } else {
-                usize::MAX
-            };
+        for (symbol, states) in coverage_grouped_results {
+            println!("Symbol: {}", symbol);
 
             for state in states {
-                if has_coverage_increase
-                    && state.query_token_index < min_coverage_increase_query_token_index
-                {
-                    continue;
-                }
-
                 let query_token = self
                     .text_doc_tokenizer
                     .charcode_vector_to_token(&state.query_vector);
@@ -149,6 +121,113 @@ impl<'a> TickerExtractor<'a> {
                     state.accumulated_company_name_coverage,
                     state
                 );
+            }
+        }
+
+        // let grouped_states = self.group_by_symbol();
+        // let highest_accumulated_coverage_states = self.find_highest_accumulated_coverage_states();
+        // let coverage_increase_states = self.analyze_coverage_increase();
+
+        // for (symbol, states) in grouped_states {
+        //     let highest_accumulated_coverage_state = highest_accumulated_coverage_states
+        //         .get(&symbol)
+        //         .expect(&format!(
+        //             "Highest accumulated coverage state not found for symbol: {}",
+        //             symbol
+        //         ));
+
+        //     let empty_vec = Vec::new();
+        //     let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
+
+        //     println!(
+        //         "Symbol: {}, Highest accumulated coverage: {:?}, Coverage Increase: {:?}",
+        //         symbol, highest_accumulated_coverage_state, coverage_increase
+        //     );
+
+        //     let has_coverage_increase = coverage_increase.len() > 0;
+        //     let min_coverage_increase_query_token_index = if has_coverage_increase {
+        //         coverage_increase[0]
+        //     } else {
+        //         usize::MAX
+        //     };
+
+        //     for state in states {
+        //         if has_coverage_increase
+        //             && state.query_token_index < min_coverage_increase_query_token_index
+        //         {
+        //             continue;
+        //         }
+
+        //         let query_token = self
+        //             .text_doc_tokenizer
+        //             .charcode_vector_to_token(&state.query_vector);
+
+        //         let company_token = self
+        //             .text_doc_tokenizer
+        //             .charcode_vector_to_token(&state.company_token_vector);
+
+        //         println!(
+        //             r#"
+        //                 {} : {}
+        //                 Tokenized Entries: {:?},
+        //                 Query Token Index: {}
+        //                 Token Window Index: {}
+        //                 Company Name Similarity at Index: {},
+        //                 Accumulated Company Name Coverage at Index: {},
+        //                 State: {:?}
+        //             "#,
+        //             query_token,
+        //             company_token,
+        //             self.company_token_processor
+        //                 .get_company_name_tokens(state.company_index),
+        //             state.query_token_index,
+        //             state.token_window_index,
+        //             state.company_name_similarity_at_index,
+        //             state.accumulated_company_name_coverage,
+        //             state
+        //         );
+
+        //         // Skip progressing if no coverage increase
+        //         if !has_coverage_increase {
+        //             break;
+        //         }
+        //     }
+        // }
+    }
+
+    fn collect_coverage_filtered_results(
+        &self,
+    ) -> HashMap<TickerSymbol, Vec<QueryVectorIntermediateSimilarityState>> {
+        let grouped_states = self.group_by_symbol();
+        let coverage_increase_states = self.analyze_coverage_increase();
+
+        let mut coverage_grouped: HashMap<
+            TickerSymbol,
+            Vec<QueryVectorIntermediateSimilarityState>,
+        > = HashMap::new();
+
+        for (symbol, states) in grouped_states {
+            let empty_vec = Vec::new();
+            let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
+
+            let has_coverage_increase = coverage_increase.len() > 0;
+            let min_coverage_increase_query_token_index = if has_coverage_increase {
+                coverage_increase[0]
+            } else {
+                usize::MAX
+            };
+
+            for state in states {
+                if has_coverage_increase
+                    && state.query_token_index < min_coverage_increase_query_token_index
+                {
+                    continue;
+                }
+
+                coverage_grouped
+                    .entry(symbol.clone())
+                    .or_insert_with(Vec::new)
+                    .push(state.clone());
 
                 // Skip progressing if no coverage increase
                 if !has_coverage_increase {
@@ -156,25 +235,27 @@ impl<'a> TickerExtractor<'a> {
                 }
             }
         }
+
+        coverage_grouped
     }
 
-    fn find_highest_accumulated_coverage_states(&self) -> HashMap<TickerSymbol, f64> {
-        let mut max_coverages = HashMap::new();
+    // fn find_highest_accumulated_coverage_states(&self) -> HashMap<TickerSymbol, f64> {
+    //     let mut max_coverages = HashMap::new();
 
-        for (symbol, states) in self.group_by_symbol() {
-            let mut max_coverage = 0.0;
+    //     for (symbol, states) in self.group_by_symbol() {
+    //         let mut max_coverage = 0.0;
 
-            for state in states {
-                if state.accumulated_company_name_coverage > max_coverage {
-                    max_coverage = state.accumulated_company_name_coverage;
-                }
-            }
+    //         for state in states {
+    //             if state.accumulated_company_name_coverage > max_coverage {
+    //                 max_coverage = state.accumulated_company_name_coverage;
+    //             }
+    //         }
 
-            max_coverages.insert(symbol, max_coverage);
-        }
+    //         max_coverages.insert(symbol, max_coverage);
+    //     }
 
-        max_coverages
-    }
+    //     max_coverages
+    // }
 
     fn calc_token_window_indexes(&self, token_window_index: usize) -> (usize, usize) {
         let token_start_index = token_window_index * self.user_config.token_window_size;
