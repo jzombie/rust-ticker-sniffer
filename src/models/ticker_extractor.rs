@@ -104,6 +104,10 @@ impl<'a> TickerExtractor<'a> {
         // Begin parsing at the first page
         self.parse(None);
 
+        self.collect_results();
+    }
+
+    fn collect_results(&self) {
         let mut similarity_collection: IntermediateSimilarityCollection = HashMap::new();
 
         for similarity_state in &self.company_similarity_states {
