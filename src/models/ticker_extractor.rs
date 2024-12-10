@@ -14,6 +14,7 @@ pub struct TickerExtractorConfig {
     pub min_text_doc_token_sim_threshold: f64,
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
+    pub token_gap_penalty: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -132,10 +133,6 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn calculate_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
-        // TODO: Configure as param
-        // Increasing this value applies higher penalty
-        const GAP_PENALTY: f64 = 2.5;
-
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
         let mut confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
@@ -152,7 +149,7 @@ impl<'a> TickerExtractor<'a> {
                     let gap = state.query_token_index as isize - prev_query_token_index as isize;
 
                     // Apply a penalty for larger gaps (e.g., inverse weighting)
-                    inverse_weight = 1.0 / (GAP_PENALTY + gap.abs() as f64);
+                    inverse_weight = 1.0 / (self.user_config.token_gap_penalty + gap.abs() as f64);
                 }
 
                 // Weigh the similarity score based on the calculated weight
