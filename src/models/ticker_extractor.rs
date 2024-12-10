@@ -459,6 +459,15 @@ impl<'a> TickerExtractor<'a> {
                     // faster at making comparisons than other algorithms I have experimented with.
                     let similarity = cosine_similarity(&query_vector, company_token_vector);
 
+                    // let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;
+
+                    // // TODO: Remove
+                    // if ticker_symbol == "AMZN" {
+                    //     println!("hello??");
+
+                    //     println!("{}", similarity);
+                    // }
+
                     if similarity >= self.user_config.min_text_doc_token_sim_threshold {
                         window_match_count += 1;
 
