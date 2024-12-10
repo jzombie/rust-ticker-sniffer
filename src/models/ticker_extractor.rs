@@ -346,7 +346,8 @@ impl<'a> TickerExtractor<'a> {
                                                     *company_token_index_by_source_type,
                                                 company_token_vector: company_token_vector.clone(),
                                                 similarity_at_index: similarity
-                                                    / (company_name_length + 1) as f64,
+                                                    / (*company_name_length as f64 + f64::EPSILON)
+                                                        as f64,
                                                 // TODO: Add coverage_at_index
                                             },
                                         );
