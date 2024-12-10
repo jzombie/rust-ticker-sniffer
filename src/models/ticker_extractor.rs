@@ -170,6 +170,7 @@ impl<'a> TickerExtractor<'a> {
 
                 println!(
                     r#"
+                        Tokenized Entries: {:?},
                         Query Token Index: {}
                         Query token: {}
                         Token Window Index: {}
@@ -177,6 +178,8 @@ impl<'a> TickerExtractor<'a> {
                         Similarity at Index: {},
                         State: {:?}
                     "#,
+                    self.company_token_processor
+                        .get_company_name_tokens(state.company_index),
                     state_index,
                     query_token,
                     state.token_window_index,

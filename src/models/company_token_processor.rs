@@ -122,4 +122,29 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
     }
+
+    pub fn get_company_name_tokens(&self, company_index: usize) -> Option<Vec<String>> {
+        // Retrieve the tokenized entries for the given company index
+        let tokenized_entries = self.tokenized_entries.get(company_index)?;
+
+        // Filter tokens that are of the `CompanyName` source type and map them to strings
+        let company_name_tokens: Vec<String> = tokenized_entries
+            .iter()
+            .filter_map(|(token, token_source_type, _)| {
+                if *token_source_type == CompanyTokenSourceType::CompanyName {
+                    // Convert the token to a string (adjust based on actual token structure)
+                    Some(self.text_doc_tokenizer.charcode_vector_to_token(token))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Return None if no tokens are found, otherwise return the tokens
+        if company_name_tokens.is_empty() {
+            None
+        } else {
+            Some(company_name_tokens)
+        }
+    }
 }
