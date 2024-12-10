@@ -110,13 +110,10 @@ impl<'a> TickerExtractor<'a> {
             // );
 
             // Retrieve the symbol for the given company index
-            let ticker_symbol = match self
+            let (ticker_symbol, _) = self
                 .company_symbols_list
                 .get(similarity_state.company_index)
-            {
-                Some((ticker_symbol, _)) => ticker_symbol,
-                None => unreachable!("Could not obtain ticker symbol"),
-            };
+                .expect("Could not locate ticker symbol");
 
             // Get or insert the symbol group (BTreeMap for query token index -> similarity state)
             let symbol_group = ordered_collection
@@ -138,17 +135,19 @@ impl<'a> TickerExtractor<'a> {
         // TODO: Locate the results with the highest token window index and figure out which query token indexes make it up,
         // ensuring that a query like "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT."
         // correctly identifies, "BRK-A", "BRK-B", "AAPL", and "APLE" as top matches
-        let highest_token_window_states = self.find_highest_token_window_states();
+        let highest_accumulated_coverage_states = self.find_highest_accumulated_coverage_states();
 
         for (symbol, intermediate_states) in ordered_collection {
-            let highest_token_window_index = match highest_token_window_states.get(&symbol) {
-                Some((highest_token_window_index, _)) => highest_token_window_index,
-                None => unreachable!("Could not obtain highest window index"),
-            };
+            let highest_accumulated_coverage_state = highest_accumulated_coverage_states
+                .get(&symbol)
+                .expect(&format!(
+                    "Highest accumulated coverage state not found for symbol: {}",
+                    symbol
+                ));
 
             println!(
-                "Symbol: {}, Highest token window index: {:?}",
-                symbol, highest_token_window_index
+                "Symbol: {}, Highest accumulated coverage: {:?}",
+                symbol, highest_accumulated_coverage_state
             );
 
             for (state_index, state) in intermediate_states {
@@ -193,10 +192,11 @@ impl<'a> TickerExtractor<'a> {
         }
     }
 
-    fn find_highest_token_window_states(&self) -> HashMap<TickerSymbol, (usize, Vec<usize>)> {
-        // Group by symbol, then by the highest token_window_index
-        let mut top_matches: HashMap<TickerSymbol, (TokenWindowIndex, Vec<QueryTokenIndex>)> =
-            HashMap::new();
+    fn find_highest_accumulated_coverage_states(
+        &self,
+    ) -> HashMap<TickerSymbol, (f64, Vec<QueryTokenIndex>)> {
+        // Group by symbol, then by the highest accumulated company name coverage
+        let mut top_matches: HashMap<TickerSymbol, (f64, Vec<QueryTokenIndex>)> = HashMap::new();
 
         for similarity_state in &self.company_similarity_states {
             let ticker_symbol = self
@@ -207,26 +207,19 @@ impl<'a> TickerExtractor<'a> {
 
             let entry = top_matches
                 .entry(ticker_symbol.clone())
-                .or_insert((0, Vec::new()));
+                .or_insert((0.0, Vec::new()));
 
-            // If this state has a higher token_window_index, update the entry
-            if similarity_state.token_window_index > entry.0 {
-                entry.0 = similarity_state.token_window_index;
+            // If this state has higher accumulated coverage, update the entry
+            if similarity_state.accumulated_company_name_coverage > entry.0 {
+                entry.0 = similarity_state.accumulated_company_name_coverage;
                 entry.1 = vec![similarity_state.query_token_index];
-            } else if similarity_state.token_window_index == entry.0 {
-                // If the token_window_index matches the current max, append the query_token_index
+            } else if (similarity_state.accumulated_company_name_coverage - entry.0).abs()
+                < f64::EPSILON
+            {
+                // If the coverage is equal to the current max, append the query_token_index
                 entry.1.push(similarity_state.query_token_index);
             }
         }
-
-        // Display the results
-        // println!("Results by token window index:");
-        // for (symbol, (max_window_index, query_indexes)) in &top_matches {
-        //     println!(
-        //         "Symbol: {}, Highest Token Window Index: {}, Query Token Indexes: {:?}",
-        //         symbol, max_window_index, query_indexes
-        //     );
-        // }
 
         top_matches
     }
@@ -264,99 +257,84 @@ impl<'a> TickerExtractor<'a> {
 
             // let include_source_types = &[CompanyTokenSourceType::CompanyName];
 
-            match self
+            let bins = self
                 .company_token_processor
                 .token_length_bins
                 .get(query_vector_length)
-            {
-                Some(bins) => {
-                    for (company_index, tokenized_entry_index) in bins {
-                        if token_window_index > 0
-                            && !self.progressible_company_indices.contains(company_index)
-                        {
-                            continue;
-                        }
+                .expect("Could not locate bins");
 
-                        let (
-                            company_token_vector,
-                            company_token_type,
-                            company_token_index_by_source_type,
-                        ) = &self.company_token_processor.tokenized_entries[*company_index]
-                            [*tokenized_entry_index];
-
-                        if *company_token_type != CompanyTokenSourceType::CompanyName {
-                            continue;
-                        }
-
-                        if *company_token_index_by_source_type >= token_start_index
-                            && *company_token_index_by_source_type < token_end_index
-                        {
-                            // Note: Cosine similarity isn't used for "semantic relevance" in this context
-                            // because these vectors are just simple vectors obtained from character codes.
-                            // But the algorithm happens to be pretty efficient at what it does and seems
-                            // faster at making comparisons than other algorithms I have experimented with.
-                            let similarity = cosine_similarity(&query_vector, company_token_vector);
-
-                            if similarity >= self.user_config.min_text_doc_token_sim_threshold {
-                                // println!(
-                                //     "Matched company: {:?}; Token Index: {}",
-                                //     self.company_symbols_list.get(*company_index),
-                                //     query_token_index
-                                // );
-
-                                window_match_count += 1;
-
-                                let company_name_length = match self
-                                    .company_token_processor
-                                    .company_name_lengths
-                                    .get(*company_index)
-                                {
-                                    Some(company_name_length) => company_name_length,
-                                    None => unreachable!("Could not obtain company name length"),
-                                };
-
-                                let company_name_token_count = match self
-                                    .company_token_processor
-                                    .company_name_token_counts
-                                    .get(*company_index)
-                                {
-                                    Some(company_name_token_count) => company_name_token_count,
-                                    None => {
-                                        unreachable!("Could not obtain company name token count")
-                                    }
-                                };
-
-                                let company_name_similarity_at_index = similarity
-                                    / (*company_name_length as f64 + f64::EPSILON) as f64;
-
-                                let accumulated_company_name_coverage = 1.0
-                                    / (*company_name_token_count as f64
-                                        / (*company_token_index_by_source_type as f64 + 1.0));
-
-                                self.company_similarity_states.push(
-                                    QueryVectorIntermediateSimilarityState {
-                                        token_window_index,
-                                        query_token_index,
-                                        query_vector: query_vector.clone(),
-                                        company_index: *company_index,
-                                        company_token_type: *company_token_type,
-                                        company_token_index_by_source_type:
-                                            *company_token_index_by_source_type,
-                                        company_token_vector: company_token_vector.clone(),
-                                        company_name_similarity_at_index,
-                                        accumulated_company_name_coverage,
-                                    },
-                                );
-
-                                self.progressible_company_indices.insert(*company_index);
-                            } else {
-                                self.progressible_company_indices.remove(company_index);
-                            }
-                        }
-                    }
+            for (company_index, tokenized_entry_index) in bins {
+                if token_window_index > 0
+                    && !self.progressible_company_indices.contains(company_index)
+                {
+                    continue;
                 }
 
-                None => unreachable!("Could not access target bins"),
+                let (company_token_vector, company_token_type, company_token_index_by_source_type) =
+                    &self.company_token_processor.tokenized_entries[*company_index]
+                        [*tokenized_entry_index];
+
+                if *company_token_type != CompanyTokenSourceType::CompanyName {
+                    continue;
+                }
+
+                if *company_token_index_by_source_type >= token_start_index
+                    && *company_token_index_by_source_type < token_end_index
+                {
+                    // Note: Cosine similarity isn't used for "semantic relevance" in this context
+                    // because these vectors are just simple vectors obtained from character codes.
+                    // But the algorithm happens to be pretty efficient at what it does and seems
+                    // faster at making comparisons than other algorithms I have experimented with.
+                    let similarity = cosine_similarity(&query_vector, company_token_vector);
+
+                    if similarity >= self.user_config.min_text_doc_token_sim_threshold {
+                        // println!(
+                        //     "Matched company: {:?}; Token Index: {}",
+                        //     self.company_symbols_list.get(*company_index),
+                        //     query_token_index
+                        // );
+
+                        window_match_count += 1;
+
+                        let company_name_length = self
+                            .company_token_processor
+                            .company_name_lengths
+                            .get(*company_index)
+                            .expect("Could not obtain company name length");
+
+                        let company_name_token_count = self
+                            .company_token_processor
+                            .company_name_token_counts
+                            .get(*company_index)
+                            .expect("Could not obtain company name token count");
+
+                        let company_name_similarity_at_index =
+                            similarity / (*company_name_length as f64 + f64::EPSILON) as f64;
+
+                        let accumulated_company_name_coverage = 1.0
+                            / (*company_name_token_count as f64
+                                / (*company_token_index_by_source_type as f64 + 1.0));
+
+                        self.company_similarity_states.push(
+                            QueryVectorIntermediateSimilarityState {
+                                token_window_index,
+                                query_token_index,
+                                query_vector: query_vector.clone(),
+                                company_index: *company_index,
+                                company_token_type: *company_token_type,
+                                company_token_index_by_source_type:
+                                    *company_token_index_by_source_type,
+                                company_token_vector: company_token_vector.clone(),
+                                company_name_similarity_at_index,
+                                accumulated_company_name_coverage,
+                            },
+                        );
+
+                        self.progressible_company_indices.insert(*company_index);
+                    } else {
+                        self.progressible_company_indices.remove(company_index);
+                    }
+                }
             }
         }
 
