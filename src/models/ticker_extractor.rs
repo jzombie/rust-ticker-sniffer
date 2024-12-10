@@ -115,6 +115,7 @@ impl<'a> TickerExtractor<'a> {
             BTreeMap<QueryTokenIndex, QueryVectorIntermediateSimilarityState>,
         > = HashMap::new();
 
+        // Collect state into ordered collection
         for similarity_state in &self.company_similarity_states {
             let (company_token_vector, company_token_type, _company_token_index_by_source_type) =
                 &self.company_token_processor.tokenized_entries[similarity_state.company_index]
