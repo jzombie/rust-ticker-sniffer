@@ -89,6 +89,7 @@ impl<'a> TickerExtractor<'a> {
     fn collect_results(&self) {
         let grouped_states = self.group_by_symbol();
         let highest_accumulated_coverage_states = self.find_highest_accumulated_coverage_states();
+        let coverage_increase_states = self.analyze_coverage_increase();
 
         for (symbol, states) in grouped_states {
             let highest_accumulated_coverage_state = highest_accumulated_coverage_states
@@ -98,9 +99,12 @@ impl<'a> TickerExtractor<'a> {
                     symbol
                 ));
 
+            let empty_vec = Vec::new();
+            let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
+
             println!(
-                "Symbol: {}, Highest accumulated coverage: {:?}",
-                symbol, highest_accumulated_coverage_state
+                "Symbol: {}, Highest accumulated coverage: {:?}, Coverage Increase: {:?}",
+                symbol, highest_accumulated_coverage_state, coverage_increase
             );
 
             for state in states {
@@ -134,9 +138,6 @@ impl<'a> TickerExtractor<'a> {
                 );
             }
         }
-
-        let coverage = self.analyze_coverage();
-        println!("Coverage report: {:?}", coverage);
     }
 
     fn find_highest_accumulated_coverage_states(
@@ -199,7 +200,7 @@ impl<'a> TickerExtractor<'a> {
         grouped
     }
 
-    fn analyze_coverage(&self) -> HashMap<TickerSymbol, Vec<QueryTokenIndex>> {
+    fn analyze_coverage_increase(&self) -> HashMap<TickerSymbol, Vec<QueryTokenIndex>> {
         let mut results = HashMap::new();
 
         for (symbol, states) in self.group_by_symbol() {
