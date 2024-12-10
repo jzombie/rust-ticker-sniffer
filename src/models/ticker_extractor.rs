@@ -90,50 +90,114 @@ impl<'a> TickerExtractor<'a> {
     }
 
     fn collect_results(&self) {
-        let coverage_grouped_results = self.collect_coverage_filtered_results();
-        let confidence_scores = self.calculate_confidence_scores();
+        // let coverage_grouped_results = self.collect_coverage_filtered_results();
 
-        for (symbol, states) in coverage_grouped_results {
-            let confidence = confidence_scores
-                .get(&symbol)
-                .expect("Could not obtain confidence score");
+        let symbols_with_confidence = self.get_symbols_with_confidence();
 
-            println!("Symbol: {}, Confidence: {}", symbol, confidence);
+        println!("symbols with confidence: {:?}", symbols_with_confidence);
 
-            for state in states {
-                let query_token = self
-                    .text_doc_tokenizer
-                    .charcode_vector_to_token(&state.query_vector);
+        // let confidence_scores = self.calc_confidence_scores();
 
-                let company_token = self
-                    .text_doc_tokenizer
-                    .charcode_vector_to_token(&state.company_token_vector);
+        // for (symbol, states) in coverage_grouped_results {
+        //     let confidence = confidence_scores
+        //         .get(&symbol)
+        //         .expect("Could not obtain confidence score");
 
-                println!(
-                    r#"
-                        {} : {}
-                        Tokenized Entries: {:?},
-                        Query Token Index: {}
-                        Token Window Index: {}
-                        Company Name Similarity at Index: {},
-                        State: {:?}
-                    "#,
-                    query_token,
-                    company_token,
-                    self.company_token_processor
-                        .get_company_name_tokens(state.company_index),
-                    state.query_token_index,
-                    state.token_window_index,
-                    state.company_name_similarity_at_index,
-                    state
-                );
-            }
-        }
+        //     println!("Symbol: {}, Confidence: {}", symbol, confidence);
+
+        //     for state in states {
+        //         let query_token = self
+        //             .text_doc_tokenizer
+        //             .charcode_vector_to_token(&state.query_vector);
+
+        //         let company_token = self
+        //             .text_doc_tokenizer
+        //             .charcode_vector_to_token(&state.company_token_vector);
+
+        //         println!(
+        //             r#"
+        //                 {} : {}
+        //                 Tokenized Entries: {:?},
+        //                 Query Token Index: {}
+        //                 Token Window Index: {}
+        //                 Company Name Similarity at Index: {},
+        //                 State: {:?}
+        //             "#,
+        //             query_token,
+        //             company_token,
+        //             self.company_token_processor
+        //                 .get_company_name_tokens(state.company_index),
+        //             state.query_token_index,
+        //             state.token_window_index,
+        //             state.company_name_similarity_at_index,
+        //             state
+        //         );
+        //     }
 
         // TODO: For each query token index, take the symbol with the highest confidence score
     }
 
-    fn calculate_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
+    fn map_highest_ranking_symbols_to_query_tokens(
+        &self,
+    ) -> HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> {
+        // Calculate confidence scores for each symbol
+        let confidence_scores = self.calc_confidence_scores();
+
+        // Prepare a map to associate query tokens with the highest-ranked symbols
+        let mut query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> =
+            HashMap::new();
+
+        // Iterate through each symbol and its associated states
+        for (symbol, states) in self.collect_coverage_filtered_results() {
+            // Retrieve the confidence score for the current symbol
+            let confidence_score = *confidence_scores
+                .get(&symbol)
+                .expect("Confidence score not found for symbol");
+
+            // Map the confidence score to each associated query token index
+            for state in states {
+                query_token_rankings
+                    .entry(state.query_token_index)
+                    .and_modify(|(existing_symbols, existing_score)| {
+                        if confidence_score > *existing_score {
+                            // New highest score, replace the symbols
+                            *existing_symbols = vec![symbol.clone()];
+                            *existing_score = confidence_score;
+                        } else if (confidence_score - *existing_score).abs() < f64::EPSILON {
+                            // Tie, append the symbol
+                            existing_symbols.push(symbol.clone());
+                        }
+                    })
+                    .or_insert((vec![symbol.clone()], confidence_score));
+            }
+        }
+
+        query_token_rankings
+    }
+
+    fn get_symbols_with_confidence(&self) -> HashMap<TickerSymbol, f64> {
+        let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
+
+        // Prepare a map for symbols and their highest confidence scores
+        let mut symbols_with_confidence: HashMap<TickerSymbol, f64> = HashMap::new();
+
+        for (_query_token_index, (symbols, score)) in query_token_rankings {
+            for symbol in symbols {
+                symbols_with_confidence
+                    .entry(symbol.clone())
+                    .and_modify(|existing_score| {
+                        if *existing_score < score {
+                            *existing_score = score; // Update with higher score
+                        }
+                    })
+                    .or_insert(score);
+            }
+        }
+
+        symbols_with_confidence
+    }
+
+    fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
         let mut confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
