@@ -1,15 +1,16 @@
 use crate::models::DocumentCompanyNameExtractorConfig;
 
-pub const DEFAULT_CONFIG: DocumentCompanyNameExtractorConfig = DocumentCompanyNameExtractorConfig {
-    min_text_doc_token_sim_threshold: 0.99,
-    // token_length_diff_tolerance: 0,
-    token_window_size: 1,
-    // Used when calculating confidence scores
-    token_gap_penalty: 2.5,
-    continuity_reward: 1.5,
-    low_confidence_penalty_factor: 0.5,
-    min_confidence_level_threshold: 0.5,
-};
+pub const DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG: DocumentCompanyNameExtractorConfig =
+    DocumentCompanyNameExtractorConfig {
+        min_text_doc_token_sim_threshold: 0.99,
+        // token_length_diff_tolerance: 0,
+        token_window_size: 1,
+        // Used when calculating confidence scores
+        token_gap_penalty: 2.5,
+        continuity_reward: 1.5,
+        low_confidence_penalty_factor: 0.5,
+        min_confidence_level_threshold: 0.5,
+    };
 
 // TODO: Remove
 // pub const DEFAULT_CONFIG: Weights = Weights {

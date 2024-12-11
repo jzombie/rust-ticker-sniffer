@@ -2,11 +2,12 @@ use std::collections::HashMap;
 mod constants;
 pub mod models;
 pub use constants::{
-    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_CONFIG, DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
+    DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG,
+    DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
 };
 pub use models::{
-    CompanyNameTokenRanking, CompanyTokenProcessor, DocumentCompanyNameExtractor,
-    DocumentCompanyNameExtractorConfig, Tokenizer,
+    CompanyTokenProcessor, DocumentCompanyNameExtractor, DocumentCompanyNameExtractorConfig,
+    DocumentEntityExtractor, Tokenizer,
 };
 pub mod types;
 mod utils;
@@ -22,13 +23,17 @@ pub fn extract_tickers_from_text(
     // let result_bias_adjuster =
     //     ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
 
-    extract_tickers_from_text_with_custom_weights(&text, &company_symbols_list, DEFAULT_CONFIG)
+    extract_tickers_from_text_with_custom_weights(
+        &text,
+        &company_symbols_list,
+        DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG,
+    )
 }
 
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
-    weights: DocumentCompanyNameExtractorConfig,
+    document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> HashMap<TickerSymbol, f32> {
     // let mut matches = HashSet::new();
 
@@ -183,7 +188,10 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // Goodarzi said in Monday’s release that the company is bringing its “AI-driven expert platform to help sellers boost their revenue and profitability, save time, and grow with confidence.”
     // "#;
 
-    let mut ticker_extractor = DocumentCompanyNameExtractor::new(&company_symbols_list, weights);
+    let mut ticker_extractor = DocumentEntityExtractor::new(
+        &company_symbols_list,
+        document_company_name_extractor_config,
+    );
 
     let (symbols_with_confidence, consumed_query_token_indices) = ticker_extractor.extract(&text);
 

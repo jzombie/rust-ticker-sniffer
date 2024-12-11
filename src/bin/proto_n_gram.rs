@@ -17,11 +17,12 @@ fn main() {
         // extract_tickers_from_text(&"Nvidia Corporation", &company_symbols_list)
         // extract_tickers_from_text(&"Nvidia", &company_symbols_list)
         extract_tickers_from_text(
-            // &"The shift was prompted by Wal-mart's...",
+            // &r#""Wal-Mart" and "Amazon""#,
+            &"Amazon.com",
             // &"Gap",
             // &"Apple Hospitality REIT",
             // &"The Walmart",
-            &"Berkshire Hathaway",
+            // &"Berkshire Hathaway",
             &company_symbols_list
         )
     )

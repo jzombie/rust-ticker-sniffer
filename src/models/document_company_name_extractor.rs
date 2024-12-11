@@ -2,6 +2,7 @@ use crate::types::{
     CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
 use crate::utils::index_difference_similarity;
+use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use core::f32;
 use std::collections::{HashMap, HashSet};
@@ -12,16 +13,6 @@ type QueryTokenIndex = usize;
 // TODO: If possible to add an optional report of why things were filtered or
 // included in the final result, within reason (i.e. within
 // `min_text_doc_token_sim_threshold`), would be beneficial for debugging.
-
-pub struct DocumentCompanyNameExtractorConfig {
-    pub min_text_doc_token_sim_threshold: f32,
-    // pub token_length_diff_tolerance: usize,
-    pub token_window_size: usize,
-    pub token_gap_penalty: f32,
-    pub continuity_reward: f32,
-    pub low_confidence_penalty_factor: f32,
-    pub min_confidence_level_threshold: f32,
-}
 
 #[derive(Debug, Clone)]
 struct QueryVectorIntermediateSimilarityState {
