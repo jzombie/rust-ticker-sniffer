@@ -118,9 +118,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .expect("Confidence score not found for symbol");
 
             // TODO: Remove
-            if symbol == "NVDA" {
-                println!(" ... VALID.. {}, {}", symbol, confidence_score);
-            }
+            // if symbol == "NVDA" {
+            //     println!(" ... VALID.. {}, {}", symbol, confidence_score);
+            // }
 
             let token_indices: HashSet<QueryTokenIndex> =
                 states.iter().map(|state| state.query_token_index).collect();
@@ -139,16 +139,16 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let mut used_indices: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = HashMap::new();
 
         // TODO: Remove
-        println!("Used indices: {:?}", used_indices);
+        // println!("Used indices: {:?}", used_indices);
 
         for (symbol, token_indices, confidence_score) in valid_symbols {
             // TODO: Remove
-            if symbol == "NVDA" || symbol == "NUMG" {
-                println!(
-                    " ... VALID2.. {}, {}, {:?}",
-                    symbol, confidence_score, token_indices
-                );
-            }
+            // if symbol == "NVDA" || symbol == "NUMG" {
+            //     println!(
+            //         " ... VALID2.. {}, {}, {:?}",
+            //         symbol, confidence_score, token_indices
+            //     );
+            // }
 
             let mut is_valid = true;
 
@@ -181,7 +181,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Convert used_indices to query token rankings
         let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = used_indices;
 
-        println!("   QUERY TOKEN RANKINGS: {:?}", query_token_rankings);
+        // TODO: Remove
+        println!("QUERY TOKEN RANKINGS: {:?}", query_token_rankings);
 
         query_token_rankings
     }
@@ -190,9 +191,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Ensures that only the highest confidence score is retained for each symbol.
     fn get_symbols_with_confidence(&self) -> HashMap<TickerSymbol, f64> {
         let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
-
-        // TODO: Remove
-        println!("{:?}", query_token_rankings);
 
         // Prepare a map for symbols and their highest confidence scores
         let mut symbols_with_confidence: HashMap<TickerSymbol, f64> = HashMap::new();
@@ -204,7 +202,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             for symbol in symbols {
                 // TODO: Remove
-                println!("symbol: {}, score: {}", symbol, confidence_level);
+                // println!("symbol: {}, score: {}", symbol, confidence_level);
 
                 symbols_with_confidence
                     .entry(symbol.clone())
@@ -228,16 +226,17 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
-        let mut confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
-        let mut all_scores = Vec::new();
+        let mut per_symbol_confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
+        let mut all_confidence_scores = Vec::new();
 
         // First pass: Calculate initial confidence scores
         for (symbol, states) in &coverage_grouped_results {
-            let mut combined_similarity: f64 = 0.0;
+            let mut symbol_confidence_score: f64 = 0.0;
 
             let mut seen_query_token_indexes: Vec<QueryTokenIndex> = Vec::new();
 
             for (i, state) in states.iter().enumerate() {
+                // Skip repeat processinging of same query token indexes
                 if seen_query_token_indexes.contains(&state.query_token_index) {
                     continue;
                 } else {
@@ -261,50 +260,51 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 }
 
                 // TODO: Remove
-                if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
-                    println!(
-                        "calc_confidence_scores similarity at index --------- symbol: {} {} {} : inverse weight: {} : {:?}",
-                        symbol, i, state.company_name_similarity_at_index, inverse_weight, state
-                    );
-                }
+                // if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
+                //     println!(
+                //         "calc_confidence_scores similarity at index --------- symbol: {} {} {} : inverse weight: {} : {:?}",
+                //         symbol, i, state.company_name_similarity_at_index, inverse_weight, state
+                //     );
+                // }
 
                 // Weigh the similarity score based on the calculated weight
-                combined_similarity += state.company_name_similarity_at_index * inverse_weight;
+                symbol_confidence_score += state.company_name_similarity_at_index * inverse_weight;
             }
 
             // TODO: Remove
             // if symbol == "NVDA" || symbol == "NUMG" {
-            if combined_similarity > 0.99 {
-                println!(
-                    "calc_confidence_scores --------- symbol: {} {}",
-                    symbol, combined_similarity
-                );
-            }
+            // if combined_similarity > 0.99 {
+            //     println!(
+            //         "calc_confidence_scores --------- symbol: {} {}",
+            //         symbol, combined_similarity
+            //     );
+            // }
 
-            confidence_scores.insert(symbol.clone(), combined_similarity);
-            all_scores.push(combined_similarity);
+            per_symbol_confidence_scores.insert(symbol.clone(), symbol_confidence_score);
+            all_confidence_scores.push(symbol_confidence_score);
         }
 
         // ------------------
 
         // Analyze the distribution of scores
-        let mean_score: f64 = all_scores.iter().copied().sum::<f64>() / all_scores.len() as f64;
-        let std_dev: f64 = (all_scores
+        let mean_score: f64 =
+            all_confidence_scores.iter().copied().sum::<f64>() / all_confidence_scores.len() as f64;
+        let std_dev: f64 = (all_confidence_scores
             .iter()
             .map(|&score| (score - mean_score).powi(2))
             .sum::<f64>()
-            / all_scores.len() as f64)
+            / all_confidence_scores.len() as f64)
             .sqrt();
         let threshold = mean_score - std_dev; // Scores below this threshold are penalized further
 
         // Calculate the sum of all scores below the threshold
-        let total_low_scores: f64 = confidence_scores
+        let total_low_scores: f64 = per_symbol_confidence_scores
             .values()
             .filter(|&&score| score < threshold)
             .sum::<f64>();
 
         // Second pass: Penalize scores below the threshold based on their proportion
-        for (_symbol, score) in &mut confidence_scores {
+        for (_symbol, score) in &mut per_symbol_confidence_scores {
             if *score < threshold && total_low_scores > 0.0 {
                 // Calculate the proportion of this score relative to the total low scores
                 let proportion = *score / total_low_scores;
@@ -314,7 +314,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             }
         }
 
-        confidence_scores
+        per_symbol_confidence_scores
     }
 
     /// Groups intermediate similarity states by ticker symbol, ensuring
@@ -332,9 +332,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         for (symbol, states) in grouped_states {
             // TODO: Remove
-            if symbol == "NVDA" {
-                println!("----- filtered; symbol: {}", symbol);
-            }
+            // if symbol == "NVDA" {
+            //     println!("----- filtered; symbol: {}", symbol);
+            // }
 
             let empty_vec = Vec::new();
             let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
@@ -504,12 +504,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                         index_difference_similarity(&query_vector, company_token_vector);
 
                     // TODO: Remove
-                    let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;
-                    if ticker_symbol == "NVDA" {
-                        println!("hello??");
+                    // let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;
+                    // if ticker_symbol == "NVDA" {
+                    //     println!("hello??");
 
-                        println!("{}", similarity);
-                    }
+                    //     println!("{}", similarity);
+                    // }
 
                     if similarity >= self.user_config.min_text_doc_token_sim_threshold {
                         window_match_count += 1;
