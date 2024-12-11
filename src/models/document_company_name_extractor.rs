@@ -4,19 +4,19 @@ use crate::types::{
 };
 use crate::utils::index_difference_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
-use core::f64;
+use core::f32;
 use std::collections::{HashMap, HashSet};
 
 type TokenWindowIndex = usize;
 type QueryTokenIndex = usize;
 
 pub struct DocumentCompanyNameExtractorConfig {
-    pub min_text_doc_token_sim_threshold: f64,
+    pub min_text_doc_token_sim_threshold: f32,
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
-    pub token_gap_penalty: f64,
-    pub low_confidence_penalty_factor: f64,
-    pub min_confidence_level_threshold: f64,
+    pub token_gap_penalty: f32,
+    pub low_confidence_penalty_factor: f32,
+    pub min_confidence_level_threshold: f32,
 }
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ struct QueryVectorIntermediateSimilarityState {
     company_token_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize, // TODO: Add type
     company_token_vector: TokenizerVectorTokenType,
-    company_name_similarity_at_index: f64,
+    company_name_similarity_at_index: f32,
 }
 
 pub struct DocumentCompanyNameExtractor<'a> {
@@ -81,7 +81,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Extracts ticker symbols from the given text document by tokenizing
     /// and comparing against known company names. Ensures only one extraction
     /// process runs at a time.
-    pub fn extract(&mut self, text: &str) -> HashMap<TickerSymbol, f64> {
+    pub fn extract(&mut self, text: &str) -> HashMap<TickerSymbol, f32> {
         if self.is_extracting {
             panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
         } else {
@@ -106,12 +106,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// unless they share the same confidence score.
     fn map_highest_ranking_symbols_to_query_tokens(
         &self,
-    ) -> HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> {
+    ) -> HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> {
         // Calculate confidence scores for each symbol
         let confidence_scores = self.calc_confidence_scores();
 
         // Collect all valid symbols and their token indices
-        let mut valid_symbols: Vec<(TickerSymbol, HashSet<QueryTokenIndex>, f64)> = Vec::new();
+        let mut valid_symbols: Vec<(TickerSymbol, HashSet<QueryTokenIndex>, f32)> = Vec::new();
         for (symbol, states) in self.collect_coverage_filtered_results() {
             let confidence_score = *confidence_scores
                 .get(&symbol)
@@ -136,7 +136,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         });
 
         // Filter results to ensure no overlapping token indices unless they share the same score
-        let mut used_indices: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = HashMap::new();
+        let mut used_indices: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> = HashMap::new();
 
         // TODO: Remove
         // println!("Used indices: {:?}", used_indices);
@@ -179,7 +179,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
 
         // Convert used_indices to query token rankings
-        let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f64)> = used_indices;
+        let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> = used_indices;
 
         // TODO: Remove
         println!("QUERY TOKEN RANKINGS: {:?}", query_token_rankings);
@@ -189,11 +189,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
     /// Retrieves a map of ticker symbols and their highest confidence scores.
     /// Ensures that only the highest confidence score is retained for each symbol.
-    fn get_symbols_with_confidence(&self) -> HashMap<TickerSymbol, f64> {
+    fn get_symbols_with_confidence(&self) -> HashMap<TickerSymbol, f32> {
         let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
 
         // Prepare a map for symbols and their highest confidence scores
-        let mut symbols_with_confidence: HashMap<TickerSymbol, f64> = HashMap::new();
+        let mut symbols_with_confidence: HashMap<TickerSymbol, f32> = HashMap::new();
 
         for (_query_token_index, (symbols, confidence_level)) in query_token_rankings {
             if confidence_level < self.user_config.min_confidence_level_threshold {
@@ -223,15 +223,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Calculates confidence scores for each ticker symbol by weighing
     /// their similarity states. Applies penalties for large token gaps
     /// and normalizes scores based on the overall distribution.
-    fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f64> {
+    fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f32> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
-        let mut per_symbol_confidence_scores: HashMap<TickerSymbol, f64> = HashMap::new();
+        let mut per_symbol_confidence_scores: HashMap<TickerSymbol, f32> = HashMap::new();
         let mut all_confidence_scores = Vec::new();
 
         // First pass: Calculate initial confidence scores
         for (symbol, states) in &coverage_grouped_results {
-            let mut symbol_confidence_score: f64 = 0.0;
+            let mut symbol_confidence_score: f32 = 0.0;
 
             let mut seen_query_token_indexes: Vec<QueryTokenIndex> = Vec::new();
 
@@ -253,7 +253,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                     // Apply a penalty for larger gaps (e.g., inverse weighting)
                     inverse_weight = if gap > 1 {
-                        1.0 / (self.user_config.token_gap_penalty + gap as f64)
+                        1.0 / (self.user_config.token_gap_penalty + gap as f32)
                     } else {
                         1.0
                     };
@@ -287,21 +287,21 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // ------------------
 
         // Analyze the distribution of scores
-        let mean_score: f64 =
-            all_confidence_scores.iter().copied().sum::<f64>() / all_confidence_scores.len() as f64;
-        let std_dev: f64 = (all_confidence_scores
+        let mean_score: f32 =
+            all_confidence_scores.iter().copied().sum::<f32>() / all_confidence_scores.len() as f32;
+        let std_dev: f32 = (all_confidence_scores
             .iter()
             .map(|&score| (score - mean_score).powi(2))
-            .sum::<f64>()
-            / all_confidence_scores.len() as f64)
+            .sum::<f32>()
+            / all_confidence_scores.len() as f32)
             .sqrt();
         let threshold = mean_score - std_dev; // Scores below this threshold are penalized further
 
         // Calculate the sum of all scores below the threshold
-        let total_low_scores: f64 = per_symbol_confidence_scores
+        let total_low_scores: f32 = per_symbol_confidence_scores
             .values()
             .filter(|&&score| score < threshold)
-            .sum::<f64>();
+            .sum::<f32>();
 
         // Second pass: Penalize scores below the threshold based on their proportion
         for (_symbol, score) in &mut per_symbol_confidence_scores {
@@ -521,7 +521,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                             .get_company_name_tokens_length(*company_index);
 
                         let company_name_similarity_at_index = similarity
-                            * (query_vector.len() as f64 / total_company_name_tokens_length as f64);
+                            * (query_vector.len() as f32 / total_company_name_tokens_length as f32);
 
                         self.company_similarity_states.push(
                             QueryVectorIntermediateSimilarityState {

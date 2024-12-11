@@ -76,7 +76,8 @@ pub fn run_test_for_file(
     test_file_path: &str,
     company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> (
-    HashMap<TickerSymbol, f64>,
+    // TODO: Use more specific types (especially for `f32` confidence score)
+    HashMap<TickerSymbol, f32>,
     Vec<TickerSymbol>,
     Vec<TickerSymbol>,
 ) {

@@ -18,7 +18,7 @@ pub use types::{
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
-) -> HashMap<TickerSymbol, f64> {
+) -> HashMap<TickerSymbol, f32> {
     // let result_bias_adjuster =
     //     ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
 
@@ -29,7 +29,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolsList,
     weights: DocumentCompanyNameExtractorConfig,
-) -> HashMap<TickerSymbol, f64> {
+) -> HashMap<TickerSymbol, f32> {
     // let mut matches = HashSet::new();
 
     // TODO: Commit to tests; expect: Tokens: ["WELL", "IPHONE", "DEVELOPMENT", "EBAY", "DEVELOPMENT", "WALMART", "WALMARTS"]
