@@ -1,3 +1,4 @@
+use crate::constants::STOP_WORDS;
 use crate::types::{
     CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
@@ -38,7 +39,8 @@ pub struct DocumentCompanyNameExtractor<'a> {
     user_config: DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
     text: Option<String>,
-    tokenized_query_vectors: Vec<Vec<u32>>,
+    tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
+    tokenized_stop_word_vectors: Vec<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     progressible_company_indices: HashSet<usize>, // TODO: Add type
     results: Vec<TickerSymbol>,
@@ -57,6 +59,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
+        let tokenized_stop_word_vectors =
+            text_doc_tokenizer.tokenize_to_charcode_vectors(&STOP_WORDS.join(&" "));
+
         Self {
             company_symbols_list,
             ticker_symbol_tokenizer,
@@ -66,6 +71,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             is_extracting: false,
             text: None,
             tokenized_query_vectors: vec![],
+            tokenized_stop_word_vectors,
             company_similarity_states: vec![],
             progressible_company_indices: HashSet::new(),
             results: vec![],
@@ -214,6 +220,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         symbols_with_confidence
     }
 
+    // TODO: Handle stop word penalty here: tokenized_stop_word_vectors
+    //
     /// Calculates confidence scores for each ticker symbol by weighing
     /// their similarity states. Applies penalties for large token gaps
     /// and normalizes scores based on the overall distribution.
