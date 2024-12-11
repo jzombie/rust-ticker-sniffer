@@ -251,6 +251,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Calculate confidence scores for each symbol
         let confidence_scores = self.calc_confidence_scores();
 
+        // TODO: Rename `valid_symbols`... it's confusing
         // Collect all valid symbols and their token indices
         let mut valid_symbols: Vec<(TickerSymbol, HashSet<QueryTokenIndex>, f32)> = Vec::new();
         for (symbol, states) in self.collect_coverage_filtered_results() {
@@ -260,7 +261,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             // TODO: Remove
             // if symbol == "NVDA" {
-            //     println!(" ... VALID.. {}, {}", symbol, confidence_score);
+            // println!(" ... VALID.. {}, {}", symbol, confidence_score);
             // }
 
             let token_indices: HashSet<QueryTokenIndex> =
@@ -279,16 +280,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Filter results to ensure no overlapping token indices unless they share the same score
         let mut used_indices: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> = HashMap::new();
 
-        // TODO: Remove
-        // println!("Used indices: {:?}", used_indices);
-
         for (symbol, token_indices, confidence_score) in valid_symbols {
             // TODO: Remove
             // if symbol == "NVDA" || symbol == "NUMG" {
-            //     println!(
-            //         " ... VALID2.. {}, {}, {:?}",
-            //         symbol, confidence_score, token_indices
-            //     );
+            // println!(
+            //     " ... VALID2.. {}, {}, {:?}",
+            //     symbol, confidence_score, token_indices
+            // );
             // }
 
             let mut is_valid = true;
@@ -318,6 +316,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 }
             }
         }
+
+        // TODO: Remove
+        // println!("Used indices: {:?}", used_indices);
 
         // Convert used_indices to query token rankings
         let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> = used_indices;
@@ -388,9 +389,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 symbol_confidence_score +=
                     (state.company_name_similarity_at_index * inverse_weight) + continuity_reward;
             }
-
-            // Clamp `symbol_confidence_score` between 0 and 1
-            symbol_confidence_score = symbol_confidence_score.clamp(0.0, 1.0);
 
             // TODO: Remove
             // if symbol == "NVDA" || symbol == "NUMG" {
