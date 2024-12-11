@@ -2,7 +2,7 @@ use crate::constants::STOP_WORDS;
 use crate::types::{
     CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
-use crate::utils::cosine_similarity;
+use crate::utils::index_difference_similarity;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use core::f64;
 use std::collections::{HashMap, HashSet};
@@ -500,11 +500,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 if *company_token_index_by_source_type >= token_start_index
                     && *company_token_index_by_source_type < token_end_index
                 {
-                    // Note: Cosine similarity isn't used for "semantic relevance" in this context
-                    // because these vectors are just simple vectors obtained from character codes.
-                    // But the algorithm happens to be pretty efficient at what it does and seems
-                    // faster at making comparisons than other algorithms I have experimented with.
-                    let similarity = cosine_similarity(&query_vector, company_token_vector);
+                    let similarity =
+                        index_difference_similarity(&query_vector, company_token_vector);
 
                     // TODO: Remove
                     let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;

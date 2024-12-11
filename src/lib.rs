@@ -8,9 +8,8 @@ pub use models::{
     CompanyNameTokenRanking, CompanyTokenProcessor, DocumentCompanyNameExtractor,
     DocumentCompanyNameExtractorConfig, Tokenizer,
 };
-pub mod utils;
-pub use utils::{cosine_similarity, pad_vector, pad_vectors_to_match};
 pub mod types;
+mod utils;
 pub use types::{
     CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
