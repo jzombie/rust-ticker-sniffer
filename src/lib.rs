@@ -185,7 +185,12 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     let mut ticker_extractor = DocumentCompanyNameExtractor::new(&company_symbols_list, weights);
 
-    let symbols_with_confidence = ticker_extractor.extract(&text);
+    let (symbols_with_confidence, consumed_query_token_indices) = ticker_extractor.extract(&text);
+
+    println!(
+        "Consumed query token indices: {:?}",
+        consumed_query_token_indices
+    );
 
     symbols_with_confidence
 }

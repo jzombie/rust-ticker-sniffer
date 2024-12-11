@@ -80,7 +80,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Extracts ticker symbols from the given text document by tokenizing
     /// and comparing against known company names. Ensures only one extraction
     /// process runs at a time.
-    pub fn extract(&mut self, text: &str) -> HashMap<TickerSymbol, f32> {
+    pub fn extract(&mut self, text: &str) -> (HashMap<TickerSymbol, f32>, Vec<usize>) {
         if self.is_extracting {
             panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
         } else {
@@ -96,7 +96,29 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Begin parsing at the first page
         self.parse_company_names(None);
 
-        self.get_symbols_with_confidence()
+        let symbols_with_confidence = self.get_symbols_with_confidence();
+
+        let consumed_query_token_indices: Vec<QueryTokenIndex> = self
+            .company_similarity_states
+            .iter()
+            .filter_map(|state| {
+                let symbol = self
+                    .company_symbols_list
+                    .get(state.company_index)
+                    .map(|(s, _)| s);
+
+                if let Some(symbol) = symbol {
+                    if symbols_with_confidence.contains_key(symbol) {
+                        return Some(state.query_token_index);
+                    }
+                }
+                None
+            })
+            .collect::<HashSet<_>>() // Ensure unique indices
+            .into_iter()
+            .collect();
+
+        (symbols_with_confidence, consumed_query_token_indices)
     }
 
     /// Parses company names from the text document, processing a specific
