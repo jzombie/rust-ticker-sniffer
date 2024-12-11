@@ -5,6 +5,7 @@ use crate::types::TokenizerVectorTokenType;
 pub struct Tokenizer {
     pub min_uppercase_ratio: Option<f32>,
     pub hyphens_as_potential_multiple_words: bool,
+    pub require_first_letter_caps: bool,
 }
 
 impl Tokenizer {
@@ -13,6 +14,7 @@ impl Tokenizer {
         Self {
             min_uppercase_ratio: Some(0.9),
             hyphens_as_potential_multiple_words: false,
+            require_first_letter_caps: false,
         }
     }
 
@@ -21,6 +23,7 @@ impl Tokenizer {
         Self {
             min_uppercase_ratio: None,
             hyphens_as_potential_multiple_words: true,
+            require_first_letter_caps: true,
         }
     }
 
@@ -47,6 +50,13 @@ impl Tokenizer {
             .replace("--", " ") // Replace standalone double hyphens
             .replace(",", " ") // Normalize commas to periods
             .split_whitespace() // Split into words
+            .filter(|word| {
+                if self.require_first_letter_caps {
+                    word.chars().next().map_or(false, |c| c.is_uppercase())
+                } else {
+                    true
+                }
+            })
             .map(|word| {
                 // Remove possessive endings ('s or s') and normalize
                 let stripped = word.replace("'s", "").replace("s'", "");
