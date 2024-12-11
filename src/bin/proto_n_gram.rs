@@ -17,7 +17,8 @@ fn main() {
         // extract_tickers_from_text(&"Nvidia Corporation", &company_symbols_list)
         // extract_tickers_from_text(&"Nvidia", &company_symbols_list)
         extract_tickers_from_text(
-            &"The shift was prompted by Wal-mart's...",
+            // &"The shift was prompted by Wal-mart's...",
+            &"Nvidia",
             &company_symbols_list
         )
     )

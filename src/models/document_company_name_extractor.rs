@@ -16,6 +16,7 @@ pub struct DocumentCompanyNameExtractorConfig {
     pub token_window_size: usize,
     pub token_gap_penalty: f32,
     pub stop_word_penalty: f32,
+    pub continuity_reward: f32,
     pub low_confidence_penalty_factor: f32,
     pub min_confidence_level_threshold: f32,
 }
@@ -25,9 +26,9 @@ struct QueryVectorIntermediateSimilarityState {
     token_window_index: TokenWindowIndex,
     query_token_index: QueryTokenIndex,
     query_vector: TokenizerVectorTokenType,
-    company_index: usize, // TODO: Add type
+    company_index: usize, // TODO: Add more specific type
     company_token_type: CompanyTokenSourceType,
-    company_token_index_by_source_type: usize, // TODO: Add type
+    company_token_index_by_source_type: usize, // TODO: Add more specific type
     company_token_vector: TokenizerVectorTokenType,
     company_name_similarity_at_index: f32,
 }
@@ -279,10 +280,20 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     f32::EPSILON
                 } * self.user_config.stop_word_penalty;
 
+                let continuity_reward = ((state.token_window_index + 1) as f32
+                    / (self
+                        .company_token_processor
+                        .get_total_company_name_tokens(state.company_index))
+                        as f32)
+                    * self.user_config.continuity_reward;
+
                 // Weigh the similarity score based on the calculated weight
                 symbol_confidence_score +=
-                    (state.company_name_similarity_at_index * inverse_weight) - stop_word_penalty;
+                    (state.company_name_similarity_at_index * inverse_weight) - stop_word_penalty
+                        + continuity_reward;
             }
+
+            // TODO: Clamp `symbol_confidence_score` between 0 and 1
 
             // TODO: Remove
             // if symbol == "NVDA" || symbol == "NUMG" {

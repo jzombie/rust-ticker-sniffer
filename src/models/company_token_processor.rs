@@ -141,13 +141,15 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
-    // pub fn get_total_company_name_tokens(&self, company_index: usize) -> usize {
-    //     match self.get_company_name_tokens(company_index) {
-    //         Some(company_name_tokens) => company_name_tokens.len(),
-    //         None => 0,
-    //     }
-    // }
+    pub fn get_total_company_name_tokens(&self, company_index: usize) -> usize {
+        match self.get_company_name_tokens(company_index) {
+            Some(company_name_tokens) => company_name_tokens.len(),
+            None => 0,
+        }
+    }
 
+    // TODO: Rename
+    /// Retrieves the summed total of all company tokens
     pub fn get_company_name_tokens_length(&self, company_index: usize) -> usize {
         match self.get_company_name_tokens(company_index) {
             Some(company_name_tokens) => {
