@@ -93,6 +93,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
+        println!(
+            "Tokenized query: {:?}",
+            self.text_doc_tokenizer
+                .charcode_vectors_to_tokens(&self.tokenized_query_vectors)
+        );
+
         // Begin parsing at the first page
         self.parse_company_names(None);
 

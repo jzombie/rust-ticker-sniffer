@@ -1,0 +1,5 @@
+Amazon is an online store.
+
+EXPECTED: AMZN
+
+COMMENT: In the dataset it is part of a domain name.

@@ -1,33 +1,47 @@
 use crate::constants::STOP_WORDS;
 use crate::constants::TLD_LIST;
 use crate::types::TokenizerVectorTokenType;
+use std::char;
+use std::collections::HashSet;
 
-#[derive(Copy, Clone)]
 pub struct Tokenizer {
     pub min_uppercase_ratio: Option<f32>,
     pub hyphens_as_potential_multiple_words: bool,
     pub require_first_letter_caps: bool,
     pub filter_stop_words: bool,
+    pre_processed_stop_words: Option<HashSet<String>>,
 }
 
 impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
+        let filter_stop_words = true;
         Self {
             min_uppercase_ratio: Some(0.9),
             hyphens_as_potential_multiple_words: false,
             require_first_letter_caps: false,
-            filter_stop_words: false,
+            filter_stop_words,
+            pre_processed_stop_words: if filter_stop_words {
+                Some(Self::preprocess_stop_words())
+            } else {
+                None
+            },
         }
     }
 
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
+        let filter_stop_words = true;
         Self {
             min_uppercase_ratio: None,
             hyphens_as_potential_multiple_words: true,
             require_first_letter_caps: true,
-            filter_stop_words: true,
+            filter_stop_words,
+            pre_processed_stop_words: if filter_stop_words {
+                Some(Self::preprocess_stop_words())
+            } else {
+                None
+            },
         }
     }
 
@@ -36,7 +50,7 @@ impl Tokenizer {
     ///
     /// Note: This explcitly does not modify the case of the text.
 
-    pub fn tokenize(self, text: &str) -> Vec<String> {
+    pub fn tokenize(&self, text: &str) -> Vec<String> {
         // Helper function to calculate uppercase ratio
         fn uppercase_ratio(word: &str) -> f32 {
             let total_chars = word.chars().count() as f32;
@@ -52,14 +66,22 @@ impl Tokenizer {
             .replace('\n', " ") // Normalize line breaks to spaces
             .replace('\r', " ") // Handle potential carriage returns
             .replace("--", " ") // Replace standalone double hyphens
-            .replace(",", " ") // Normalize commas to periods
+            .replace(",", " ") // Normalize commas to spaces
             .split_whitespace() // Split into words
             .filter(|word| {
                 if self.require_first_letter_caps {
-                    word.chars().next().map_or(false, |c| c.is_uppercase())
+                    word.chars()
+                        .find(|c| c.is_alphanumeric()) // Find the first alphanumeric character
+                        .map_or(false, |c| c.is_uppercase()) // Ensure it is uppercase
                 } else {
                     true
                 }
+            })
+            .map(|word| {
+                // Normalize TLDs and strip them if found
+                word.rsplit_once('.')
+                    .filter(|(_, tld)| TLD_LIST.contains(&tld.to_lowercase().as_str()))
+                    .map_or_else(|| word.to_string(), |(base, _)| base.to_string())
             })
             .map(|word| {
                 // Remove possessive endings ('s or s') and normalize
@@ -74,15 +96,6 @@ impl Tokenizer {
                 // Apply uppercase ratio filter
                 self.min_uppercase_ratio
                     .map_or(true, |ratio| uppercase_ratio(word) >= ratio)
-            })
-            .filter(|word| {
-                !self.filter_stop_words || !STOP_WORDS.contains(&word.to_lowercase().as_str())
-            })
-            .map(|word| {
-                // Normalize TLDs and lowercase the base word
-                word.rsplit_once('.')
-                    .filter(|(_, tld)| TLD_LIST.contains(&tld.to_lowercase().as_str()))
-                    .map_or_else(|| word.to_lowercase(), |(base, _)| base.to_lowercase())
             })
             .flat_map(|word| {
                 // Handle hyphenated words
@@ -100,27 +113,58 @@ impl Tokenizer {
                         vec![word.replace('-', "")].into_iter()
                     })
             })
-            .map(|word| word.to_uppercase()) // Convert to uppercase
-            // TODO: Remove
-            // .map(|word| {
-            //     println!("{}", word);
-            //     word
-            // })
+            .map(|word| {
+                word.chars()
+                    .filter(|c| c.is_alphanumeric()) // Use a closure instead of a function pointer
+                    .collect::<String>() // Collect filtered characters into a String
+                    .to_uppercase() // Convert to uppercase
+            })
+            .filter(|word| {
+                // Use preprocessed stop words for filtering
+                !self.filter_stop_words
+                    || !self
+                        .pre_processed_stop_words
+                        .as_ref()
+                        .map_or(false, |stop_words| stop_words.contains(word))
+            })
             .collect()
     }
 
-    pub fn token_to_charcode_vector(self, token: &str) -> TokenizerVectorTokenType {
+    /// Pre-process the stop words by removing non-alphanumeric characters and converting to uppercase
+    fn preprocess_stop_words() -> HashSet<String> {
+        STOP_WORDS
+            .iter()
+            .map(|word| {
+                word.chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>()
+                    .to_uppercase()
+            })
+            .collect()
+    }
+
+    pub fn token_to_charcode_vector(&self, token: &str) -> TokenizerVectorTokenType {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn charcode_vector_to_token(self, charcodes: &TokenizerVectorTokenType) -> String {
+    pub fn charcode_vector_to_token(&self, charcodes: &TokenizerVectorTokenType) -> String {
         charcodes
             .iter()
             .map(|&code| char::from_u32(code).unwrap_or('\u{FFFD}')) // Convert code to char, using '�' as a fallback
             .collect()
     }
 
-    pub fn tokenize_to_charcode_vectors(self, text: &str) -> Vec<TokenizerVectorTokenType> {
+    pub fn charcode_vectors_to_tokens(
+        &self,
+        charcode_vectors: &Vec<TokenizerVectorTokenType>,
+    ) -> Vec<String> {
+        charcode_vectors
+            .into_iter() // Iterate over the vector of references to charcode vectors
+            .map(|charcodes| self.charcode_vector_to_token(charcodes)) // Convert each vector of char codes to a string
+            .collect() // Collect the resulting strings into a Vec<String>
+    }
+
+    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorTokenType> {
         self.tokenize(text)
             .into_iter() // Use the existing `tokenize` function to get tokens
             .map(|token| self.token_to_charcode_vector(&token)) // Convert each token to char code vectors

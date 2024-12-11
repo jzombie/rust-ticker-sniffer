@@ -1,0 +1,4 @@
+"Wal-Mart" and "Amazon"
+
+EXPECTED: WMT
+EXPECTED: AMZN
