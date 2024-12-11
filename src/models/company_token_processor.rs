@@ -76,8 +76,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             if let Some(company_name) = company_name {
-                let mut company_name_token_count: usize = 0;
-
                 let company_name_token_vectors = self
                     .text_doc_tokenizer
                     .tokenize_to_charcode_vectors(company_name);
@@ -87,9 +85,6 @@ impl<'a> CompanyTokenProcessor<'a> {
                         CompanyTokenSourceType::CompanyName,
                         index_by_source_type,
                     ));
-
-                    company_name_token_count += 1;
-                    // Token from company name
                 }
             }
 
