@@ -223,8 +223,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         symbols_with_confidence
     }
 
-    // TODO: Handle stop word penalty here: tokenized_stop_word_vectors
-    //
     /// Calculates confidence scores for each ticker symbol by weighing
     /// their similarity states. Applies penalties for large token gaps
     /// and normalizes scores based on the overall distribution.
