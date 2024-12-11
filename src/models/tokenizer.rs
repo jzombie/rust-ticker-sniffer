@@ -159,15 +159,15 @@ impl Tokenizer {
         charcode_vectors: &Vec<TokenizerVectorTokenType>,
     ) -> Vec<String> {
         charcode_vectors
-            .into_iter() // Iterate over the vector of references to charcode vectors
-            .map(|charcodes| self.charcode_vector_to_token(charcodes)) // Convert each vector of char codes to a string
+            .iter()
+            .map(|charcodes| self.charcode_vector_to_token(charcodes))
             .collect() // Collect the resulting strings into a Vec<String>
     }
 
     pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorTokenType> {
         self.tokenize(text)
-            .into_iter() // Use the existing `tokenize` function to get tokens
-            .map(|token| self.token_to_charcode_vector(&token)) // Convert each token to char code vectors
+            .iter() // Use the existing `tokenize` function to get tokens
+            .map(|token| self.token_to_charcode_vector(&token))
             .collect()
     }
 }
