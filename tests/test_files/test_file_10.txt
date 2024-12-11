@@ -1,4 +1,4 @@
-Apple Manzana Nvidia Microsoft Alphabet Apple.  The people, some say that Apple, Apple Hospitality REIT are two different tings.
+Apple Manzana Nvidia Microsoft Alphabet Apple.  The people, some say that Apple, Apple Hospitality REIT are two different things.
 
 EXPECTED: AAPL
 EXPECTED: APLE
