@@ -9,6 +9,10 @@ use std::collections::{HashMap, HashSet};
 type TokenWindowIndex = usize;
 type QueryTokenIndex = usize;
 
+// TODO: If possible to add an optional report of why things were filtered or
+// included in the final result, within reason (i.e. within
+// `min_text_doc_token_sim_threshold`), would be beneficial for debugging.
+
 pub struct DocumentCompanyNameExtractorConfig {
     pub min_text_doc_token_sim_threshold: f32,
     // pub token_length_diff_tolerance: usize,
