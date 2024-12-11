@@ -1,4 +1,3 @@
-use crate::constants::STOP_WORDS;
 use crate::types::{
     CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
@@ -15,7 +14,6 @@ pub struct DocumentCompanyNameExtractorConfig {
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
     pub token_gap_penalty: f32,
-    pub stop_word_penalty: f32,
     pub continuity_reward: f32,
     pub low_confidence_penalty_factor: f32,
     pub min_confidence_level_threshold: f32,
@@ -42,7 +40,6 @@ pub struct DocumentCompanyNameExtractor<'a> {
     is_extracting: bool,
 
     tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
-    tokenized_stop_word_vectors: HashSet<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     progressible_company_indices: HashSet<usize>, // TODO: Add type
     results: Vec<TickerSymbol>,
@@ -62,11 +59,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
-        let tokenized_stop_word_vectors: HashSet<TokenizerVectorTokenType> = text_doc_tokenizer
-            .tokenize_to_charcode_vectors(&STOP_WORDS.join(" "))
-            .into_iter()
-            .collect();
-
         Self {
             company_symbols_list,
             ticker_symbol_tokenizer,
@@ -75,7 +67,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             user_config,
             is_extracting: false,
             tokenized_query_vectors: vec![],
-            tokenized_stop_word_vectors,
             company_similarity_states: vec![],
             progressible_company_indices: HashSet::new(),
             results: vec![],
@@ -271,15 +262,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 //     );
                 // }
 
-                let stop_word_penalty = if self
-                    .tokenized_stop_word_vectors
-                    .contains(&state.query_vector)
-                {
-                    1.0
-                } else {
-                    f32::EPSILON
-                } * self.user_config.stop_word_penalty;
-
                 let continuity_reward = ((state.token_window_index + 1) as f32
                     / (self
                         .company_token_processor
@@ -289,11 +271,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 // Weigh the similarity score based on the calculated weight
                 symbol_confidence_score +=
-                    (state.company_name_similarity_at_index * inverse_weight) - stop_word_penalty
-                        + continuity_reward;
+                    (state.company_name_similarity_at_index * inverse_weight) + continuity_reward;
             }
 
-            // TODO: Clamp `symbol_confidence_score` between 0 and 1
+            // Clamp `symbol_confidence_score` between 0 and 1
+            symbol_confidence_score = symbol_confidence_score.clamp(0.0, 1.0);
 
             // TODO: Remove
             // if symbol == "NVDA" || symbol == "NUMG" {

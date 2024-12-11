@@ -1,3 +1,4 @@
+use crate::constants::STOP_WORDS;
 use crate::constants::TLD_LIST;
 use crate::types::TokenizerVectorTokenType;
 
@@ -6,6 +7,7 @@ pub struct Tokenizer {
     pub min_uppercase_ratio: Option<f32>,
     pub hyphens_as_potential_multiple_words: bool,
     pub require_first_letter_caps: bool,
+    pub filter_stop_words: bool,
 }
 
 impl Tokenizer {
@@ -15,6 +17,7 @@ impl Tokenizer {
             min_uppercase_ratio: Some(0.9),
             hyphens_as_potential_multiple_words: false,
             require_first_letter_caps: false,
+            filter_stop_words: false,
         }
     }
 
@@ -24,6 +27,7 @@ impl Tokenizer {
             min_uppercase_ratio: None,
             hyphens_as_potential_multiple_words: true,
             require_first_letter_caps: true,
+            filter_stop_words: true,
         }
     }
 
@@ -70,6 +74,9 @@ impl Tokenizer {
                 // Apply uppercase ratio filter
                 self.min_uppercase_ratio
                     .map_or(true, |ratio| uppercase_ratio(word) >= ratio)
+            })
+            .filter(|word| {
+                !self.filter_stop_words || !STOP_WORDS.contains(&word.to_lowercase().as_str())
             })
             .map(|word| {
                 // Normalize TLDs and lowercase the base word
