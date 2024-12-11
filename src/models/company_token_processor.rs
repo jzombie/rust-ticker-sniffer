@@ -36,6 +36,7 @@ pub struct CompanyTokenProcessor<'a> {
 
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
+        // TODO: Share tokenizers with some sort of base class, to not need to re-init
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
         let text_doc_tokenizer = Tokenizer::text_doc_parser();
 
