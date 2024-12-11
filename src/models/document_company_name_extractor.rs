@@ -222,7 +222,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
         let mut per_symbol_confidence_scores: HashMap<TickerSymbol, f32> = HashMap::new();
-        let mut all_confidence_scores = Vec::new();
 
         // First pass: Calculate initial confidence scores
         for (symbol, states) in &coverage_grouped_results {
@@ -287,10 +286,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             // }
 
             per_symbol_confidence_scores.insert(symbol.clone(), symbol_confidence_score);
-            all_confidence_scores.push(symbol_confidence_score);
         }
 
         // ------------------
+
+        let all_confidence_scores: Vec<f32> =
+            per_symbol_confidence_scores.values().cloned().collect();
 
         // Analyze the distribution of scores
         let mean_score: f32 =
