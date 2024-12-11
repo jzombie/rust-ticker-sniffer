@@ -38,7 +38,7 @@ pub struct DocumentCompanyNameExtractor<'a> {
     company_token_processor: CompanyTokenProcessor<'a>,
     user_config: DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
-    text: Option<String>,
+
     tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
     tokenized_stop_word_vectors: Vec<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
@@ -70,7 +70,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             company_token_processor,
             user_config,
             is_extracting: false,
-            text: None,
             tokenized_query_vectors: vec![],
             tokenized_stop_word_vectors,
             company_similarity_states: vec![],
@@ -93,7 +92,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         self.progressible_company_indices.clear();
         self.results.clear();
 
-        self.text = Some(text.to_string());
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
         // Begin parsing at the first page
