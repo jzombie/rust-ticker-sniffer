@@ -15,6 +15,7 @@ pub struct DocumentCompanyNameExtractorConfig {
     // pub token_length_diff_tolerance: usize,
     pub token_window_size: usize,
     pub token_gap_penalty: f32,
+    pub stop_word_penalty: f32,
     pub low_confidence_penalty_factor: f32,
     pub min_confidence_level_threshold: f32,
 }
@@ -40,7 +41,7 @@ pub struct DocumentCompanyNameExtractor<'a> {
     is_extracting: bool,
 
     tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
-    tokenized_stop_word_vectors: Vec<TokenizerVectorTokenType>,
+    tokenized_stop_word_vectors: HashSet<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     progressible_company_indices: HashSet<usize>, // TODO: Add type
     results: Vec<TickerSymbol>,
@@ -60,8 +61,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
 
-        let tokenized_stop_word_vectors =
-            text_doc_tokenizer.tokenize_to_charcode_vectors(&STOP_WORDS.join(&" "));
+        let tokenized_stop_word_vectors: HashSet<TokenizerVectorTokenType> = text_doc_tokenizer
+            .tokenize_to_charcode_vectors(&STOP_WORDS.join(" "))
+            .into_iter()
+            .collect();
 
         Self {
             company_symbols_list,
@@ -181,7 +184,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let query_token_rankings: HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> = used_indices;
 
         // TODO: Remove
-        println!("QUERY TOKEN RANKINGS: {:?}", query_token_rankings);
+        println!("QUERY TOKEN RANKINGS");
+        for ranking in &query_token_rankings {
+            println!("\t{:?}", ranking);
+        }
 
         query_token_rankings
     }
@@ -266,8 +272,18 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 //     );
                 // }
 
+                let stop_word_penalty = if self
+                    .tokenized_stop_word_vectors
+                    .contains(&state.query_vector)
+                {
+                    1.0
+                } else {
+                    f32::EPSILON
+                } * self.user_config.stop_word_penalty;
+
                 // Weigh the similarity score based on the calculated weight
-                symbol_confidence_score += state.company_name_similarity_at_index * inverse_weight;
+                symbol_confidence_score +=
+                    (state.company_name_similarity_at_index * inverse_weight) - stop_word_penalty;
             }
 
             // TODO: Remove

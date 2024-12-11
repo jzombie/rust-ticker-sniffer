@@ -6,7 +6,7 @@ pub const DEFAULT_CONFIG: DocumentCompanyNameExtractorConfig = DocumentCompanyNa
     token_window_size: 1,
     // Used when calculating confidence scores
     token_gap_penalty: 2.5,
-    // TODO: Add stop-word penalty
+    stop_word_penalty: 0.4,
     low_confidence_penalty_factor: 0.5,
     min_confidence_level_threshold: 0.5,
 };
