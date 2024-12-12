@@ -37,7 +37,6 @@ pub struct DocumentCompanyNameExtractor<'a> {
 
     tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
-    progressible_company_indices: HashSet<usize>, // TODO: Add more specific type
     results: Vec<TickerSymbol>,
 }
 
@@ -59,7 +58,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             is_extracting: false,
             tokenized_query_vectors: vec![],
             company_similarity_states: vec![],
-            progressible_company_indices: HashSet::new(),
             results: vec![],
         }
     }
@@ -75,7 +73,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
 
         self.company_similarity_states.clear();
-        self.progressible_company_indices.clear();
         self.results.clear();
 
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
@@ -86,7 +83,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         );
 
         // Begin parsing at the first page
-        self.parse_company_names(None);
+        self.parse_company_names(None, None);
 
         let symbols_with_confidence = self.get_symbols_with_confidence();
 
@@ -116,10 +113,21 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Parses company names from the text document, processing a specific
     /// range of tokens defined by the token window index. Filters and evaluates
     /// token similarity for potential ticker symbol matches.
-    fn parse_company_names(&mut self, token_window_index: Option<TokenWindowIndex>) {
+    fn parse_company_names(
+        &mut self,
+        token_window_index: Option<TokenWindowIndex>,
+        progressible_company_indices: Option<HashSet<usize>>,
+    ) {
+        let mut next_progressible_company_indices: HashSet<usize> = HashSet::new();
+
+        let progressible_company_indices = match progressible_company_indices {
+            Some(progressible_company_indices) => progressible_company_indices,
+            _ => HashSet::new(),
+        };
+
         let token_window_index = match token_window_index {
             Some(token_window_index) => token_window_index,
-            None => 0,
+            _ => 0,
         };
 
         let (token_start_index, token_end_index) =
@@ -149,9 +157,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .expect("Could not locate bins");
 
             for (company_index, tokenized_entry_index) in bins {
-                if token_window_index > 0
-                    && !self.progressible_company_indices.contains(company_index)
-                {
+                if token_window_index > 0 && !progressible_company_indices.contains(company_index) {
                     continue;
                 }
 
@@ -172,9 +178,22 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     // TODO: Remove
                     // let ticker_symbol = &self.company_symbols_list.get(*company_index).expect("").0;
                     // if ticker_symbol == "NVDA" {
-                    //     println!("hello??");
-
-                    //     println!("{}", similarity);
+                    // println!("-----");
+                    // println!(
+                    //     "Symbol: {}, Similarity: {}, Threshold: {}, Query: {}, Result: {}, Query Token Index: {}, Company Token Index: {}, Token Start Index: {}, Token End Index: {}, Token Window Index: {}, Company Index: {}, Company Name Tokens: {:?}",
+                    //     ticker_symbol,
+                    //     similarity,
+                    //     self.user_config.min_text_doc_token_sim_threshold,
+                    //     Tokenizer::charcode_vector_to_token(query_vector),
+                    //     Tokenizer::charcode_vector_to_token(company_token_vector),
+                    //     query_token_index,
+                    //     company_token_index_by_source_type,
+                    //     token_start_index,
+                    //     token_end_index,
+                    //     token_window_index,
+                    //     company_index,
+                    //     self.company_token_processor.get_company_name_tokens(*company_index)
+                    // );
                     // }
 
                     if similarity >= self.user_config.min_text_doc_token_sim_threshold {
@@ -203,9 +222,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                             },
                         );
 
-                        self.progressible_company_indices.insert(*company_index);
-                    } else {
-                        self.progressible_company_indices.remove(company_index);
+                        next_progressible_company_indices.insert(*company_index);
                     }
                 }
             }
@@ -213,7 +230,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         // Continue looping if new matches have been discovered
         if window_match_count > 0 {
-            self.parse_company_names(Some(token_window_index + 1));
+            self.parse_company_names(
+                Some(token_window_index + 1),
+                Some(next_progressible_company_indices),
+            );
         }
     }
 
@@ -237,6 +257,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Prepare a map for symbols and their highest confidence scores
         let mut symbols_with_confidence: HashMap<TickerSymbol, f32> = HashMap::new();
 
+        // Iterate through each query token index, obtaining symbols and confidence levels
         for (_query_token_index, (symbols, confidence_level)) in query_token_rankings {
             if confidence_level < self.user_config.min_confidence_level_threshold {
                 continue;
@@ -244,7 +265,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             for symbol in symbols {
                 // TODO: Remove
-                // println!("symbol: {}, score: {}", symbol, confidence_level);
+                println!("symbol: {}, score: {}", symbol, confidence_level);
 
                 symbols_with_confidence
                     .entry(symbol.clone())
@@ -356,6 +377,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f32> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
+        // TODO: Remove
+        // println!("coveraged grouped results: {:?}", coverage_grouped_results);
+
         let mut per_symbol_confidence_scores: HashMap<TickerSymbol, f32> = HashMap::new();
 
         // First pass: Calculate initial confidence scores
@@ -386,26 +410,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     continue;
                 }
 
-                // if i > 0 {
-                //     // Calculate the gap between the current and previous indices
-                //     let prev_query_token_index = states[i - 1].query_token_index;
-                //     let gap = (state.query_token_index as isize - prev_query_token_index as isize)
-                //         .abs() as usize;
-
-                //     // Apply a penalty for larger gaps (e.g., inverse weighting)
-                //     inverse_weight = if gap > 1 {
-                //         1.0 / (self.user_config.token_gap_penalty + gap as f32)
-                //     } else {
-                //         1.0
-                //     };
-
-                //     // TODO: Remove
-                //     println!(
-                //         "\nsymbol: {}, gap: {}, inverse_weight {}\n",
-                //         symbol, gap, inverse_weight
-                //     );
-                // }
-
                 let continuity_reward = ((state.token_window_index + 1) as f32
                     / (self
                         .company_token_processor
@@ -419,11 +423,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 // TODO: Remove
                 // if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
-                println!(
-                    "calc_confidence_scores similarity at index --------- symbol: {} {} {} {} : {:?}",
-                    symbol, i, state.company_name_similarity_at_index, symbol_confidence_score, state
-                );
-
+                // println!(
+                //     "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
+                //     symbol, state.query_vector, symbol_confidence_score, state
+                // );
                 // }
 
                 last_token_window_index = Some(state.token_window_index);
@@ -476,10 +479,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
 
         // TODO: Remove
-        println!(
-            "Per symbol confidence scores: {:?}",
-            per_symbol_confidence_scores
-        );
+        // println!("Per symbol confidence scores",);
+        // for (symbol, confidence_score) in &per_symbol_confidence_scores {
+        //     println!("Symbol: {}, confidence score: {}", symbol, confidence_score);
+        // }
 
         per_symbol_confidence_scores
     }
@@ -502,6 +505,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             // if symbol == "NVDA" {
             //     println!("----- filtered; symbol: {}", symbol);
             // }
+
+            // TODO: Remove
+            // println!("CF RESULTS: Symbol: {}, States: {:?}", symbol, states);
 
             let empty_vec = Vec::new();
             let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
