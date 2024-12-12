@@ -47,47 +47,6 @@ pub fn extract_tickers_from_text_with_custom_weights(
     //     &"E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.",
     // );
 
-    // let tokens = tokenize("A cool test, way to go Apple, e-Trade");
-    // let vectors: Vec<Vec<u32>> = tokens
-    //     .into_iter()
-    //     .map(|token| token_to_charcode_vector(&token)) // Each token produces a Vec<u32>
-    //     .collect();
-
-    // eprintln!("vectors: {:?}", vectors);
-
-    // let token_processor = CompanyTokenProcessor::new(&company_symbols_list);
-
-    // TODO: Refactor
-    // Query for tokens of a specific length (e.g., length 8)
-    // let min_token_legnth = 1;
-    // let max_token_length = 20;
-    // let token_start_index = 0;
-    // let token_end_index = 4;
-    // // let include_source_types = &[CompanyTokenSourceType::Symbol, TokenSourceType::CompanyName];
-    // // let include_source_types = &[CompanyTokenSourceType::CompanyName];
-    // let include_source_types = &[CompanyTokenSourceType::Symbol];
-    // let results_iter = token_processor.filter_token_space(
-    //     min_token_legnth,
-    //     max_token_length,
-    //     token_start_index,
-    //     token_end_index,
-    //     include_source_types
-    // );
-
-    // for (index, result) in results_iter.enumerate() {
-    //     println!(
-    //         "#: {}, Company Index: {}, Token Index: {} - Symbol: {} - String Token: {:?} - Source Type: {:?} - Company Tokens: {:?}",
-    //         index,
-    //         result.company_index,
-    //         result.token_index,
-    //         result.symbol,
-    //         charcode_vector_to_token(result.token_vector),
-    //         result.source_type,
-    //         result.company_tokenized_entries
-
-    //     );
-    // }
-
     // let query = "The stuff IT dreams are made of, but you know, Agilent is interesting.";
 
     // // let query = "Amazon.com";
