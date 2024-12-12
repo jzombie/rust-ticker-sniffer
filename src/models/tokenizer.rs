@@ -12,7 +12,6 @@ pub struct Tokenizer {
     pre_processed_stop_words: Option<HashSet<String>>,
 }
 
-// TODO: Split tokens by syllables
 impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
@@ -46,11 +45,7 @@ impl Tokenizer {
         }
     }
 
-    // TODO: Provide optional STOP_WORD filtering?
     /// Tokenizer function to split the text into individual tokens.
-    ///
-    /// Note: This explcitly does not modify the case of the text.
-
     pub fn tokenize(&self, text: &str) -> Vec<String> {
         // Helper function to calculate uppercase ratio
         fn uppercase_ratio(word: &str) -> f32 {
