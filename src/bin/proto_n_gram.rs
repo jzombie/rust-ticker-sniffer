@@ -134,6 +134,12 @@ fn main() {
     // Goodarzi said in Monday’s release that the company is bringing its “AI-driven expert platform to help sellers boost their revenue and profitability, save time, and grow with confidence.”
     // "#;
 
+    // TODO: Ensure DIA gets extracted from company name extractor only
+    let query = r#"
+     Given this, investors seeking to tap the potential strength in the Dow Jones trend could consider SPDR Dow Jones Industrial Average ETF (DIA Quick QuoteDIA - Free Report) , iShares Dow Jones U.S. ETF (IYY Quick QuoteIYY - Free Report) , Invesco Dow Jones Industrial Average Dividend ETF (DJD Quick QuoteDJD - Free Report) and First Trust Dow 30 Equal Weight ETF (EDOW Quick QuoteEDOW - Free Report) .
+    "#;
+    // let query = r#"SPDR Dow Jones Industrial Average ETF Invesco Dow Jones Industrial Average Dividend ETF iShares Dow Jones U.S. ETF"#;
+
     let results = extract_tickers_from_text(&query, &company_symbols_list);
 
     println!("Extracted Tickers:");

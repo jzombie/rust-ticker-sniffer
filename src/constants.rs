@@ -19,6 +19,7 @@ pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
 // (may be completely overkill for this use case; just need TLDs)
 pub const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
 
+// TODO: Remove?
 pub const IGNORE_WORDS: &[&str] = &[
     // Many State Street ETFs are commonly referenced without SPDR prefix
     "SPDR", "U.S.", "Strong",

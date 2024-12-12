@@ -90,10 +90,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
-        // println!(
-        //     "Tokenized query: {:?}",
-        //     Tokenizer::charcode_vectors_to_tokens(&self.tokenized_query_vectors)
-        // );
+        // TODO: Remove
+        println!(
+            "Tokenized query: {:?}",
+            Tokenizer::charcode_vectors_to_tokens(&self.tokenized_query_vectors)
+        );
 
         // Begin parsing at the first page
         self.parse_company_names(None, None);
@@ -205,7 +206,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                         // TODO: Remove
                         // let ticker_symbol =
                         //     &self.company_symbols_list.get(*company_index).expect("").0;
-                        // if ticker_symbol == "AAPL" {
+                        // if ticker_symbol == "DIA" {
                         //     println!("-----");
                         //     println!(
                         //         "Symbol: {}, Similarity: {}, Threshold: {}, Query: {}, Result: {}, Query Token Index: {}, Company Token Index: {}, Token Start Index: {}, Token End Index: {}, Token Window Index: {}, Company Index: {}, Company Name Tokens: {:?}",
@@ -314,6 +315,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     fn map_highest_ranking_symbols_to_query_tokens(
         &self,
     ) -> HashMap<QueryTokenIndex, (Vec<TickerSymbol>, f32)> {
+        // TODO: Remove
+        // println!("---- map_highest_ranking_symbols_to_query_tokens");
+
         // Calculate confidence scores for each symbol
         let confidence_scores = self.calc_confidence_scores();
 
@@ -389,21 +393,31 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             let mut last_query_token_index = None;
 
             // TODO: Remove
-            // if symbol == "AAPL" || symbol == "APLE" {
-            //     println!(
-            //         "calc_confidence_scores (initial states): symbol: {}",
-            //         symbol,
-            //     );
-            //     for state in states {
-            //         println!(
-            //             "\t{:?}",
-            //             Tokenizer::charcode_vector_to_token(&state.query_vector)
-            //         );
-            //         println!("\t{:?}", state,);
-            //     }
-            // }
+            if symbol == "DIA" {
+                println!(
+                    "calc_confidence_scores (initial states): symbol: {}",
+                    symbol,
+                );
+                for state in states {
+                    println!(
+                        "\t{:?}",
+                        Tokenizer::charcode_vector_to_token(&state.query_vector)
+                    );
+                    println!("\t{:?}", state,);
+                }
+            }
 
             for (i, state) in states.iter().enumerate() {
+                // TODO: Remove
+                // if symbol == "DIA" {
+                //     println!(
+                //         "calc_confidence_scores: symbol: {}, token: {:?}, state: {:?}",
+                //         symbol,
+                //         Tokenizer::charcode_vector_to_token(&state.query_vector),
+                //         state
+                //     );
+                // }
+
                 // Skip repeat processinging of same query token indexes
                 if seen_query_token_indexes.contains(&state.query_token_index) {
                     continue;
@@ -446,15 +460,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     state.company_name_similarity_at_index + continuity_reward;
 
                 // TODO: Remove
-                // if symbol == "AAPL" || symbol == "APLE" {
-                //     println!(
-                //         "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
-                //         symbol,
-                //         Tokenizer::charcode_vector_to_token(&state.query_vector),
-                //         symbol_confidence_score,
-                //         state
-                //     );
-                // }
+                if symbol == "DIA" {
+                    println!(
+                        "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
+                        symbol,
+                        Tokenizer::charcode_vector_to_token(&state.query_vector),
+                        symbol_confidence_score,
+                        state
+                    );
+                }
 
                 last_token_window_index = Some(state.token_window_index);
                 last_query_token_index = Some(state.query_token_index);
@@ -491,10 +505,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     *score *= penalty_factor;
 
                     // TODO: Remove
-                    println!(
-                        "Penalizing symbol: {} with original score: {} (frequency: {}), new score: {}",
-                        symbol, *score / penalty_factor, frequency, *score
-                    );
+                    // println!(
+                    //     "Penalizing symbol: {} with original score: {} (frequency: {}), new score: {}",
+                    //     symbol, *score / penalty_factor, frequency, *score
+                    // );
                 }
             }
         }
@@ -536,7 +550,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // TODO: Remove
         // println!("Per symbol confidence scores",);
         // for (symbol, confidence_score) in &per_symbol_confidence_scores {
-        //     println!("Symbol: {}, confidence score: {}", symbol, confidence_score);
+        //     println!(
+        //         "-----  Symbol: {}, confidence score: {}",
+        //         symbol, confidence_score
+        //     );
         // }
 
         per_symbol_confidence_scores
@@ -556,10 +573,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         > = HashMap::new();
 
         for (symbol, states) in grouped_states {
-            // TODO: Remove
-            // if symbol == "NVDA" {
-            //     println!("----- filtered; symbol: {}", symbol);
-            // }
+            if symbol == "DIA" {
+                println!(
+                    "collect_coverage_filtered_results (initial states): symbol: {}",
+                    symbol,
+                );
+                for state in &states {
+                    println!(
+                        "\t{:?}",
+                        Tokenizer::charcode_vector_to_token(&state.query_vector)
+                    );
+                    println!("\t{:?}", state,);
+                }
+            }
 
             // TODO: Remove
             // println!("CF RESULTS: Symbol: {}, States: {:?}", symbol, states);
