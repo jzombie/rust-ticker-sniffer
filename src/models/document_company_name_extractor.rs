@@ -679,9 +679,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .push(state.clone());
         }
 
-        // Sort each group by query_token_index
+        // Sort each group by token_window_index
         for states in grouped.values_mut() {
-            states.sort_by_key(|state| state.query_token_index);
+            states.sort_by_key(|state| state.token_window_index);
         }
 
         grouped
