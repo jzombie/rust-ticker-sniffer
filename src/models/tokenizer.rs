@@ -5,7 +5,6 @@ use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
-    pub require_first_letter_caps: bool,
     pub min_uppercase_ratio: Option<f32>,
     pub hyphens_as_potential_multiple_words: bool,
     pub filter_stop_words: bool,
@@ -17,7 +16,6 @@ impl Tokenizer {
     pub fn ticker_symbol_parser() -> Self {
         let filter_stop_words = true;
         Self {
-            require_first_letter_caps: false,
             min_uppercase_ratio: Some(0.9),
             hyphens_as_potential_multiple_words: false,
             filter_stop_words,
@@ -33,7 +31,6 @@ impl Tokenizer {
     pub fn text_doc_parser() -> Self {
         let filter_stop_words = true;
         Self {
-            require_first_letter_caps: true,
             min_uppercase_ratio: None,
             hyphens_as_potential_multiple_words: true,
             filter_stop_words,
@@ -66,20 +63,14 @@ impl Tokenizer {
             .split_whitespace() // Split into words
             // Filter by original capitalization
             .filter(|word| {
-                // Apply uppercase ratio filter and first letter caps requirement
+                // Apply uppercase ratio filter and any capital letter requirement
                 let passes_uppercase_ratio = self
                     .min_uppercase_ratio
                     .map_or(true, |ratio| uppercase_ratio(word) >= ratio);
 
-                let passes_first_letter_caps = if self.require_first_letter_caps {
-                    word.chars()
-                        .find(|c| c.is_alphanumeric()) // Find the first alphanumeric character
-                        .map_or(false, |c| c.is_uppercase()) // Ensure it is uppercase
-                } else {
-                    true
-                };
+                let passes_any_caps = word.chars().any(|c| c.is_uppercase()); // Check if any letter is capitalized
 
-                passes_uppercase_ratio && passes_first_letter_caps
+                passes_uppercase_ratio && passes_any_caps
             })
             // Remove TLD extensions (i.e. so `Amazon` and `Amazon.com` are treated the same)
             .map(|word| {
