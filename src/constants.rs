@@ -3,7 +3,6 @@ use crate::models::DocumentCompanyNameExtractorConfig;
 pub const DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG: DocumentCompanyNameExtractorConfig =
     DocumentCompanyNameExtractorConfig {
         min_text_doc_token_sim_threshold: 0.99,
-        // token_length_diff_tolerance: 0,
         token_window_size: 1,
         // Used when calculating confidence scores
         token_gap_penalty: 2.5,
