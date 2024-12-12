@@ -372,8 +372,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     }
 
     /// Calculates confidence scores for each ticker symbol by weighing
-    /// their similarity states. Applies penalties for large token gaps
-    /// and normalizes scores based on the overall distribution.
+    /// their similarity states.
     fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f32> {
         let coverage_grouped_results = self.collect_coverage_filtered_results();
 
