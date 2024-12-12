@@ -133,6 +133,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let (token_start_index, token_end_index) =
             self.calc_token_window_indexes(token_window_index);
 
+        // TODO: Remove
         println!(
             "Start index: {}, End index: {}",
             token_start_index, token_end_index
@@ -298,19 +299,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Iterate over all symbols and their corresponding states
         for (symbol, states) in self.collect_coverage_filtered_results() {
             // TODO: Remove
-            if symbol == "AAPL" || symbol == "APLE" {
-                println!("symbol: {}, Confidence scores....................", symbol);
+            // if symbol == "AAPL" || symbol == "APLE" {
+            //     println!("symbol: {}, Confidence scores....................", symbol);
 
-                for state in &states {
-                    println!(
-                        "\t{}, {}, {:?}, {:?}",
-                        symbol,
-                        Tokenizer::charcode_vector_to_token(&state.company_token_vector),
-                        confidence_scores.get(&symbol).expect(""),
-                        state
-                    );
-                }
-            }
+            //     for state in &states {
+            //         println!(
+            //             "\t{}, {}, {:?}, {:?}",
+            //             symbol,
+            //             Tokenizer::charcode_vector_to_token(&state.company_token_vector),
+            //             confidence_scores.get(&symbol).expect(""),
+            //             state
+            //         );
+            //     }
+            // }
 
             // Get the confidence score for this symbol
             let confidence_score = *confidence_scores
@@ -341,6 +342,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         query_token_rankings
     }
 
+    // TODO: Decrease confidence score if the same query token indexes match a significant number of results (this may need to be done in another method, for simplicity)
+    //
     /// Calculates confidence scores for each ticker symbol by weighing
     /// their similarity states.
     fn calc_confidence_scores(&self) -> HashMap<TickerSymbol, f32> {
@@ -361,19 +364,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             let mut last_query_token_index = None;
 
             // TODO: Remove
-            if symbol == "AAPL" || symbol == "APLE" {
-                println!(
-                    "calc_confidence_scores (initial states): symbol: {}",
-                    symbol,
-                );
-                for state in states {
-                    println!(
-                        "\t{:?}",
-                        Tokenizer::charcode_vector_to_token(&state.query_vector)
-                    );
-                    println!("\t{:?}", state,);
-                }
-            }
+            // if symbol == "AAPL" || symbol == "APLE" {
+            //     println!(
+            //         "calc_confidence_scores (initial states): symbol: {}",
+            //         symbol,
+            //     );
+            //     for state in states {
+            //         println!(
+            //             "\t{:?}",
+            //             Tokenizer::charcode_vector_to_token(&state.query_vector)
+            //         );
+            //         println!("\t{:?}", state,);
+            //     }
+            // }
 
             for (i, state) in states.iter().enumerate() {
                 // Skip repeat processinging of same query token indexes
@@ -520,6 +523,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             };
 
             for state in states {
+                // TODO: Remove
+                // println!("coverage measure  {}, {:?}", symbol, state);
+
                 if has_coverage_increase
                     && state.query_token_index < min_coverage_increase_query_token_index
                 {
@@ -530,11 +536,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     .entry(symbol.clone())
                     .or_insert_with(Vec::new)
                     .push(state.clone());
-
-                // Skip progressing if no coverage increase
-                if !has_coverage_increase {
-                    break;
-                }
             }
         }
 
