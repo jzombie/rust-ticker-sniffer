@@ -28,9 +28,8 @@ struct QueryVectorIntermediateSimilarityState {
 
 pub struct DocumentCompanyNameExtractor<'a> {
     company_symbols_list: &'a CompanySymbolsList,
-    ticker_symbol_tokenizer: Tokenizer,
-    text_doc_tokenizer: Tokenizer,
-    company_token_processor: CompanyTokenProcessor<'a>,
+    text_doc_tokenizer: &'a Tokenizer,
+    company_token_processor: &'a CompanyTokenProcessor<'a>,
     user_config: DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
 
@@ -47,18 +46,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     pub fn new(
         company_symbols_list: &'a CompanySymbolsList,
         user_config: DocumentCompanyNameExtractorConfig,
+        text_doc_tokenizer: &'a Tokenizer,
+        company_token_processor: &'a CompanyTokenProcessor,
     ) -> Self {
-        // TODO: Share tokenizers with some sort of base class, to not need to re-init
-        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
-        let text_doc_tokenizer = Tokenizer::text_doc_parser();
-
-        let company_token_processor = CompanyTokenProcessor::new(&company_symbols_list);
-
         Self {
             company_symbols_list,
-            ticker_symbol_tokenizer,
-            text_doc_tokenizer,
-            company_token_processor,
+            text_doc_tokenizer: &text_doc_tokenizer,
+            company_token_processor: &company_token_processor,
             user_config,
             is_extracting: false,
             tokenized_query_vectors: vec![],

@@ -188,12 +188,11 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // Goodarzi said in Monday’s release that the company is bringing its “AI-driven expert platform to help sellers boost their revenue and profitability, save time, and grow with confidence.”
     // "#;
 
-    let mut ticker_extractor = DocumentEntityExtractor::new(
+    let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
         &company_symbols_list,
         document_company_name_extractor_config,
+        &text,
     );
-
-    let (symbols_with_confidence, consumed_query_token_indices) = ticker_extractor.extract(&text);
 
     println!(
         "Consumed query token indices: {:?}",

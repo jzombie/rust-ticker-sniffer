@@ -22,8 +22,8 @@ type CompanyTokenBin = Vec<CompanyTokenBinEntry>;
 //  - Outer vector elements are by company index
 //  - Inner vector elements are for multiple entries, per company
 pub struct CompanyTokenProcessor<'a> {
-    ticker_symbol_tokenizer: Tokenizer,
-    text_doc_tokenizer: Tokenizer,
+    ticker_symbol_tokenizer: &'a Tokenizer,
+    text_doc_tokenizer: &'a Tokenizer,
     pub company_symbols_list: &'a CompanySymbolsList,
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
@@ -35,11 +35,11 @@ pub struct CompanyTokenProcessor<'a> {
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
-    pub fn new(company_symbols_list: &'a CompanySymbolsList) -> Self {
-        // TODO: Share tokenizers with some sort of base class, to not need to re-init
-        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
-        let text_doc_tokenizer = Tokenizer::text_doc_parser();
-
+    pub fn new(
+        company_symbols_list: &'a CompanySymbolsList,
+        ticker_symbol_tokenizer: &'a Tokenizer,
+        text_doc_tokenizer: &'a Tokenizer,
+    ) -> Self {
         let mut instance = Self {
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
