@@ -130,6 +130,13 @@ impl Tokenizer {
             .collect()
     }
 
+    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorTokenType> {
+        self.tokenize(text)
+            .iter() // Use the existing `tokenize` function to get tokens
+            .map(|token| Tokenizer::token_to_charcode_vector(&token))
+            .collect()
+    }
+
     /// Pre-process the stop words by removing non-alphanumeric characters and converting to uppercase
     fn preprocess_stop_words() -> HashSet<String> {
         STOP_WORDS
@@ -143,11 +150,11 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn token_to_charcode_vector(&self, token: &str) -> TokenizerVectorTokenType {
+    pub fn token_to_charcode_vector(token: &str) -> TokenizerVectorTokenType {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn charcode_vector_to_token(&self, charcodes: &TokenizerVectorTokenType) -> String {
+    pub fn charcode_vector_to_token(charcodes: &TokenizerVectorTokenType) -> String {
         charcodes
             .iter()
             .map(|&code| char::from_u32(code).unwrap_or('\u{FFFD}')) // Convert code to char, using '�' as a fallback
@@ -155,19 +162,11 @@ impl Tokenizer {
     }
 
     pub fn charcode_vectors_to_tokens(
-        &self,
         charcode_vectors: &Vec<TokenizerVectorTokenType>,
     ) -> Vec<String> {
         charcode_vectors
             .iter()
-            .map(|charcodes| self.charcode_vector_to_token(charcodes))
+            .map(|charcodes| Tokenizer::charcode_vector_to_token(charcodes))
             .collect() // Collect the resulting strings into a Vec<String>
-    }
-
-    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorTokenType> {
-        self.tokenize(text)
-            .iter() // Use the existing `tokenize` function to get tokens
-            .map(|token| self.token_to_charcode_vector(&token))
-            .collect()
     }
 }

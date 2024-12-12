@@ -82,8 +82,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         println!(
             "Tokenized query: {:?}",
-            self.text_doc_tokenizer
-                .charcode_vectors_to_tokens(&self.tokenized_query_vectors)
+            Tokenizer::charcode_vectors_to_tokens(&self.tokenized_query_vectors)
         );
 
         // Begin parsing at the first page

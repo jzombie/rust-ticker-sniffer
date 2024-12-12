@@ -126,7 +126,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .filter_map(|(token, token_source_type, _)| {
                 if *token_source_type == CompanyTokenSourceType::CompanyName {
                     // Convert the token to a string (adjust based on actual token structure)
-                    Some(self.text_doc_tokenizer.charcode_vector_to_token(token))
+                    Some(Tokenizer::charcode_vector_to_token(token))
                 } else {
                     None
                 }
