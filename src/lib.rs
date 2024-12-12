@@ -49,13 +49,6 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     // let query = "The stuff IT dreams are made of, but you know, Agilent is interesting.";
 
-    // // let query = "Amazon.com";
-    // let query = "Amazon is a company too";
-
-    // let query = "Amazon.com is a domain";
-
-    // let query = "Apple  INC";
-
     // let query = "Ashford";
     // let query = "Power REIT";
     // let query = "REIT Hospitality Apple stuff";

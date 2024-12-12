@@ -1,0 +1,5 @@
+Apple Inc
+
+EXPECTED: AAPL
+
+COMMENT: Ensure the "Inc" suffix doesn't trigger another company name match.
