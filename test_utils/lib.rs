@@ -79,7 +79,7 @@ pub fn run_test_for_file(
     company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> (
     // TODO: Use more specific types (especially for `f32` confidence score)
-    HashMap<TickerSymbol, f32>,
+    Vec<(TickerSymbol, f32)>,
     Vec<TickerSymbol>,
     Vec<TickerSymbol>,
 ) {
@@ -112,7 +112,11 @@ pub fn run_test_for_file(
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
 
     // Separate actual results into a vector of just tickers
-    let actual_tickers: Vec<TickerSymbol> = results_with_confidence.keys().cloned().collect();
+    let actual_tickers: Vec<TickerSymbol> = results_with_confidence
+        .iter()
+        .map(|(symbol, _confidence)| symbol)
+        .cloned()
+        .collect();
 
     // Determine unexpected and missing tickers
     let unexpected_tickers: Vec<TickerSymbol> = actual_tickers

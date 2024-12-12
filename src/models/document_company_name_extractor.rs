@@ -65,7 +65,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Extracts ticker symbols from the given text document by tokenizing
     /// and comparing against known company names. Ensures only one extraction
     /// process runs at a time.
-    pub fn extract(&mut self, text: &str) -> (HashMap<TickerSymbol, f32>, Vec<usize>) {
+    pub fn extract(&mut self, text: &str) -> (Vec<(TickerSymbol, f32)>, Vec<usize>) {
         if self.is_extracting {
             panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
         } else {
@@ -107,7 +107,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             .into_iter()
             .collect();
 
-        (symbols_with_confidence, consumed_query_token_indices)
+        let mut sorted_symbols_with_confidence: Vec<(String, f32)> = symbols_with_confidence
+            .iter()
+            .map(|(symbol, confidence)| (symbol.clone(), *confidence))
+            .collect();
+
+        // Note: This could be included as part of the previous by specifically
+        // depending on `itertools` dependency, which I didn't want to do for now.
+        //
+        // Sort the results by confidence score in descending order
+        sorted_symbols_with_confidence
+            .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        (sorted_symbols_with_confidence, consumed_query_token_indices)
     }
 
     /// Parses company names from the text document, processing a specific

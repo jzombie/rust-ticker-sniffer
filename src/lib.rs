@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 mod constants;
 pub mod models;
 pub use constants::{
@@ -19,7 +18,7 @@ pub use types::{
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolList,
-) -> HashMap<TickerSymbol, f32> {
+) -> Vec<(TickerSymbol, f32)> {
     extract_tickers_from_text_with_custom_weights(
         &text,
         &company_symbols_list,
@@ -31,7 +30,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
-) -> HashMap<TickerSymbol, f32> {
+) -> Vec<(TickerSymbol, f32)> {
     let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
         &company_symbols_list,
         &document_company_name_extractor_config,
