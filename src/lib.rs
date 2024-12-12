@@ -37,12 +37,12 @@ pub fn extract_tickers_from_text_with_custom_weights(
 ) -> HashMap<TickerSymbol, f32> {
     // let mut matches = HashSet::new();
 
-    // TODO: Commit to tests; expect: Tokens: ["WELL", "IPHONE", "DEVELOPMENT", "EBAY", "DEVELOPMENT", "WALMART", "WALMARTS"]
+    // TODO: Commit to tokenizer tests; expect: Tokens: ["WELL", "IPHONE", "DEVELOPMENT", "EBAY", "DEVELOPMENT", "WALMART", "WALMARTS"]
     // let tokens = tokenize(
     //     &"Well okay iPhone turtle develoPment e-Bay  Deve-\nlopment Wal-mart's at it again!",
     // );
 
-    // TODO: Commit to tests; expect: Tokens: ["ECOMMERCE", "AMAZONCOM", "AMAZON", "INC", "AMZN", "QUICK", "QUOTEAMZN", "FREE", "REPORT", "DOW", "JONES", "INDUSTRIAL", "AVERAGE", "WALGREENS", "BOOTS", "ALLIANCE", "WBA", "QUICK", "QUOTEWBA", "FREE", "REPORT", "FEB", "THE", "THE", "AMAZON", "DOW"]
+    // TODO: Commit to tokenizer tests; expect: Tokens: ["ECOMMERCE", "AMAZONCOM", "AMAZON", "INC", "AMZN", "QUICK", "QUOTEAMZN", "FREE", "REPORT", "DOW", "JONES", "INDUSTRIAL", "AVERAGE", "WALGREENS", "BOOTS", "ALLIANCE", "WBA", "QUICK", "QUOTEWBA", "FREE", "REPORT", "FEB", "THE", "THE", "AMAZON", "DOW"]
     // let tokens = tokenize(
     //     &"E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.",
     // );
