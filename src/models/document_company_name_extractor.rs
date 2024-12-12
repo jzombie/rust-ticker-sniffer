@@ -8,6 +8,8 @@ use core::f32;
 use std::collections::{HashMap, HashSet};
 
 type TokenWindowIndex = usize;
+
+// TODO: Extract to global types, and use elsewhere
 type QueryTokenIndex = usize;
 
 // TODO: If possible to add an optional report of why things were filtered or
@@ -30,12 +32,12 @@ pub struct DocumentCompanyNameExtractor<'a> {
     company_symbols_list: &'a CompanySymbolsList,
     text_doc_tokenizer: &'a Tokenizer,
     company_token_processor: &'a CompanyTokenProcessor<'a>,
-    user_config: DocumentCompanyNameExtractorConfig,
+    user_config: &'a DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
 
     tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
-    progressible_company_indices: HashSet<usize>, // TODO: Add type
+    progressible_company_indices: HashSet<usize>, // TODO: Add more specific type
     results: Vec<TickerSymbol>,
 }
 
@@ -45,7 +47,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Initializes the necessary tokenizers and token processors.
     pub fn new(
         company_symbols_list: &'a CompanySymbolsList,
-        user_config: DocumentCompanyNameExtractorConfig,
+        user_config: &'a DocumentCompanyNameExtractorConfig,
         text_doc_tokenizer: &'a Tokenizer,
         company_token_processor: &'a CompanyTokenProcessor,
     ) -> Self {
@@ -53,7 +55,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             company_symbols_list,
             text_doc_tokenizer: &text_doc_tokenizer,
             company_token_processor: &company_token_processor,
-            user_config,
+            user_config: &user_config,
             is_extracting: false,
             tokenized_query_vectors: vec![],
             company_similarity_states: vec![],

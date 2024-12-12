@@ -190,7 +190,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
         &company_symbols_list,
-        document_company_name_extractor_config,
+        &document_company_name_extractor_config,
         &text,
     );
 

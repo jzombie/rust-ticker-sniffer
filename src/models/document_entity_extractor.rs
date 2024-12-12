@@ -10,7 +10,7 @@ pub struct DocumentEntityExtractor {}
 impl DocumentEntityExtractor {
     pub fn extract(
         company_symbols_list: &CompanySymbolsList,
-        document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
+        document_company_name_extractor_config: &DocumentCompanyNameExtractorConfig,
         text: &str,
     ) -> (HashMap<TickerSymbol, f32>, Vec<usize>) {
         // Create the tokenizer as a shared reference
@@ -19,15 +19,15 @@ impl DocumentEntityExtractor {
 
         // Create the company token processor, passing references
         let company_token_processor = CompanyTokenProcessor::new(
-            company_symbols_list,
+            &company_symbols_list,
             &ticker_symbol_tokenizer,
             &text_doc_tokenizer,
         );
 
         // Pass references to the extractor
         let mut document_company_name_extractor = DocumentCompanyNameExtractor::new(
-            company_symbols_list,
-            document_company_name_extractor_config,
+            &company_symbols_list,
+            &document_company_name_extractor_config,
             &text_doc_tokenizer,
             &company_token_processor,
         );
