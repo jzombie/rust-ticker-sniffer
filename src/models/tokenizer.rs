@@ -12,6 +12,7 @@ pub struct Tokenizer {
     pre_processed_stop_words: Option<HashSet<String>>,
 }
 
+// TODO: Split tokens by syllables
 impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
