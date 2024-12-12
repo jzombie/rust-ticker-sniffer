@@ -78,6 +78,24 @@ fn main() {
     Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
         "#;
 
+    // let query = "First Trust Dow 30 Equal Weight ETF";
+    // Note: This is a subset of the previous, filtered to the lines which were are causing EDOW to not be represented in the result set.
+    let query = r#"  
+
+            While the Dow Jones is making new record highs, its performance is lagging behind the S&P and Nasdaq over the past year. The underperformance is due to the lack of exposure in tech stocks and the “Magnificent Seven” companies in particular. The Dow includes two of the Magnificent Seven — Apple (AAPL Quick QuoteAAPL - Free Report) and Microsoft (MSFT Quick QuoteMSFT - Free Report) . Amazon will be the third. As such, the addition of Amazon will help Dow Jones catch up with the S&P 500 gains. The shares of the commerce giant have surged more than 80% over the past year (read: ETFs to Tap on Amazon's Strong Q4 Earnings).
+
+            Given this, investors seeking to tap the potential strength in the Dow Jones trend could consider SPDR Dow Jones Industrial Average ETF (DIA Quick QuoteDIA - Free Report) , iShares Dow Jones U.S. ETF (IYY Quick QuoteIYY - Free Report) , Invesco Dow Jones Industrial Average Dividend ETF (DJD Quick QuoteDJD - Free Report) and First Trust Dow 30 Equal Weight ETF (EDOW Quick QuoteEDOW - Free Report) .
+
+            First Trust Dow 30 Equal Weight ETF (EDOW Quick QuoteEDOW - Free Report)
+
+            First Trust Dow 30 Equal Weight ETF offers equal-weight exposure to all the 30 components of the Dow Jones Industrial Average by tracking the Dow Jones Industrial Average Equal Weight Index.
+        
+        First Trust Dow 30 Equal Weight ETF has accumulated $249.1 million in its asset base and trades in an average daily volume of 58,000 shares. It charges 50 bps in annual fees.
+
+            Want key ETF info delivered straight to your inbox?
+        Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
+    "#;
+
     // TODO: This includes a lot of repeated "Capital" entries, with only initial 0 window indexes.
     // This type of pattern should be filtered out so it effectively removes them entirely.
     // let query = r#"
