@@ -466,16 +466,17 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             .filter(|&&score| score < threshold)
             .sum::<f32>();
 
+        // TODO: Remove? This was placed here before stop word filtering was reintroduced
         // Second pass: Penalize scores below the threshold based on their proportion
-        for (_symbol, score) in &mut per_symbol_confidence_scores {
-            if *score < threshold && total_low_scores > 0.0 {
-                // Calculate the proportion of this score relative to the total low scores
-                let proportion = *score / total_low_scores;
+        // for (_symbol, score) in &mut per_symbol_confidence_scores {
+        //     if *score < threshold && total_low_scores > 0.0 {
+        //         // Calculate the proportion of this score relative to the total low scores
+        //         let proportion = *score / total_low_scores;
 
-                // Penalize the score based on its proportion
-                *score *= proportion * self.user_config.low_confidence_penalty_factor;
-            }
-        }
+        //         // Penalize the score based on its proportion
+        //         *score *= proportion * self.user_config.low_confidence_penalty_factor;
+        //     }
+        // }
 
         // TODO: Remove
         // println!("Per symbol confidence scores",);
