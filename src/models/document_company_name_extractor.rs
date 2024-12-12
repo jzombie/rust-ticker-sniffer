@@ -398,13 +398,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     seen_query_token_indexes.push(state.query_token_index);
                 }
 
-                // Discard result if token window index has incremented but contains incosistent gaps in query tokens
+                // Skip the result if the token window index and query token index are not
+                // incrementing together or if the gap between query token indices exceeds
+                // the allowable limit.
                 if i > 0
-                    && state.token_window_index
-                        > last_token_window_index.expect("Could not locate last token window index")
-                    && state.query_token_index
-                        > (last_query_token_index.expect("Could not locate last query token index")
-                            + self.user_config.max_allowable_query_token_gap)
+                    && (state.token_window_index
+                        <= last_token_window_index.expect("Missing token window index")
+                        || state.query_token_index
+                            > last_query_token_index.expect("Missing query token index")
+                                + self.user_config.max_allowable_query_token_gap)
                 {
                     continue;
                 }
@@ -421,11 +423,14 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     state.company_name_similarity_at_index + continuity_reward;
 
                 // TODO: Remove
-                // if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
-                // println!(
-                //     "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
-                //     symbol, state.query_vector, symbol_confidence_score, state
-                // );
+                // if symbol == "EDOW" {
+                //     println!(
+                //         "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
+                //         symbol,
+                //         Tokenizer::charcode_vector_to_token(&state.query_vector),
+                //         symbol_confidence_score,
+                //         state
+                //     );
                 // }
 
                 last_token_window_index = Some(state.token_window_index);
@@ -468,15 +473,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         // TODO: Remove? This was placed here before stop word filtering was reintroduced
         // Second pass: Penalize scores below the threshold based on their proportion
-        // for (_symbol, score) in &mut per_symbol_confidence_scores {
-        //     if *score < threshold && total_low_scores > 0.0 {
-        //         // Calculate the proportion of this score relative to the total low scores
-        //         let proportion = *score / total_low_scores;
+        for (_symbol, score) in &mut per_symbol_confidence_scores {
+            if *score < threshold && total_low_scores > 0.0 {
+                // Calculate the proportion of this score relative to the total low scores
+                let proportion = *score / total_low_scores;
 
-        //         // Penalize the score based on its proportion
-        //         *score *= proportion * self.user_config.low_confidence_penalty_factor;
-        //     }
-        // }
+                // Penalize the score based on its proportion
+                *score *= proportion * self.user_config.low_confidence_penalty_factor;
+            }
+        }
 
         // TODO: Remove
         // println!("Per symbol confidence scores",);
