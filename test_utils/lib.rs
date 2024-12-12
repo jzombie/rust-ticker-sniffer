@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
-    extract_tickers_from_text_with_custom_weights, CompanySymbolsList,
+    extract_tickers_from_text_with_custom_weights, CompanySymbolList,
     DocumentCompanyNameExtractorConfig, TickerSymbol,
 };
 pub mod models;
@@ -12,8 +12,10 @@ pub mod constants;
 use constants::TEST_SYMBOLS_CSV_PATH;
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.
-pub fn load_symbols_from_file(file_path: &str) -> Result<CompanySymbolsList, Box<dyn Error>> {
-    let mut company_symbols_list = CompanySymbolsList::new();
+pub fn load_company_symbol_list_from_file(
+    file_path: &str,
+) -> Result<CompanySymbolList, Box<dyn Error>> {
+    let mut company_symbols_list = CompanySymbolList::new();
     let mut reader = Reader::from_path(file_path)?;
 
     // Use headers to extract columns
@@ -82,8 +84,8 @@ pub fn run_test_for_file(
     Vec<TickerSymbol>,
 ) {
     // Load symbols from a test CSV file
-    let symbols_map =
-        load_symbols_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols from CSV");
+    let symbols_map = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
+        .expect("Failed to load symbols from CSV");
 
     // Read the content of the text file
     let raw_text = fs::read_to_string(test_file_path).expect("Failed to read test file");

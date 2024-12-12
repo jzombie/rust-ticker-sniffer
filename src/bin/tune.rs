@@ -9,7 +9,7 @@ use ticker_sniffer::{ResultBiasAdjuster, SymbolsMap, Weights};
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
 use test_utils::constants::{TEST_FILES_DIRECTORY, TEST_SYMBOLS_CSV_PATH};
-use test_utils::{load_symbols_from_file, run_test_for_file};
+use test_utils::{load_company_symbol_list_from_file, run_test_for_file};
 
 #[path = "../../bin_utils/lib.rs"]
 mod bin_utils;
@@ -29,7 +29,7 @@ fn tune_weights() {
     let mut result_bias_adjuster = ResultBiasAdjuster::new();
 
     let symbols_map =
-        load_symbols_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols from CSV");
+        load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols from CSV");
 
     let mut rng = rand::thread_rng();
 

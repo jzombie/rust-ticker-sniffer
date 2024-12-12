@@ -12,13 +12,13 @@ pub use models::{
 pub mod types;
 mod utils;
 pub use types::{
-    CompanyName, CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
+    CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
 
 // TODO: Add dedicated type instead of f64
 pub fn extract_tickers_from_text(
     text: &str,
-    company_symbols_list: &CompanySymbolsList,
+    company_symbols_list: &CompanySymbolList,
 ) -> HashMap<TickerSymbol, f32> {
     // let result_bias_adjuster =
     //     ResultBiasAdjuster::from_weights(DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS);
@@ -32,7 +32,7 @@ pub fn extract_tickers_from_text(
 
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
-    company_symbols_list: &CompanySymbolsList,
+    company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> HashMap<TickerSymbol, f32> {
     // let mut matches = HashSet::new();

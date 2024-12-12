@@ -1,7 +1,7 @@
 pub type TickerSymbol = String;
 pub type CompanyName = String;
 
-pub type CompanySymbolsList = Vec<(TickerSymbol, Option<CompanyName>)>;
+pub type CompanySymbolList = Vec<(TickerSymbol, Option<CompanyName>)>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)] // Use a numeric representation for efficiency

@@ -1,4 +1,4 @@
-use crate::types::{CompanySymbolsList, CompanyTokenSourceType, TokenizerVectorTokenType};
+use crate::types::{CompanySymbolList, CompanyTokenSourceType, TokenizerVectorTokenType};
 use crate::Tokenizer;
 
 type CompanyTokenIndexBySourceType = usize;
@@ -24,7 +24,7 @@ type CompanyTokenBin = Vec<CompanyTokenBinEntry>;
 pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: &'a Tokenizer,
     text_doc_tokenizer: &'a Tokenizer,
-    pub company_symbols_list: &'a CompanySymbolsList,
+    pub company_symbols_list: &'a CompanySymbolList,
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub tokenized_entries: Vec<Vec<CompanyTokenizedEntry>>,
@@ -36,7 +36,7 @@ pub struct CompanyTokenProcessor<'a> {
 
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(
-        company_symbols_list: &'a CompanySymbolsList,
+        company_symbols_list: &'a CompanySymbolList,
         ticker_symbol_tokenizer: &'a Tokenizer,
         text_doc_tokenizer: &'a Tokenizer,
     ) -> Self {

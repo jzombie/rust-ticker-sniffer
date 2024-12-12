@@ -5,7 +5,7 @@ use ticker_sniffer::{ResultBiasAdjuster, Weights, DEFAULT_CONFIG};
 #[path = "../../test_utils/lib.rs"]
 mod test_utils;
 use test_utils::constants::{TEST_FILES_DIRECTORY, TEST_SYMBOLS_CSV_PATH};
-use test_utils::{load_symbols_from_file, run_test_for_file, EvaluationResult};
+use test_utils::{load_company_symbol_list_from_file, run_test_for_file, EvaluationResult};
 
 #[path = "../../bin_utils/lib.rs"]
 mod bin_utils;
@@ -24,7 +24,7 @@ fn train_result_bias_adjuster() {
 
     // Load symbols
     let symbols_map: HashMap<String, Option<String>> =
-        load_symbols_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols");
+        load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH).expect("Failed to load symbols");
 
     // Initialize ResultBiasAdjuster
     let mut result_bias_adjuster = ResultBiasAdjuster::new();

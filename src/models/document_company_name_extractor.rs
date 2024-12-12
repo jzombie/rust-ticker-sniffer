@@ -1,5 +1,5 @@
 use crate::types::{
-    CompanySymbolsList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
+    CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
 };
 use crate::utils::index_difference_similarity;
 use crate::DocumentCompanyNameExtractorConfig;
@@ -29,7 +29,7 @@ struct QueryVectorIntermediateSimilarityState {
 }
 
 pub struct DocumentCompanyNameExtractor<'a> {
-    company_symbols_list: &'a CompanySymbolsList,
+    company_symbols_list: &'a CompanySymbolList,
     text_doc_tokenizer: &'a Tokenizer,
     company_token_processor: &'a CompanyTokenProcessor<'a>,
     user_config: &'a DocumentCompanyNameExtractorConfig,
@@ -46,7 +46,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// with the provided company symbols list and configuration.
     /// Initializes the necessary tokenizers and token processors.
     pub fn new(
-        company_symbols_list: &'a CompanySymbolsList,
+        company_symbols_list: &'a CompanySymbolList,
         user_config: &'a DocumentCompanyNameExtractorConfig,
         text_doc_tokenizer: &'a Tokenizer,
         company_token_processor: &'a CompanyTokenProcessor,
