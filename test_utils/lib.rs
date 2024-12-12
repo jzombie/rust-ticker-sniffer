@@ -142,9 +142,10 @@ pub fn run_test_for_file(
     for ticker in &expected_tickers {
         assert!(
             actual_tickers.contains(ticker),
-            "{} - Expected ticker {:?} was not found in results.",
+            "{} - Expected ticker {:?} was not found in results. Found: {:?}",
             test_file_path,
-            ticker
+            ticker,
+            actual_tickers
         );
     }
 

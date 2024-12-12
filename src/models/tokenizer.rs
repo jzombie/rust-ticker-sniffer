@@ -1,5 +1,4 @@
-use crate::constants::STOP_WORDS;
-use crate::constants::TLD_LIST;
+use crate::constants::{IGNORE_WORDS, STOP_WORDS, TLD_LIST};
 use crate::types::TokenizerVectorTokenType;
 use std::char;
 use std::collections::HashSet;
@@ -8,37 +7,33 @@ pub struct Tokenizer {
     pub min_uppercase_ratio: Option<f32>,
     pub hyphens_as_potential_multiple_words: bool,
     pub filter_stop_words: bool,
+    pub filter_ignored_words: bool,
     pre_processed_stop_words: Option<HashSet<String>>,
+    pre_processed_ignored_words: Option<HashSet<String>>,
 }
 
 impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
-        let filter_stop_words = true;
         Self {
             min_uppercase_ratio: Some(0.9),
             hyphens_as_potential_multiple_words: false,
-            filter_stop_words,
-            pre_processed_stop_words: if filter_stop_words {
-                Some(Self::preprocess_stop_words())
-            } else {
-                None
-            },
+            filter_stop_words: false,
+            filter_ignored_words: false,
+            pre_processed_stop_words: None,
+            pre_processed_ignored_words: None,
         }
     }
 
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
-        let filter_stop_words = true;
         Self {
             min_uppercase_ratio: None,
             hyphens_as_potential_multiple_words: true,
-            filter_stop_words,
-            pre_processed_stop_words: if filter_stop_words {
-                Some(Self::preprocess_stop_words())
-            } else {
-                None
-            },
+            filter_stop_words: true,
+            filter_ignored_words: true,
+            pre_processed_stop_words: Some(Self::preprocess_stop_words()),
+            pre_processed_ignored_words: Some(Self::preprocess_ignored_words()),
         }
     }
 
@@ -111,13 +106,22 @@ impl Tokenizer {
                     .collect::<String>() // Collect filtered characters into a String
                     .to_uppercase() // Convert to uppercase
             })
+            // Filter stop words and ignored words
             .filter(|word| {
                 // Use preprocessed stop words for filtering
-                !self.filter_stop_words
+                let passes_stop_words = !self.filter_stop_words
                     || !self
                         .pre_processed_stop_words
                         .as_ref()
-                        .map_or(false, |stop_words| stop_words.contains(word))
+                        .map_or(false, |stop_words| stop_words.contains(word));
+
+                let passes_ignored_words = !self.filter_ignored_words
+                    || !self
+                        .pre_processed_ignored_words
+                        .as_ref()
+                        .map_or(false, |ignored_words| ignored_words.contains(word));
+
+                passes_stop_words && passes_ignored_words
             })
             .collect()
     }
@@ -132,6 +136,18 @@ impl Tokenizer {
     /// Pre-process the stop words by removing non-alphanumeric characters and converting to uppercase
     fn preprocess_stop_words() -> HashSet<String> {
         STOP_WORDS
+            .iter()
+            .map(|word| {
+                word.chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>()
+                    .to_uppercase()
+            })
+            .collect()
+    }
+
+    fn preprocess_ignored_words() -> HashSet<String> {
+        IGNORE_WORDS
             .iter()
             .map(|word| {
                 word.chars()
