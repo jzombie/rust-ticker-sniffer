@@ -364,6 +364,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             let mut seen_query_token_indexes: Vec<QueryTokenIndex> = Vec::new();
 
+            let mut last_token_window_index = None;
+            let mut last_query_token_index = None;
+
             for (i, state) in states.iter().enumerate() {
                 // Skip repeat processinging of same query token indexes
                 if seen_query_token_indexes.contains(&state.query_token_index) {
@@ -372,27 +375,34 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     seen_query_token_indexes.push(state.query_token_index);
                 }
 
-                let mut inverse_weight = 1.0;
-
-                if i > 0 {
-                    // Calculate the gap between the current and previous indices
-                    let prev_query_token_index = states[i - 1].query_token_index;
-                    let gap = (state.query_token_index as isize - prev_query_token_index as isize)
-                        .abs() as usize;
-
-                    // Apply a penalty for larger gaps (e.g., inverse weighting)
-                    inverse_weight = if gap > 1 {
-                        1.0 / (self.user_config.token_gap_penalty + gap as f32)
-                    } else {
-                        1.0
-                    };
+                // Discard result if token window index has incremented but contains incosistent gaps in query tokens
+                if i > 0
+                    && state.token_window_index
+                        > last_token_window_index.expect("Could not locate last token window index")
+                    && state.query_token_index
+                        > (last_query_token_index.expect("Could not locate last query token index")
+                            + self.user_config.max_allowable_query_token_gap)
+                {
+                    continue;
                 }
 
-                // TODO: Remove
-                // if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
+                // if i > 0 {
+                //     // Calculate the gap between the current and previous indices
+                //     let prev_query_token_index = states[i - 1].query_token_index;
+                //     let gap = (state.query_token_index as isize - prev_query_token_index as isize)
+                //         .abs() as usize;
+
+                //     // Apply a penalty for larger gaps (e.g., inverse weighting)
+                //     inverse_weight = if gap > 1 {
+                //         1.0 / (self.user_config.token_gap_penalty + gap as f32)
+                //     } else {
+                //         1.0
+                //     };
+
+                //     // TODO: Remove
                 //     println!(
-                //         "calc_confidence_scores similarity at index --------- symbol: {} {} {} : inverse weight: {} : {:?}",
-                //         symbol, i, state.company_name_similarity_at_index, inverse_weight, state
+                //         "\nsymbol: {}, gap: {}, inverse_weight {}\n",
+                //         symbol, gap, inverse_weight
                 //     );
                 // }
 
@@ -405,7 +415,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 // Weigh the similarity score based on the calculated weight
                 symbol_confidence_score +=
-                    (state.company_name_similarity_at_index * inverse_weight) + continuity_reward;
+                    state.company_name_similarity_at_index + continuity_reward;
+
+                // TODO: Remove
+                // if symbol == "NVDA" || symbol == "NUMG" || symbol == "BGM" {
+                println!(
+                    "calc_confidence_scores similarity at index --------- symbol: {} {} {} {} : {:?}",
+                    symbol, i, state.company_name_similarity_at_index, symbol_confidence_score, state
+                );
+
+                // }
+
+                last_token_window_index = Some(state.token_window_index);
+                last_query_token_index = Some(state.query_token_index);
             }
 
             // TODO: Remove
@@ -452,6 +474,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 *score *= proportion * self.user_config.low_confidence_penalty_factor;
             }
         }
+
+        // TODO: Remove
+        println!(
+            "Per symbol confidence scores: {:?}",
+            per_symbol_confidence_scores
+        );
 
         per_symbol_confidence_scores
     }

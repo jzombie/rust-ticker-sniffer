@@ -93,9 +93,6 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // TODO: Testing this should indicate that Apple Hospitality REIT has a very low confidence score (and also includes Amazon)
     // let query = "Apple is not Walmart, but maybe Amazon is okay, Hospitality REIT?";
 
-    // TODO: Testing this should pull up Amazon (it's listed as Amazon.com)
-    // let query = "Amazon";
-
     // // let query = "Amazon.com";
     // let query = "Amazon is a company too";
 
