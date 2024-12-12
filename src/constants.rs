@@ -12,16 +12,6 @@ pub const DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG: DocumentCompanyNameExtractorCon
         min_confidence_level_threshold: 0.5,
     };
 
-// TODO: Remove
-// pub const DEFAULT_CONFIG: Weights = Weights {
-//     consecutive_match_weight: 0.021446686,
-//     letter_mismatch_penalty: 0.85928243,
-//     word_mismatch_penalty: 0.25776097,
-//     minimum_match_score: 0.21479446,
-//     stop_word_filter_ratio: 0.6,
-//     abbreviation_match_threshold: 0.8,
-// };
-
 pub const DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS: &[(u64, f32)] = &[];
 
 pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
