@@ -6,6 +6,7 @@ pub const DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG: DocumentCompanyNameExtractorCon
         token_window_size: 1,
         max_allowable_query_token_gap: 1,
         continuity_reward: 1.5,
+        confidence_score_duplicate_threshold: 2,
         low_confidence_penalty_factor: 0.5,
         min_confidence_level_threshold: 0.5,
     };

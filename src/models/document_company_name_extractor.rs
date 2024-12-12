@@ -5,7 +5,20 @@ use crate::utils::index_difference_similarity;
 use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use core::f32;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
+
+use std::cmp::Ordering;
+
+#[derive(PartialEq, PartialOrd)]
+struct OrderedF32(f32);
+
+impl Eq for OrderedF32 {}
+
+impl Ord for OrderedF32 {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+    }
+}
 
 type TokenWindowIndex = usize;
 
@@ -457,6 +470,33 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             // }
 
             per_symbol_confidence_scores.insert(symbol.clone(), symbol_confidence_score);
+        }
+
+        // ------------------
+
+        let mut score_frequencies: BTreeMap<OrderedF32, usize> = BTreeMap::new();
+
+        // Track the frequency of each confidence score
+        for &score in per_symbol_confidence_scores.values() {
+            let wrapped_score = OrderedF32(score);
+            *score_frequencies.entry(wrapped_score).or_insert(0) += 1;
+        }
+
+        // Penalize scores with excessive duplication
+        for (symbol, score) in per_symbol_confidence_scores.iter_mut() {
+            let wrapped_score = OrderedF32(*score);
+            if let Some(&frequency) = score_frequencies.get(&wrapped_score) {
+                if frequency > self.user_config.confidence_score_duplicate_threshold {
+                    let penalty_factor = 1.0 / (frequency as f32 + f32::EPSILON);
+                    *score *= penalty_factor;
+
+                    // TODO: Remove
+                    println!(
+                        "Penalizing symbol: {} with original score: {} (frequency: {}), new score: {}",
+                        symbol, *score / penalty_factor, frequency, *score
+                    );
+                }
+            }
         }
 
         // ------------------
