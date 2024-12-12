@@ -113,15 +113,13 @@ impl Tokenizer {
                         vec![word.replace('-', "")].into_iter()
                     })
             })
-            // TODO: Remove?  This was doing alphanumeric filtering before applying uppercase
-            // .map(|word| {
-            //     word.chars()
-            //         .filter(|c| c.is_alphanumeric()) // Use a closure instead of a function pointer
-            //         .collect::<String>() // Collect filtered characters into a String
-            //         .to_uppercase() // Convert to uppercase
-            // })
-            // Convert word to uppercase
-            .map(|word| word.to_uppercase())
+            // Filter to alphanumeric and uppercase
+            .map(|word| {
+                word.chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>() // Collect filtered characters into a String
+                    .to_uppercase() // Convert to uppercase
+            })
             .filter(|word| {
                 // Use preprocessed stop words for filtering
                 !self.filter_stop_words
