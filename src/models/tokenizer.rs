@@ -5,9 +5,9 @@ use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
+    pub require_first_letter_caps: bool,
     pub min_uppercase_ratio: Option<f32>,
     pub hyphens_as_potential_multiple_words: bool,
-    pub require_first_letter_caps: bool,
     pub filter_stop_words: bool,
     pre_processed_stop_words: Option<HashSet<String>>,
 }
@@ -17,9 +17,9 @@ impl Tokenizer {
     pub fn ticker_symbol_parser() -> Self {
         let filter_stop_words = true;
         Self {
+            require_first_letter_caps: false,
             min_uppercase_ratio: Some(0.9),
             hyphens_as_potential_multiple_words: false,
-            require_first_letter_caps: false,
             filter_stop_words,
             pre_processed_stop_words: if filter_stop_words {
                 Some(Self::preprocess_stop_words())
@@ -33,9 +33,9 @@ impl Tokenizer {
     pub fn text_doc_parser() -> Self {
         let filter_stop_words = true;
         Self {
+            require_first_letter_caps: true,
             min_uppercase_ratio: None,
             hyphens_as_potential_multiple_words: true,
-            require_first_letter_caps: true,
             filter_stop_words,
             pre_processed_stop_words: if filter_stop_words {
                 Some(Self::preprocess_stop_words())
@@ -64,23 +64,32 @@ impl Tokenizer {
             .replace("--", " ") // Replace standalone double hyphens
             .replace(",", " ") // Normalize commas to spaces
             .split_whitespace() // Split into words
+            // Filter by original capitalization
             .filter(|word| {
-                if self.require_first_letter_caps {
+                // Apply uppercase ratio filter and first letter caps requirement
+                let passes_uppercase_ratio = self
+                    .min_uppercase_ratio
+                    .map_or(true, |ratio| uppercase_ratio(word) >= ratio);
+
+                let passes_first_letter_caps = if self.require_first_letter_caps {
                     word.chars()
                         .find(|c| c.is_alphanumeric()) // Find the first alphanumeric character
                         .map_or(false, |c| c.is_uppercase()) // Ensure it is uppercase
                 } else {
                     true
-                }
+                };
+
+                passes_uppercase_ratio && passes_first_letter_caps
             })
+            // Remove TLD extensions (i.e. so `Amazon` and `Amazon.com` are treated the same)
             .map(|word| {
                 // Normalize TLDs and strip them if found
                 word.rsplit_once('.')
                     .filter(|(_, tld)| TLD_LIST.contains(&tld.to_lowercase().as_str()))
                     .map_or_else(|| word.to_string(), |(base, _)| base.to_string())
             })
+            // Remove possessive endings
             .map(|word| {
-                // Remove possessive endings ('s or s') and normalize
                 let stripped = word.replace("'s", "").replace("s'", "");
 
                 stripped
@@ -88,13 +97,8 @@ impl Tokenizer {
                     .filter(|c| c.is_alphanumeric())
                     .collect::<String>()
             })
-            .filter(|word| {
-                // Apply uppercase ratio filter
-                self.min_uppercase_ratio
-                    .map_or(true, |ratio| uppercase_ratio(word) >= ratio)
-            })
+            // Handle hyphenated words
             .flat_map(|word| {
-                // Handle hyphenated words
                 word.split('-')
                     .map(|part| {
                         part.chars()
@@ -109,12 +113,15 @@ impl Tokenizer {
                         vec![word.replace('-', "")].into_iter()
                     })
             })
-            .map(|word| {
-                word.chars()
-                    .filter(|c| c.is_alphanumeric()) // Use a closure instead of a function pointer
-                    .collect::<String>() // Collect filtered characters into a String
-                    .to_uppercase() // Convert to uppercase
-            })
+            // TODO: Remove?  This was doing alphanumeric filtering before applying uppercase
+            // .map(|word| {
+            //     word.chars()
+            //         .filter(|c| c.is_alphanumeric()) // Use a closure instead of a function pointer
+            //         .collect::<String>() // Collect filtered characters into a String
+            //         .to_uppercase() // Convert to uppercase
+            // })
+            // Convert word to uppercase
+            .map(|word| word.to_uppercase())
             .filter(|word| {
                 // Use preprocessed stop words for filtering
                 !self.filter_stop_words
