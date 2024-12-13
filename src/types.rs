@@ -12,6 +12,6 @@ pub enum CompanyTokenSourceType {
     CompanyName = 1, // Tokens derived from the company name
 }
 
-pub type TokenizerVectorTokenType = Vec<u32>;
+pub type TokenizerVectorToken = Vec<u32>;
 
-pub type TokenFrequencyMap = HashMap<TokenizerVectorTokenType, usize>;
+pub type TokenFrequencyMap = HashMap<TokenizerVectorToken, usize>;

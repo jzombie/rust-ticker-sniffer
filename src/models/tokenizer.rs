@@ -1,5 +1,5 @@
 use crate::constants::{IGNORE_WORDS, STOP_WORDS, TLD_LIST};
-use crate::types::TokenizerVectorTokenType;
+use crate::types::TokenizerVectorToken;
 use std::char;
 use std::collections::HashSet;
 
@@ -127,7 +127,7 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorTokenType> {
+    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorToken> {
         self.tokenize(text)
             .iter() // Use the existing `tokenize` function to get tokens
             .map(|token| Tokenizer::token_to_charcode_vector(&token))
@@ -159,20 +159,18 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn token_to_charcode_vector(token: &str) -> TokenizerVectorTokenType {
+    pub fn token_to_charcode_vector(token: &str) -> TokenizerVectorToken {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn charcode_vector_to_token(charcodes: &TokenizerVectorTokenType) -> String {
+    pub fn charcode_vector_to_token(charcodes: &TokenizerVectorToken) -> String {
         charcodes
             .iter()
             .map(|&code| char::from_u32(code).unwrap_or('\u{FFFD}')) // Convert code to char, using '�' as a fallback
             .collect()
     }
 
-    pub fn charcode_vectors_to_tokens(
-        charcode_vectors: &Vec<TokenizerVectorTokenType>,
-    ) -> Vec<String> {
+    pub fn charcode_vectors_to_tokens(charcode_vectors: &Vec<TokenizerVectorToken>) -> Vec<String> {
         charcode_vectors
             .iter()
             .map(|charcodes| Tokenizer::charcode_vector_to_token(charcodes))

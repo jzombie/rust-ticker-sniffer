@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use crate::types::{
-    CompanySymbolList, CompanyTokenSourceType, TokenFrequencyMap, TokenizerVectorTokenType,
+    CompanySymbolList, CompanyTokenSourceType, TokenFrequencyMap, TokenizerVectorToken,
 };
 use crate::Tokenizer;
 
 type CompanyTokenIndexBySourceType = usize;
 
 type CompanyTokenizedEntry = (
-    TokenizerVectorTokenType,
+    TokenizerVectorToken,
     CompanyTokenSourceType,
     CompanyTokenIndexBySourceType,
 );
@@ -37,6 +37,7 @@ pub struct CompanyTokenProcessor<'a> {
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
     pub token_frequency_map: TokenFrequencyMap,
+    pub company_name_token_tdidf_scores: HashMap<usize, HashMap<TokenizerVectorToken, f32>>,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -53,10 +54,12 @@ impl<'a> CompanyTokenProcessor<'a> {
             max_corpus_token_length: 0,
             token_length_bins: vec![],
             token_frequency_map: HashMap::new(),
+            company_name_token_tdidf_scores: HashMap::new(),
         };
 
         instance.tokenize_all();
         instance.bin_tokens_by_length();
+        instance.compute_company_name_token_tfidf_scores();
 
         instance
     }
@@ -66,6 +69,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         self.max_corpus_token_length = 0;
         self.tokenized_entries.clear();
         self.token_frequency_map.clear();
+        self.company_name_token_tdidf_scores.clear();
 
         // First pass: Tokenize and determine the maximum token length
         for (symbol, company_name) in self.company_symbols_list.iter() {
@@ -134,15 +138,47 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
+    fn compute_company_name_token_tfidf_scores(&mut self) {
+        let total_documents = self.tokenized_entries.len() as f32;
+        let mut tfidf_map: HashMap<usize, HashMap<TokenizerVectorToken, f32>> = HashMap::new();
+
+        for (company_index, company_tokens) in self.tokenized_entries.iter().enumerate() {
+            let mut token_tf_map: HashMap<TokenizerVectorToken, f32> = HashMap::new();
+            let mut token_count = 0;
+
+            // Calculate TF
+            for (token_vector, source_type, _) in company_tokens {
+                if *source_type == CompanyTokenSourceType::CompanyName {
+                    *token_tf_map.entry(token_vector.clone()).or_insert(0.0) += 1.0;
+                    token_count += 1;
+                }
+            }
+
+            // Normalize TF and compute TF-IDF
+            for (token_vector, tf) in token_tf_map.iter_mut() {
+                *tf /= token_count as f32; // Normalize TF
+                if let Some(df) = self.token_frequency_map.get(token_vector) {
+                    let idf = (total_documents / (1.0 + *df as f32)).ln(); // Compute IDF
+                    tfidf_map
+                        .entry(company_index)
+                        .or_insert_with(HashMap::new)
+                        .insert(token_vector.clone(), *tf * idf);
+                }
+            }
+        }
+
+        self.company_name_token_tdidf_scores = tfidf_map;
+    }
+
     pub fn get_company_name_token_vectors(
         &self,
         company_index: usize,
-    ) -> Option<Vec<TokenizerVectorTokenType>> {
+    ) -> Option<Vec<TokenizerVectorToken>> {
         // Retrieve the tokenized entries for the given company index
         let tokenized_entries = self.tokenized_entries.get(company_index)?;
 
         // Filter tokens that are of the `CompanyName` source type and map them to strings
-        let company_name_tokens_vectors: Vec<TokenizerVectorTokenType> = tokenized_entries
+        let company_name_tokens_vectors: Vec<TokenizerVectorToken> = tokenized_entries
             .iter()
             .filter_map(|(token_vector, token_source_type, _)| {
                 if *token_source_type == CompanyTokenSourceType::CompanyName {

@@ -1,6 +1,4 @@
-use crate::types::{
-    CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorTokenType,
-};
+use crate::types::{CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorToken};
 use crate::utils::index_difference_similarity;
 use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Error, Tokenizer};
@@ -35,11 +33,11 @@ type QueryTokenIndex = usize;
 struct QueryVectorIntermediateSimilarityState {
     token_window_index: TokenWindowIndex,
     query_token_index: QueryTokenIndex,
-    query_token_vector: TokenizerVectorTokenType,
+    query_token_vector: TokenizerVectorToken,
     company_index: usize, // TODO: Add more specific type
     company_token_source_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize, // TODO: Add more specific type
-    company_token_vector: TokenizerVectorTokenType,
+    company_token_vector: TokenizerVectorToken,
     company_name_similarity_at_index: f32,
 }
 
@@ -49,10 +47,10 @@ struct TickerSymbolRangeReport {
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
-    query_token_vectors: Vec<TokenizerVectorTokenType>,
+    query_token_vectors: Vec<TokenizerVectorToken>,
     // TODO: query_token_vector_frequencies: Track frequency of query tokens across document
     // TODO: Track token TF-IDF scores based on company name "corpus"
-    company_name_token_vectors: Vec<TokenizerVectorTokenType>,
+    company_name_token_vectors: Vec<TokenizerVectorToken>,
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
 }
@@ -64,7 +62,7 @@ pub struct DocumentCompanyNameExtractor<'a> {
     user_config: &'a DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
 
-    tokenized_query_token_vectors: Vec<TokenizerVectorTokenType>,
+    tokenized_query_token_vectors: Vec<TokenizerVectorToken>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     results: Vec<TickerSymbol>,
 }
@@ -405,7 +403,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
 
         // TODO: Remove
-        println!("{:?}", self.company_token_processor.token_frequency_map);
+        // println!("{:?}", self.company_token_processor.token_frequency_map);
+        println!(
+            "{:?}",
+            self.company_token_processor.company_name_token_tdidf_scores
+        );
 
         // println!("{:?}", symbol_consecutive_query_token_indices);
 

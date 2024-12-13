@@ -12,7 +12,7 @@ pub mod types;
 mod utils;
 pub use types::{
     CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenFrequencyMap,
-    TokenizerVectorTokenType,
+    TokenizerVectorToken,
 };
 
 // TODO: Add dedicated type instead of f32
