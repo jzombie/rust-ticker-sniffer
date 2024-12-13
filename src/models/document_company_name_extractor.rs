@@ -328,19 +328,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Iterate over all symbols and their corresponding states
         for (symbol, states) in self.collect_coverage_filtered_results() {
             // TODO: Remove
-            // if symbol == "AAPL" || symbol == "APLE" {
-            //     println!("symbol: {}, Confidence scores....................", symbol);
+            if symbol == "AAPL" || symbol == "APLE" {
+                println!("symbol: {}, Confidence scores....................", symbol);
 
-            //     for state in &states {
-            //         println!(
-            //             "\t{}, {}, {:?}, {:?}",
-            //             symbol,
-            //             Tokenizer::charcode_vector_to_token(&state.company_token_vector),
-            //             confidence_scores.get(&symbol).expect(""),
-            //             state
-            //         );
-            //     }
-            // }
+                for state in &states {
+                    println!(
+                        "\t{}, {}, {:?}, {:?}",
+                        symbol,
+                        Tokenizer::charcode_vector_to_token(&state.company_token_vector),
+                        confidence_scores.get(&symbol).expect(""),
+                        state
+                    );
+                }
+            }
 
             // Get the confidence score for this symbol
             let confidence_score = *confidence_scores
@@ -609,17 +609,25 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 usize::MAX
             };
 
-            for state in states {
-                // TODO: Remove
-                // println!("coverage measure  {}, {:?}", symbol, state);
-                // if symbol == "DIA" {
-                //     println!("coverage increase: {}, {:?}", has_coverage_increase, state);
-                // }
+            // TODO: Remove
+            if symbol == "DIA" {
+                println!("Coverage increase: {:?}", coverage_increase);
+            }
 
+            for state in states {
                 if has_coverage_increase
                     && state.query_token_index < min_coverage_increase_query_token_index
                 {
                     continue;
+                }
+
+                // TODO: Remove
+                // println!("coverage measure  {}, {:?}", symbol, state);
+                if symbol == "AAPL" || symbol == "APLE" {
+                    println!(
+                        "symbol: {}, coverage increase: {}, min cov. incr. token query index: {}, {:?},",
+                        symbol, has_coverage_increase, min_coverage_increase_query_token_index, state
+                    );
                 }
 
                 coverage_grouped
@@ -664,7 +672,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             for (i, state) in states.iter().enumerate() {
                 let current_coverage = state.token_window_index + 1;
 
-                if i > 0 && current_coverage > last_coverage {
+                if i > 0
+                    && current_coverage
+                        > last_coverage + self.user_config.max_allowable_query_token_gap
+                {
                     // Add the previous index to the range if starting a new range
                     if increasing_range.is_empty() && i > 0 {
                         increasing_range.push(states[i - 1].query_token_index);
