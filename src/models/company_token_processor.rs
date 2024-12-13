@@ -119,7 +119,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        // TODO: Remove tokens from self.tokenized_entries which are too common?
+        // TODO: Remove first-n tokens from self.tokenized_entries which are too common?
     }
 
     fn bin_tokens_by_length(&mut self) {
