@@ -17,7 +17,10 @@ pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
 // (may be completely overkill for this use case; just need TLDs)
 pub const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
 
-// TODO: Remove?
+// TODO: Ideally, instead of hardcoding this list, it would be nice to include
+// a utility to learn the words to use and how to properly weigh them. The
+// list could be learned from expected/actual results from the test cases,
+// and be wrapped up in the same tuning process that was used before.
 pub const IGNORE_WORDS: &[&str] = &[
     // Many State Street ETFs are commonly referenced without SPDR prefix
     "SPDR", "U.S.", "Strong",
