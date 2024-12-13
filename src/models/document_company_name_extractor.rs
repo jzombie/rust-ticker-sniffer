@@ -572,9 +572,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             Vec<QueryVectorIntermediateSimilarityState>,
         > = HashMap::new();
 
-        // Step 1: Obtain max token window index
-        // println!("coverage increases: {:?}", coverage_increase_states);
-
         for (symbol, states) in grouped_states {
             // TODO: Remove
             // if symbol == "DIA" {
