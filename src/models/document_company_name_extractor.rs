@@ -7,18 +7,19 @@ use crate::{CompanyTokenProcessor, Error, Tokenizer};
 use core::f32;
 use std::collections::{HashMap, HashSet};
 
-use std::cmp::Ordering;
-
-#[derive(PartialEq, PartialOrd)]
-struct OrderedF32(f32);
-
-impl Eq for OrderedF32 {}
-
-impl Ord for OrderedF32 {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap_or(Ordering::Equal)
-    }
-}
+// TODO: Remove
+// use std::cmp::Ordering;
+//
+// #[derive(PartialEq, PartialOrd)]
+// struct OrderedF32(f32);
+//
+// impl Eq for OrderedF32 {}
+//
+// impl Ord for OrderedF32 {
+//     fn cmp(&self, other: &Self) -> Ordering {
+//         self.partial_cmp(other).unwrap_or(Ordering::Equal)
+//     }
+// }
 
 type TokenWindowIndex = usize;
 
