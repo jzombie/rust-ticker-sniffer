@@ -46,7 +46,8 @@ struct QueryVectorIntermediateSimilarityState {
 #[derive(Debug, Clone)]
 struct TickerSymbolRangeReport {
     ticker_symbol: TickerSymbol,
-    vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
+    // TODO: Track vector_similarity_state_indices?
+    // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorTokenType>,
     company_name_char_coverage: f32,
@@ -497,7 +498,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 ticker_symbol_range_reports.push(TickerSymbolRangeReport {
                     ticker_symbol: ticker_symbol.clone(),
-                    vector_similarity_states,
+                    // vector_similarity_states,
                     query_token_indices,
                     query_token_vectors,
                     company_name_char_coverage,
