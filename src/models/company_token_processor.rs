@@ -118,6 +118,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                 self.max_corpus_token_length = self.max_corpus_token_length.max(token.len());
             }
         }
+
+        // TODO: Remove tokens from self.tokenized_entries which are too common?
     }
 
     fn bin_tokens_by_length(&mut self) {
