@@ -276,7 +276,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     // }
 
     /// Sorts the similarity states by `company_index`, `query_token_index`, and `token_window_index`.
-    pub fn sort_similarity_states(&mut self) {
+    fn sort_similarity_states(&mut self) {
         self.company_similarity_states.sort_by(|a, b| {
             // First, compare by `company_index`
             a.company_index
@@ -286,6 +286,26 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 // Finally, compare by `token_window_index` if both previous fields are the same
                 .then_with(|| a.token_window_index.cmp(&b.token_window_index))
         });
+    }
+
+    // TODO: Refactor to common utils
+    fn get_company_index_with_symbol(&self, symbol: &str) -> Option<usize> {
+        self.company_symbols_list
+            .iter()
+            .position(|(target_symbol, _)| symbol == target_symbol)
+    }
+
+    fn get_similarity_state_with_query_token_index(
+        &self,
+        company_index: usize,
+        query_token_index: usize,
+    ) -> Option<QueryVectorIntermediateSimilarityState> {
+        self.company_similarity_states
+            .iter()
+            .find(|state| {
+                state.company_index == company_index && state.query_token_index == query_token_index
+            })
+            .cloned()
     }
 
     /// Retrieves a map of ticker symbols and their highest confidence scores.
@@ -332,16 +352,28 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         //          Range: [26, 27, 28, 29]
         for (symbol, consecutive_query_token_index_ranges) in symbol_consecutive_query_token_indices
         {
-            println!("Symbol: {}", symbol);
+            let company_index = self.get_company_index_with_symbol(&symbol).expect(&format!(
+                "Could not locate company index with symbol: {}",
+                &symbol
+            ));
+
+            println!("Symbol: {}, Company Index: {}", symbol, company_index);
             for query_token_index_range in consecutive_query_token_index_ranges {
                 println!("\t Range: {:?}", &query_token_index_range);
 
-                // for query_token_index in range {
-                //     println!(
-                //         "\t\t {:?}",
-                //         self.company_similarity_states.get(query_token_index)
-                //     )
-                // }
+                for query_token_index in query_token_index_range {
+                    let state = self.get_similarity_state_with_query_token_index(
+                        company_index,
+                        query_token_index
+                    ).expect(&format!("Could not locate similarity state with company index {} and query token index {}", company_index, query_token_index));
+
+                    println!(
+                        "\t\t Query Token Index: {}, Token: {}, {:?}",
+                        state.query_token_index,
+                        Tokenizer::charcode_vector_to_token(&state.query_vector.to_vec()),
+                        state
+                    );
+                }
             }
         }
 
