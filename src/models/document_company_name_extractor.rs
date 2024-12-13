@@ -49,7 +49,8 @@ struct TickerSymbolRangeReport {
     vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorTokenType>,
-    company_name_coverage: f32,
+    company_name_char_coverage: f32,
+    company_name_token_coverage: f32,
 }
 
 pub struct DocumentCompanyNameExtractor<'a> {
@@ -378,10 +379,17 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 "Query Tokens: {:?}",
                 Tokenizer::charcode_vectors_to_tokens(&range_report.query_token_vectors)
             );
+
+            // Note: In some instances character coverage will be higher, other times, token coverage
             println!(
-                "Company Name Coverage: {}",
-                range_report.company_name_coverage
+                "Company Name Character Coverage: {:?}",
+                range_report.company_name_char_coverage
             );
+            println!(
+                "Company Name Token Coverage: {:?}",
+                range_report.company_name_token_coverage
+            );
+
             println!("{:?}\n\n", range_report);
         }
 
@@ -432,6 +440,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .company_token_processor
                 .calculate_summed_company_token_length(company_index);
 
+            let total_company_name_tokens = self
+                .company_token_processor
+                .get_total_company_name_tokens(company_index);
+
             println!(
                 "Symbol: {}, Company Index: {}",
                 &ticker_symbol, company_index
@@ -466,13 +478,17 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     .map(|token| token.len()) // Map each token to its length
                     .sum(); // Sum up all the lengths
 
-                let company_name_coverage =
+                let company_name_char_coverage =
                     summed_range_token_length as f32 / summed_company_name_tokens_length as f32;
+
+                let company_name_token_coverage =
+                    query_token_vectors.len() as f32 / total_company_name_tokens as f32;
 
                 println!("\t\t-------------------");
                 println!(
-                    "\t\tRange Coverage: {:?}, Range Length: {}, Summed Range Token Length: {}, Summed Company Name Tokens: {}",
-                    company_name_coverage,
+                    "\t\tRange Character Coverage: {:?}, Token Coverage: {:?}, Range Length: {}, Summed Range Token Length: {}, Summed Company Name Tokens: {}",
+                    company_name_char_coverage,
+                    company_name_token_coverage,
                     query_token_indices.len(),
                     summed_range_token_length,
                     summed_company_name_tokens_length
@@ -484,7 +500,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     vector_similarity_states,
                     query_token_indices,
                     query_token_vectors,
-                    company_name_coverage,
+                    company_name_char_coverage,
+                    company_name_token_coverage,
                 })
             }
         }
