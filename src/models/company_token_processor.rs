@@ -23,7 +23,7 @@ type CompanyTokenBinEntry = (CompanyIndex, CompanyTokenIndex);
 type CompanyTokenBin = Vec<CompanyTokenBinEntry>;
 
 // For all nested vectors:
-//  - Outer vector elements are by company index
+//  - Outer vector elements are indexed by company index
 //  - Inner vector elements are for multiple entries, per company
 pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: &'a Tokenizer,
