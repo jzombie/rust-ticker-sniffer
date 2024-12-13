@@ -153,6 +153,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         Ok((sorted_symbols_with_confidence, consumed_query_token_indices))
     }
 
+    // TODO: Could TF-IDF score for a particular term also influence the decision
+    // whether to auto-increment the token window index
+    //
     /// Parses company names from the text document, processing a specific
     /// range of tokens defined by the token window index. Filters and evaluates
     /// token similarity for potential ticker symbol matches.
