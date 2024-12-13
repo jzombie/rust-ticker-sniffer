@@ -50,6 +50,7 @@ struct TickerSymbolRangeReport {
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorTokenType>,
+    // TODO: query_token_vector_frequencies: Track frequency of query tokens across document
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
 }
