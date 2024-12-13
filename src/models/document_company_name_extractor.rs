@@ -438,15 +438,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 // Skip the result if the token window index and query token index are not
                 // incrementing together or if the gap between query token indices exceeds
                 // the allowable limit.
-                if i > 0
-                    && (state.token_window_index
-                        <= last_token_window_index.expect("Missing token window index")
-                        || state.query_token_index
-                            > last_query_token_index.expect("Missing query token index")
-                                + self.user_config.max_allowable_query_token_gap)
-                {
-                    continue;
-                }
+                // if i > 0
+                //     && (state.token_window_index
+                //         <= last_token_window_index.expect("Missing token window index")
+                //         || state.query_token_index
+                //             > last_query_token_index.expect("Missing query token index")
+                //                 + self.user_config.max_allowable_query_token_gap)
+                // {
+                //     continue;
+                // }
 
                 let continuity_reward = ((state.token_window_index + 1) as f32
                     / (self
@@ -559,6 +559,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         per_symbol_confidence_scores
     }
 
+    // TODO: I think this needs to be modified so that it can keep track of multiple ranges per symbol
+    //
     /// Groups intermediate similarity states by ticker symbol, ensuring
     /// only states that contribute to coverage increases are retained.
     fn collect_coverage_filtered_results(
@@ -610,7 +612,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             };
 
             // TODO: Remove
-            if symbol == "DIA" {
+            if symbol == "DIA" || symbol == "AAPL" || symbol == "APLE" {
                 println!("Coverage increase: {:?}", coverage_increase);
             }
 
@@ -623,12 +625,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 // TODO: Remove
                 // println!("coverage measure  {}, {:?}", symbol, state);
-                if symbol == "AAPL" || symbol == "APLE" {
-                    println!(
-                        "symbol: {}, coverage increase: {}, min cov. incr. token query index: {}, {:?},",
-                        symbol, has_coverage_increase, min_coverage_increase_query_token_index, state
-                    );
-                }
+                // if symbol == "AAPL" || symbol == "APLE" {
+                //     println!(
+                //         "symbol: {}, coverage increase: {}, min cov. incr. token query index: {}, {:?},",
+                //         symbol, has_coverage_increase, min_coverage_increase_query_token_index, state
+                //     );
+                // }
 
                 coverage_grouped
                     .entry(symbol.clone())
@@ -674,7 +676,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 if i > 0
                     && current_coverage
-                        > last_coverage + self.user_config.max_allowable_query_token_gap
+                        == last_coverage + self.user_config.max_allowable_query_token_gap
                 {
                     // Add the previous index to the range if starting a new range
                     if increasing_range.is_empty() && i > 0 {
