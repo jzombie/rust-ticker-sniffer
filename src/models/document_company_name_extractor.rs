@@ -376,16 +376,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .or_insert(state.token_window_index);
         }
 
-        // // Step 2: Convert to a Vec and sort by descending order
-        // let mut sorted_symbols_by_index: Vec<(TickerSymbol, usize)> =
-        //     symbol_to_highest_token_window_index_map
-        //         .into_iter()
-        //         .collect();
-
-        // sorted_symbols_by_index.sort_unstable_by(|a, b| b.1.cmp(&a.1)); // Descending order
-
-        // sorted_symbols_by_index
-
         symbol_to_highest_token_window_index_map
     }
 
@@ -407,6 +397,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             let mut last_query_token_index: usize = usize::MAX - 1; // 1 adds headroom for +1 checks
             let mut last_token_window_index: usize = usize::MAX - 1; // 1 adds headroom for +1 checks
 
+            let mut found_max_range = false;
+
             println!("\nProcessing consecutive indexes for symbol: {}", symbol);
 
             for state in &self.company_similarity_states {
@@ -418,12 +410,14 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 if (state.query_token_index != last_query_token_index + 1)
                     || (state.token_window_index != last_token_window_index + 1)
                 {
+                    println!("... clear");
+
                     consecutive_query_token_indices.clear();
                 }
 
                 println!(
-                    "symbol: {}, token: {}, query token index: {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}",
-                    symbol, Tokenizer::charcode_vector_to_token(&state.query_vector), state.query_token_index, max_token_window_index, consecutive_query_token_indices
+                    "symbol: {}, token: {}, query token index: {}, token window index: {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}",
+                    symbol, Tokenizer::charcode_vector_to_token(&state.query_vector), state.query_token_index, state.token_window_index, max_token_window_index, consecutive_query_token_indices
                 );
 
                 consecutive_query_token_indices.push(state.query_token_index);
@@ -435,22 +429,30 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     "-- Bingo: symbol: {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}\n",
                     symbol, max_token_window_index, consecutive_query_token_indices
                 );
-
+                    // Upsert max range
                     symbol_consecutive_query_token_indices
                         .entry(symbol.clone())
                         .and_modify(|existing_ranges| {
                             existing_ranges.push(consecutive_query_token_indices.clone())
                         })
                         .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+
+                    found_max_range = true;
                 }
 
                 last_query_token_index = state.query_token_index;
                 last_token_window_index = state.token_window_index;
             }
-            // println!(
-            //     "symbol: {}, max token window index: {}",
-            //     symbol, max_token_window_index
-            // );
+
+            if !found_max_range && consecutive_query_token_indices.len() > 0 {
+                // Upsert partial range
+                symbol_consecutive_query_token_indices
+                    .entry(symbol.clone())
+                    .and_modify(|existing_ranges| {
+                        existing_ranges.push(consecutive_query_token_indices.clone())
+                    })
+                    .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+            }
         }
 
         symbol_consecutive_query_token_indices
