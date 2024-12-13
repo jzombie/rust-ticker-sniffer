@@ -160,7 +160,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         };
 
         // let (token_start_index, token_end_index) =
-        //     self.calc_token_window_indexes(token_window_index);
+        //     self.calc_token_window_indices(token_window_index);
 
         // TODO: Remove
         println!("Token window index: {}", token_window_index);
@@ -268,7 +268,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
     // Calculates the start and end token indices for a given window
     // based on the configured token window size.
-    // fn calc_token_window_indexes(
+    // fn calc_token_window_indices(
     //     &self,
     //     token_window_index: TokenWindowIndex,
     // ) -> (TokenWindowIndex, TokenWindowIndex) {
@@ -309,8 +309,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
 
         // Assumptions:
-        //  - Symbols with higher token_window_index have higher confidence rating for their particular symbol (assuming query token indexes are in order)
-        //  - Consecutive query token indexes which make up the full range of these token window indexes therefore have higher confidence scores
+        //  - Symbols with higher token_window_index have higher confidence rating for their particular symbol (assuming query token indices are in order)
+        //  - Consecutive query token indices which make up the full range of these token window indices therefore have higher confidence scores
 
         let symbol_to_highest_possible_token_window_index_map =
             self.get_symbol_to_highest_possible_token_window_index_map();
@@ -441,7 +441,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             let mut found_max_range = false;
 
-            println!("\nProcessing consecutive indexes for symbol: {}", symbol);
+            println!("\nProcessing consecutive indices for symbol: {}", symbol);
 
             for state in &self.company_similarity_states {
                 // Ensure we're on the correct company
@@ -471,7 +471,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 }
 
                 println!(
-                    "symbol: {}, token: {}, query token index: {}, token window index: {}, company_token_index_by_source_type, {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}",
+                    "symbol: {}, token: {}, query token index: {}, token window index: {}, company_token_index_by_source_type, {}, max_token_window_index: {}, consecutive_query_token_indices: {:?}",
                     symbol, Tokenizer::charcode_vector_to_token(&state.query_vector), state.query_token_index, state.token_window_index, state.company_token_index_by_source_type, max_token_window_index, consecutive_query_token_indices
                 );
 
@@ -479,7 +479,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     && consecutive_query_token_indices.len() == *max_token_window_index + 1
                 {
                     println!(
-                    "-- Bingo: symbol: {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}\n",
+                    "-- Bingo: symbol: {}, max_token_window_index: {}, consecutive_query_token_indices: {:?}\n",
                     symbol, max_token_window_index, consecutive_query_token_indices
                 );
                     // Insert max range
@@ -573,7 +573,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     // }
 
     // TODO: Remove?
-    // TODO: Decrease confidence score if the same query token indexes match a significant number of results (this may need to be done in another method, for simplicity)
+    // TODO: Decrease confidence score if the same query token indices match a significant number of results (this may need to be done in another method, for simplicity)
     //
     // Calculates confidence scores for each ticker symbol by weighing
     // their similarity states.
@@ -589,7 +589,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //     for (symbol, states) in &coverage_grouped_results {
     //         let mut symbol_confidence_score: f32 = 0.0;
 
-    //         let mut seen_query_token_indexes: Vec<QueryTokenIndex> = Vec::new();
+    //         let mut seen_query_token_indices: Vec<QueryTokenIndex> = Vec::new();
 
     //         let mut last_token_window_index = None;
     //         let mut last_query_token_index = None;
@@ -620,11 +620,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //             //     );
     //             // }
 
-    //             // Skip repeat processinging of same query token indexes
-    //             if seen_query_token_indexes.contains(&state.query_token_index) {
+    //             // Skip repeat processinging of same query token indices
+    //             if seen_query_token_indices.contains(&state.query_token_index) {
     //                 continue;
     //             } else {
-    //                 seen_query_token_indexes.push(state.query_token_index);
+    //                 seen_query_token_indices.push(state.query_token_index);
     //             }
 
     //             // TODO: Remove
@@ -846,7 +846,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     // }
 
     // TODO: Remove?
-    // Determines the query token indexes which contribute to company name coverage increases.
+    // Determines the query token indices which contribute to company name coverage increases.
     // fn analyze_coverage_increases(
     //     &self,
     // ) -> Result<HashMap<TickerSymbol, Vec<QueryTokenIndex>>, String> {
