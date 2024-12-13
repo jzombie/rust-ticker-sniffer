@@ -153,8 +153,8 @@ impl<'a> CompanyTokenProcessor<'a> {
     }
 
     // TODO: Rename
-    /// Retrieves the summed total of all company tokens
-    pub fn get_company_name_tokens_length(&self, company_index: usize) -> usize {
+    /// Calculates the total length of all tokens in a company's name.
+    pub fn calculate_summed_company_token_length(&self, company_index: usize) -> usize {
         match self.get_company_name_tokens(company_index) {
             Some(company_name_tokens) => {
                 let mut total_token_length = 0;

@@ -360,15 +360,23 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 &symbol
             ));
 
+            let summed_company_name_tokens_length = self
+                .company_token_processor
+                .calculate_summed_company_token_length(company_index);
+
             println!("Symbol: {}, Company Index: {}", symbol, company_index);
             for query_token_index_range in consecutive_query_token_index_ranges {
                 println!("\t Range: {:?}", &query_token_index_range);
 
-                for query_token_index in query_token_index_range {
+                let mut range_query_token_vectors = Vec::new();
+
+                for query_token_index in &query_token_index_range {
                     let state = self.get_similarity_state_with_query_token_index(
                         company_index,
-                        query_token_index
+                        *query_token_index
                     ).expect(&format!("Could not locate similarity state with company index {} and query token index {}", company_index, query_token_index));
+
+                    range_query_token_vectors.push(state.query_token_vector.clone());
 
                     println!(
                         "\t\t Query Token Index: {}, Token: {}, {:?}",
@@ -377,6 +385,24 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                         state
                     );
                 }
+
+                let summed_range_token_length: usize = range_query_token_vectors
+                    .iter()
+                    .map(|token| token.len()) // Map each token to its length
+                    .sum(); // Sum up all the lengths
+
+                let coverage_perc =
+                    summed_range_token_length as f32 / summed_company_name_tokens_length as f32;
+
+                println!("\t\t-------------------");
+                println!(
+                    "\t\tRange Coverage: {:.2}%, Range Length: {}, Summed Range Token Length: {}, Summed Company Name Tokens: {}",
+                    coverage_perc * 100.0,
+                    query_token_index_range.len(),
+                    summed_range_token_length,
+                    summed_company_name_tokens_length
+                );
+                println!("\n");
             }
         }
 
