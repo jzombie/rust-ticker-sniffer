@@ -198,10 +198,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 }
 
                 if *company_token_index_by_source_type == token_window_index {
-                    let similarity =
+                    let company_name_similarity_at_index =
                         index_difference_similarity(&query_vector, company_token_vector);
 
-                    if similarity >= self.user_config.min_text_doc_token_sim_threshold {
+                    if company_name_similarity_at_index
+                        >= self.user_config.min_text_doc_token_sim_threshold
+                    {
                         // TODO: Remove
                         let ticker_symbol = &self
                             .company_symbols_list
@@ -211,9 +213,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                         if ticker_symbol == "AAPL" || ticker_symbol == "APLE" {
                             println!("-----");
                             println!(
-                                "Symbol: {}, Similarity: {}, Threshold: {}, Query: {}, Result: {}, Query Token Index: {}, Company Token Index: {},  Token Window Index: {}, Company Index: {}, Company Name Tokens: {:?}",
+                                "Symbol: {}, Sim @ Index: {}, Threshold: {}, Query: {}, Result: {}, Query Token Index: {}, Company Token Index: {},  Token Window Index: {}, Company Index: {}, Company Name Tokens: {:?}",
                                 ticker_symbol,
-                                similarity,
+                                company_name_similarity_at_index,
                                 self.user_config.min_text_doc_token_sim_threshold,
                                 Tokenizer::charcode_vector_to_token(query_vector),
                                 Tokenizer::charcode_vector_to_token(company_token_vector),
@@ -228,12 +230,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                         // let company_name_length = company_name.len();
 
-                        let total_company_name_tokens_length = self
-                            .company_token_processor
-                            .get_company_name_tokens_length(*company_index);
+                        // let total_company_name_tokens_length = self
+                        //     .company_token_processor
+                        //     .get_company_name_tokens_length(*company_index);
 
-                        let company_name_similarity_at_index = similarity
-                            * (query_vector.len() as f32 / total_company_name_tokens_length as f32);
+                        // let company_name_similarity_at_index = similarity
+                        //     * (query_vector.len() as f32 / total_company_name_tokens_length as f32);
 
                         self.company_similarity_states.push(
                             QueryVectorIntermediateSimilarityState {
