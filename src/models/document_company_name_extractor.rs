@@ -44,12 +44,14 @@ struct QueryVectorIntermediateSimilarityState {
 #[derive(Debug, Clone)]
 struct TickerSymbolRangeReport {
     ticker_symbol: TickerSymbol,
+    // TODO: Track total number of ranges, despite this being a single range itself
+    //
+    // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorToken>,
-    // TODO: query_token_vector_frequencies: Track frequency of query tokens across document
-    // TODO: Track token TF-IDF scores based on company name "corpus"
+    company_name_token_frequencies: Vec<usize>,
     company_name_token_vectors: Vec<TokenizerVectorToken>,
     company_name_token_tdidf_scores: Vec<f32>,
     company_name_char_coverage: f32,
@@ -389,6 +391,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 Tokenizer::charcode_vectors_to_tokens(&range_report.company_name_token_vectors)
             );
             println!(
+                "Company Name Token Frequencies: {:?}",
+                range_report.company_name_token_frequencies
+            );
+            println!(
                 "Company Name TF-IDF Scores: {:?}",
                 range_report.company_name_token_tdidf_scores
             );
@@ -472,6 +478,16 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     company_index
                 ));
 
+            let mut company_name_token_frequencies = Vec::new();
+            for company_name_token_vector in &company_name_token_vectors {
+                let company_name_token_frequency = self
+                    .company_token_processor
+                    .company_name_token_frequency_map
+                    .get(&company_name_token_vector.to_vec())
+                    .expect("Could not obtain query token vector");
+                company_name_token_frequencies.push(company_name_token_frequency.clone());
+            }
+
             let company_name_token_tdidf_scores = self
                 .company_token_processor
                 .company_name_token_tdidf_scores
@@ -489,7 +505,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 println!("\t Range: {:?}", &query_token_indices);
 
                 let mut query_token_vectors = Vec::new();
-
                 let mut vector_similarity_states = Vec::new();
 
                 for query_token_index in &query_token_indices {
@@ -537,6 +552,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     // vector_similarity_states,
                     query_token_indices,
                     query_token_vectors,
+                    company_name_token_frequencies: company_name_token_frequencies.clone(),
                     company_name_token_vectors: company_name_token_vectors.clone(),
                     company_name_token_tdidf_scores: company_name_token_tdidf_scores.to_vec(),
                     company_name_char_coverage,
