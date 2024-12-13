@@ -120,6 +120,34 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
+    pub fn get_company_name_token_vectors(
+        &self,
+        company_index: usize,
+    ) -> Option<Vec<TokenizerVectorTokenType>> {
+        // Retrieve the tokenized entries for the given company index
+        let tokenized_entries = self.tokenized_entries.get(company_index)?;
+
+        // Filter tokens that are of the `CompanyName` source type and map them to strings
+        let company_name_tokens_vectors: Vec<TokenizerVectorTokenType> = tokenized_entries
+            .iter()
+            .filter_map(|(token_vector, token_source_type, _)| {
+                if *token_source_type == CompanyTokenSourceType::CompanyName {
+                    // Convert the token to a string (adjust based on actual token structure)
+                    Some(token_vector.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Return None if no tokens are found, otherwise return the tokens
+        if company_name_tokens_vectors.is_empty() {
+            None
+        } else {
+            Some(company_name_tokens_vectors)
+        }
+    }
+
     pub fn get_company_name_tokens(&self, company_index: usize) -> Option<Vec<String>> {
         // Retrieve the tokenized entries for the given company index
         let tokenized_entries = self.tokenized_entries.get(company_index)?;
@@ -127,10 +155,10 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Filter tokens that are of the `CompanyName` source type and map them to strings
         let company_name_tokens: Vec<String> = tokenized_entries
             .iter()
-            .filter_map(|(token, token_source_type, _)| {
+            .filter_map(|(token_vector, token_source_type, _)| {
                 if *token_source_type == CompanyTokenSourceType::CompanyName {
                     // Convert the token to a string (adjust based on actual token structure)
-                    Some(Tokenizer::charcode_vector_to_token(token))
+                    Some(Tokenizer::charcode_vector_to_token(token_vector))
                 } else {
                     None
                 }

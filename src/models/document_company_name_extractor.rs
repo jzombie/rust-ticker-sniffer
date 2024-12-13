@@ -51,6 +51,7 @@ struct TickerSymbolRangeReport {
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorTokenType>,
     // TODO: query_token_vector_frequencies: Track frequency of query tokens across document
+    company_name_token_vectors: Vec<TokenizerVectorTokenType>,
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
 }
@@ -381,6 +382,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 "Query Tokens: {:?}",
                 Tokenizer::charcode_vectors_to_tokens(&range_report.query_token_vectors)
             );
+            println!(
+                "Company Name Tokens: {:?}",
+                Tokenizer::charcode_vectors_to_tokens(&range_report.company_name_token_vectors)
+            );
 
             // Note: In some instances character coverage will be higher, other times, token coverage
             println!(
@@ -446,6 +451,14 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .company_token_processor
                 .get_total_company_name_tokens(company_index);
 
+            let company_name_token_vectors = self
+                .company_token_processor
+                .get_company_name_token_vectors(company_index)
+                .expect(&format!(
+                    "Could not retrieve company name vectors for company with index: {}",
+                    company_index
+                ));
+
             println!(
                 "Symbol: {}, Company Index: {}",
                 &ticker_symbol, company_index
@@ -502,6 +515,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     // vector_similarity_states,
                     query_token_indices,
                     query_token_vectors,
+                    company_name_token_vectors: company_name_token_vectors.clone(),
                     company_name_char_coverage,
                     company_name_token_coverage,
                 })
