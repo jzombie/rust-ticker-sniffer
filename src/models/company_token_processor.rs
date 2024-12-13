@@ -37,7 +37,7 @@ pub struct CompanyTokenProcessor<'a> {
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
     pub token_frequency_map: TokenFrequencyMap,
-    pub company_name_token_tdidf_scores: HashMap<usize, Vec<f32>>,
+    pub company_name_token_tdidf_scores: HashMap<CompanyIndex, Vec<f32>>,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {

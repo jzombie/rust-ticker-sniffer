@@ -51,6 +51,7 @@ struct TickerSymbolRangeReport {
     // TODO: query_token_vector_frequencies: Track frequency of query tokens across document
     // TODO: Track token TF-IDF scores based on company name "corpus"
     company_name_token_vectors: Vec<TokenizerVectorToken>,
+    company_name_token_tdidf_scores: Vec<f32>,
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
 }
@@ -61,7 +62,6 @@ pub struct DocumentCompanyNameExtractor<'a> {
     company_token_processor: &'a CompanyTokenProcessor<'a>,
     user_config: &'a DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
-
     tokenized_query_token_vectors: Vec<TokenizerVectorToken>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     results: Vec<TickerSymbol>,
@@ -388,6 +388,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 "Company Name Tokens: {:?}",
                 Tokenizer::charcode_vectors_to_tokens(&range_report.company_name_token_vectors)
             );
+            println!(
+                "Company Name TF-IDF Scores: {:?}",
+                range_report.company_name_token_tdidf_scores
+            );
 
             // Note: In some instances character coverage will be higher, other times, token coverage
             println!(
@@ -404,10 +408,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
         // TODO: Remove
         // println!("{:?}", self.company_token_processor.token_frequency_map);
-        println!(
-            "{:?}",
-            self.company_token_processor.company_name_token_tdidf_scores
-        );
+        // println!(
+        //     "{:?}",
+        //     self.company_token_processor.company_name_token_tdidf_scores
+        // );
 
         // println!("{:?}", symbol_consecutive_query_token_indices);
 
@@ -468,6 +472,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     company_index
                 ));
 
+            let company_name_token_tdidf_scores = self
+                .company_token_processor
+                .company_name_token_tdidf_scores
+                .get(&company_index)
+                .expect(&format!(
+                    "Could not retrieve company name TD-IDF scores for company with index: {}",
+                    company_index
+                ));
+
             println!(
                 "Symbol: {}, Company Index: {}",
                 &ticker_symbol, company_index
@@ -525,6 +538,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     query_token_indices,
                     query_token_vectors,
                     company_name_token_vectors: company_name_token_vectors.clone(),
+                    company_name_token_tdidf_scores: company_name_token_tdidf_scores.to_vec(),
                     company_name_char_coverage,
                     company_name_token_coverage,
                 })
