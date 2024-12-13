@@ -119,7 +119,8 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        // TODO: Remove first-n tokens from self.tokenized_entries which are too common?
+        // TODO: Auto-remove first-n tokens from self.tokenized_entries which are too common?
+        // This could possibly be a replacement for IGNORE_WORDS.
     }
 
     fn bin_tokens_by_length(&mut self) {
