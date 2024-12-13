@@ -6,6 +6,7 @@ use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Error, Tokenizer};
 use core::f32;
 use std::collections::{HashMap, HashSet};
+use std::vec;
 
 // TODO: Remove
 // use std::cmp::Ordering;
@@ -40,6 +41,14 @@ struct QueryVectorIntermediateSimilarityState {
     company_token_index_by_source_type: usize, // TODO: Add more specific type
     company_token_vector: TokenizerVectorTokenType,
     company_name_similarity_at_index: f32,
+}
+
+#[derive(Debug, Clone)]
+struct TickerSymbolRangeReport {
+    ticker_symbol: TickerSymbol,
+    vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
+    query_token_indices: Vec<QueryTokenIndex>,
+    company_name_coverage: f32,
 }
 
 pub struct DocumentCompanyNameExtractor<'a> {
@@ -354,7 +363,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         //          Range: [13, 14, 15, 16]
         //          Range: [19, 20, 21, 22]
         //          Range: [26, 27, 28, 29]
-        self.calculate_symbol_range_report(symbol_consecutive_query_token_indices);
+        let range_reports =
+            self.calculate_symbol_range_reports(symbol_consecutive_query_token_indices);
+
+        println!("\n\nRange reports:");
+        for range_report in &range_reports {
+            println!("{:?}\n\n", range_report);
+        }
 
         // println!("{:?}", symbol_consecutive_query_token_indices);
 
@@ -383,32 +398,44 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     }
 
     // TODO: Work out return type
-    fn calculate_symbol_range_report(
+    fn calculate_symbol_range_reports(
         &self,
         symbol_consecutive_query_token_indices: HashMap<TickerSymbol, Vec<Vec<usize>>>,
-    ) {
-        for (symbol, consecutive_query_token_index_ranges) in symbol_consecutive_query_token_indices
+    ) -> Vec<TickerSymbolRangeReport> {
+        let mut ticker_symbol_range_reports: Vec<TickerSymbolRangeReport> = Vec::new();
+
+        for (ticker_symbol, consecutive_query_token_index_ranges) in
+            symbol_consecutive_query_token_indices
         {
-            let company_index = self.get_company_index_with_symbol(&symbol).expect(&format!(
-                "Could not locate company index with symbol: {}",
-                &symbol
-            ));
+            let company_index =
+                self.get_company_index_with_symbol(&ticker_symbol)
+                    .expect(&format!(
+                        "Could not locate company index with symbol: {}",
+                        &ticker_symbol
+                    ));
 
             let summed_company_name_tokens_length = self
                 .company_token_processor
                 .calculate_summed_company_token_length(company_index);
 
-            println!("Symbol: {}, Company Index: {}", symbol, company_index);
-            for query_token_index_range in consecutive_query_token_index_ranges {
-                println!("\t Range: {:?}", &query_token_index_range);
+            println!(
+                "Symbol: {}, Company Index: {}",
+                &ticker_symbol, company_index
+            );
+            for query_token_indices in consecutive_query_token_index_ranges {
+                println!("\t Range: {:?}", &query_token_indices);
 
                 let mut range_query_token_vectors = Vec::new();
 
-                for query_token_index in &query_token_index_range {
+                let mut vector_similarity_states = Vec::new();
+
+                for query_token_index in &query_token_indices {
                     let state = self.get_similarity_state_with_query_token_index(
                         company_index,
                         *query_token_index
                     ).expect(&format!("Could not locate similarity state with company index {} and query token index {}", company_index, query_token_index));
+
+                    vector_similarity_states.push(state.clone());
 
                     range_query_token_vectors.push(state.query_token_vector.clone());
 
@@ -425,20 +452,29 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     .map(|token| token.len()) // Map each token to its length
                     .sum(); // Sum up all the lengths
 
-                let coverage_perc =
+                let company_name_coverage =
                     summed_range_token_length as f32 / summed_company_name_tokens_length as f32;
 
                 println!("\t\t-------------------");
                 println!(
-                    "\t\tRange Coverage: {:.2}%, Range Length: {}, Summed Range Token Length: {}, Summed Company Name Tokens: {}",
-                    coverage_perc * 100.0,
-                    query_token_index_range.len(),
+                    "\t\tRange Coverage: {:?}, Range Length: {}, Summed Range Token Length: {}, Summed Company Name Tokens: {}",
+                    company_name_coverage,
+                    query_token_indices.len(),
                     summed_range_token_length,
                     summed_company_name_tokens_length
                 );
                 println!("\n");
+
+                ticker_symbol_range_reports.push(TickerSymbolRangeReport {
+                    ticker_symbol: ticker_symbol.clone(),
+                    vector_similarity_states,
+                    query_token_indices,
+                    company_name_coverage,
+                })
             }
         }
+
+        ticker_symbol_range_reports
     }
 
     /// Note: This method is used as a preprocessor for identify_query_token_index_ranges
