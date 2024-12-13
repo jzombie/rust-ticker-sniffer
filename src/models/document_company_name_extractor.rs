@@ -318,6 +318,16 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let symbol_consecutive_query_token_indices = self
             .identify_query_token_index_ranges(symbol_to_highest_possible_token_window_index_map);
 
+        // TODO: Consider letting query token position influence scoring as well
+        //
+        // TODO: Let frequency of ranges influence score / contextual analysis
+        //
+        // For example:
+        //      Symbol: DIA
+        //          Range: [1, 2, 3, 4]
+        //          Range: [13, 14, 15, 16]
+        //          Range: [19, 20, 21, 22]
+        //          Range: [26, 27, 28, 29]
         for (symbol, consecutive_query_token_index_ranges) in symbol_consecutive_query_token_indices
         {
             println!("Symbol: {}", symbol);
