@@ -99,9 +99,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Begin parsing at the first page
         self.parse_company_names(None, None);
 
-        // Very important the states are sorted before proceeding
-        self.sort_similarity_states();
-
         let symbols_with_confidence = self.get_symbols_with_confidence()?;
 
         let consumed_query_token_indices: Vec<QueryTokenIndex> = self
@@ -294,12 +291,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Retrieves a map of ticker symbols and their highest confidence scores.
     /// Ensures that only the highest confidence score is retained for each symbol.
     fn get_symbols_with_confidence(&mut self) -> Result<HashMap<TickerSymbol, f32>, Error> {
-        // let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
+        // Very important the states are sorted before proceeding
+        self.sort_similarity_states();
 
         // Prepare a map for symbols and their highest confidence scores
         let symbols_with_confidence: HashMap<TickerSymbol, f32> = HashMap::new();
 
-        // TODO: Pre-sort by company_index, query_token_index, token_window_index
         for state in &self.company_similarity_states {
             println!(
                 "Token: {}, State: {:?}",
