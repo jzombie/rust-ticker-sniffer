@@ -79,8 +79,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                 .get(0)
                 .cloned(); // Take the first entry, if it exists
             if let Some(symbol_token) = symbol_token {
+                // Push symbol to tokenized entries
                 company_tokenized_entries.push((symbol_token, CompanyTokenSourceType::Symbol, 0));
-                // Token from symbol
             }
 
             if let Some(company_name) = company_name {
@@ -94,12 +94,14 @@ impl<'a> CompanyTokenProcessor<'a> {
                 for (index_by_source_type, token_vector) in
                     company_name_token_vectors.iter().enumerate()
                 {
+                    // Push company name to tokenized entries
                     company_tokenized_entries.push((
                         token_vector.to_vec(),
                         CompanyTokenSourceType::CompanyName,
                         index_by_source_type,
                     ));
 
+                    // Push company name to token frequency map
                     *self
                         .company_name_token_frequency_map
                         .entry(token_vector.clone())
