@@ -38,8 +38,8 @@ fn main() {
     // let query = "Berkshire";
 
     // TODO: Ensure that queries can't be performed in reverse
-    let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
-    // let query = "Apple Apple Hospitality REIT Apple INC";
+    // let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
+    let query = "Apple Apple Hospitality REIT Apple INC";
     // let query = "Apple Apple INC Apple Hospitality REIT";
     // let query = "Hathaway Berkshire";
     // let query = "Hospitality Apple";
@@ -163,7 +163,7 @@ fn main() {
 
     // let query = r#"SPDR Dow Jones Industrial Average ETF Invesco Dow Jones Industrial Average Dividend ETF iShares Dow Jones U.S. ETF"#;
 
-    let results = extract_tickers_from_text(&query, &company_symbols_list);
+    let results = extract_tickers_from_text(&query, &company_symbols_list).unwrap();
 
     println!("Extracted Tickers:");
     for (symbol, confidence) in results {

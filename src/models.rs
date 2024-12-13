@@ -4,6 +4,9 @@ pub use config::DocumentCompanyNameExtractorConfig;
 pub mod document_entity_extractor;
 pub use document_entity_extractor::DocumentEntityExtractor;
 
+pub mod error;
+pub use error::Error;
+
 pub mod company_token_processor;
 pub use company_token_processor::CompanyTokenProcessor;
 

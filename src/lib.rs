@@ -6,7 +6,7 @@ pub use constants::{
 };
 pub use models::{
     CompanyTokenProcessor, DocumentCompanyNameExtractor, DocumentCompanyNameExtractorConfig,
-    DocumentEntityExtractor, Tokenizer,
+    DocumentEntityExtractor, Error, Tokenizer,
 };
 pub mod types;
 mod utils;
@@ -18,24 +18,27 @@ pub use types::{
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolList,
-) -> Vec<(TickerSymbol, f32)> {
-    extract_tickers_from_text_with_custom_weights(
+) -> Result<Vec<(TickerSymbol, f32)>, Error> {
+    let symbols_with_confidence = extract_tickers_from_text_with_custom_weights(
         &text,
         &company_symbols_list,
         DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG,
-    )
+    )?;
+
+    Ok(symbols_with_confidence)
 }
 
 pub fn extract_tickers_from_text_with_custom_weights(
     text: &str,
     company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
-) -> Vec<(TickerSymbol, f32)> {
+) -> Result<Vec<(TickerSymbol, f32)>, Error> {
     let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
         &company_symbols_list,
         &document_company_name_extractor_config,
         &text,
-    );
+    )?;
+
     // TODO: Do symbol extraction, discarding `consumed_query_token_indices` from the query tokens
 
     // TODO: Remove
@@ -44,7 +47,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
         consumed_query_token_indices
     );
 
-    symbols_with_confidence
+    Ok(symbols_with_confidence)
 }
 
 // TODO: Remove

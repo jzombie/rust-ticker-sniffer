@@ -4,7 +4,7 @@ use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
     extract_tickers_from_text_with_custom_weights, CompanySymbolList,
-    DocumentCompanyNameExtractorConfig, TickerSymbol,
+    DocumentCompanyNameExtractorConfig, Error as LibError, TickerSymbol,
 };
 pub mod models;
 // pub use models::EvaluationResult;
@@ -77,12 +77,15 @@ pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
 pub fn run_test_for_file(
     test_file_path: &str,
     company_name_extractor_config: DocumentCompanyNameExtractorConfig,
-) -> (
-    // TODO: Use more specific types (especially for `f32` confidence score)
-    Vec<(TickerSymbol, f32)>,
-    Vec<TickerSymbol>,
-    Vec<TickerSymbol>,
-) {
+) -> Result<
+    (
+        // TODO: Use more specific types (especially for `f32` confidence score)
+        Vec<(TickerSymbol, f32)>,
+        Vec<TickerSymbol>,
+        Vec<TickerSymbol>,
+    ),
+    LibError,
+> {
     // Load symbols from a test CSV file
     let symbols_map = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
         .expect("Failed to load symbols from CSV");
@@ -106,7 +109,7 @@ pub fn run_test_for_file(
         &filtered_text,
         &symbols_map,
         company_name_extractor_config,
-    );
+    )?;
 
     // Get the expected tickers from the file
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
@@ -163,5 +166,5 @@ pub fn run_test_for_file(
     }
 
     // Return the results along with the lists of unexpected and missing tickers
-    (results_with_confidence, unexpected_tickers, missing_tickers)
+    Ok((results_with_confidence, unexpected_tickers, missing_tickers))
 }

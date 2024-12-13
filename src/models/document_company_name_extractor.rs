@@ -3,7 +3,7 @@ use crate::types::{
 };
 use crate::utils::index_difference_similarity;
 use crate::DocumentCompanyNameExtractorConfig;
-use crate::{CompanyTokenProcessor, Tokenizer};
+use crate::{CompanyTokenProcessor, Error, Tokenizer};
 use core::f32;
 use std::collections::{HashMap, HashSet};
 
@@ -78,7 +78,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     /// Extracts ticker symbols from the given text document by tokenizing
     /// and comparing against known company names. Ensures only one extraction
     /// process runs at a time.
-    pub fn extract(&mut self, text: &str) -> (Vec<(TickerSymbol, f32)>, Vec<usize>) {
+    pub fn extract(&mut self, text: &str) -> Result<(Vec<(TickerSymbol, f32)>, Vec<usize>), Error> {
         if self.is_extracting {
             panic!("Cannot perform multiple extractions concurrently from same `DocumentCompanyNameExtractor` instance");
         } else {
@@ -102,7 +102,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // Very important the states are sorted before proceeding
         self.sort_similarity_states();
 
-        let symbols_with_confidence = self.get_symbols_with_confidence();
+        let symbols_with_confidence = self.get_symbols_with_confidence()?;
 
         let consumed_query_token_indices: Vec<QueryTokenIndex> = self
             .company_similarity_states
@@ -136,7 +136,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         sorted_symbols_with_confidence
             .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        (sorted_symbols_with_confidence, consumed_query_token_indices)
+        Ok((sorted_symbols_with_confidence, consumed_query_token_indices))
     }
 
     /// Parses company names from the text document, processing a specific
@@ -200,8 +200,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                     if similarity >= self.user_config.min_text_doc_token_sim_threshold {
                         // TODO: Remove
-                        let ticker_symbol =
-                            &self.company_symbols_list.get(*company_index).expect("").0;
+                        let ticker_symbol = &self
+                            .company_symbols_list
+                            .get(*company_index)
+                            .expect("Could not locate company symbols list")
+                            .0;
                         if ticker_symbol == "AAPL" || ticker_symbol == "APLE" {
                             println!("-----");
                             println!(
@@ -285,11 +288,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
     /// Retrieves a map of ticker symbols and their highest confidence scores.
     /// Ensures that only the highest confidence score is retained for each symbol.
-    fn get_symbols_with_confidence(&mut self) -> HashMap<TickerSymbol, f32> {
+    fn get_symbols_with_confidence(&mut self) -> Result<HashMap<TickerSymbol, f32>, Error> {
         // let query_token_rankings = self.map_highest_ranking_symbols_to_query_tokens();
 
         // Prepare a map for symbols and their highest confidence scores
-        let mut symbols_with_confidence: HashMap<TickerSymbol, f32> = HashMap::new();
+        let symbols_with_confidence: HashMap<TickerSymbol, f32> = HashMap::new();
 
         // TODO: Pre-sort by company_index, query_token_index, token_window_index
         for state in &self.company_similarity_states {
@@ -353,7 +356,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         //     }
         // }
 
-        symbols_with_confidence
+        Ok(symbols_with_confidence)
     }
 
     /// Note: This method is used as a preprocessor for identify_query_token_index_ranges
