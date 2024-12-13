@@ -1,4 +1,8 @@
-use crate::types::{CompanySymbolList, CompanyTokenSourceType, TokenizerVectorTokenType};
+use std::collections::HashMap;
+
+use crate::types::{
+    CompanySymbolList, CompanyTokenSourceType, TokenFrequencyMap, TokenizerVectorTokenType,
+};
 use crate::Tokenizer;
 
 type CompanyTokenIndexBySourceType = usize;
@@ -32,6 +36,7 @@ pub struct CompanyTokenProcessor<'a> {
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
+    pub token_frequency_map: TokenFrequencyMap,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -47,6 +52,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             tokenized_entries: vec![],
             max_corpus_token_length: 0,
             token_length_bins: vec![],
+            token_frequency_map: HashMap::new(),
         };
 
         instance.tokenize_all();
@@ -59,6 +65,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn tokenize_all(&mut self) {
         self.max_corpus_token_length = 0;
         self.tokenized_entries.clear();
+        self.token_frequency_map.clear();
 
         // First pass: Tokenize and determine the maximum token length
         for (symbol, company_name) in self.company_symbols_list.iter() {
@@ -83,12 +90,19 @@ impl<'a> CompanyTokenProcessor<'a> {
                 let company_name_token_vectors = self
                     .text_doc_tokenizer
                     .tokenize_to_charcode_vectors(&uc_company_name);
-                for (index_by_source_type, token) in company_name_token_vectors.iter().enumerate() {
+                for (index_by_source_type, token_vector) in
+                    company_name_token_vectors.iter().enumerate()
+                {
                     company_tokenized_entries.push((
-                        token.to_vec(),
+                        token_vector.to_vec(),
                         CompanyTokenSourceType::CompanyName,
                         index_by_source_type,
                     ));
+
+                    *self
+                        .token_frequency_map
+                        .entry(token_vector.clone())
+                        .or_insert(0) += 1;
                 }
             }
 

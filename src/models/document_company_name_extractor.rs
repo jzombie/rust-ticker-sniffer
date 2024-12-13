@@ -221,28 +221,28 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                         >= self.user_config.min_text_doc_token_sim_threshold
                     {
                         // TODO: Remove
-                        let ticker_symbol = &self
-                            .company_symbols_list
-                            .get(*company_index)
-                            .expect("Could not locate company symbols list")
-                            .0;
-                        if ticker_symbol == "AAPL" || ticker_symbol == "APLE" {
-                            println!("-----");
-                            println!(
-                                "Symbol: {}, Sim @ Index: {}, Threshold: {}, Query: {}, Result: {}, Query Token Index: {}, Company Token Index: {},  Token Window Index: {}, Company Index: {}, Company Name Tokens: {:?}",
-                                ticker_symbol,
-                                company_name_similarity_at_index,
-                                self.user_config.min_text_doc_token_sim_threshold,
-                                Tokenizer::charcode_vector_to_token(query_token_vector),
-                                Tokenizer::charcode_vector_to_token(company_token_vector),
-                                query_token_index,
-                                company_token_index_by_source_type,
-                                token_window_index,
-                                company_index,
-                                self.company_token_processor.get_company_name_tokens(*company_index)
-                            );
-                            println!("-----");
-                        }
+                        // let ticker_symbol = &self
+                        //     .company_symbols_list
+                        //     .get(*company_index)
+                        //     .expect("Could not locate company symbols list")
+                        //     .0;
+                        // if ticker_symbol == "AAPL" || ticker_symbol == "APLE" {
+                        //     println!("-----");
+                        //     println!(
+                        //         "Symbol: {}, Sim @ Index: {}, Threshold: {}, Query: {}, Result: {}, Query Token Index: {}, Company Token Index: {},  Token Window Index: {}, Company Index: {}, Company Name Tokens: {:?}",
+                        //         ticker_symbol,
+                        //         company_name_similarity_at_index,
+                        //         self.user_config.min_text_doc_token_sim_threshold,
+                        //         Tokenizer::charcode_vector_to_token(query_token_vector),
+                        //         Tokenizer::charcode_vector_to_token(company_token_vector),
+                        //         query_token_index,
+                        //         company_token_index_by_source_type,
+                        //         token_window_index,
+                        //         company_index,
+                        //         self.company_token_processor.get_company_name_tokens(*company_index)
+                        //     );
+                        //     println!("-----");
+                        // }
 
                         // let company_name_length = company_name.len();
 
@@ -400,6 +400,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             println!("{:?}\n\n", range_report);
         }
+
+        // TODO: Remove
+        println!("{:?}", self.company_token_processor.token_frequency_map);
 
         // println!("{:?}", symbol_consecutive_query_token_indices);
 

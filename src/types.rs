@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub type TickerSymbol = String;
 pub type CompanyName = String;
 
@@ -11,3 +13,5 @@ pub enum CompanyTokenSourceType {
 }
 
 pub type TokenizerVectorTokenType = Vec<u32>;
+
+pub type TokenFrequencyMap = HashMap<TokenizerVectorTokenType, usize>;
