@@ -33,7 +33,7 @@ type QueryTokenIndex = usize;
 struct QueryVectorIntermediateSimilarityState {
     token_window_index: TokenWindowIndex,
     query_token_index: QueryTokenIndex,
-    query_vector: TokenizerVectorTokenType,
+    query_token_vector: TokenizerVectorTokenType,
     company_index: usize, // TODO: Add more specific type
     company_token_source_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize, // TODO: Add more specific type
@@ -48,7 +48,7 @@ pub struct DocumentCompanyNameExtractor<'a> {
     user_config: &'a DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
 
-    tokenized_query_vectors: Vec<TokenizerVectorTokenType>,
+    tokenized_query_token_vectors: Vec<TokenizerVectorTokenType>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     results: Vec<TickerSymbol>,
 }
@@ -69,7 +69,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             company_token_processor: &company_token_processor,
             user_config: &user_config,
             is_extracting: false,
-            tokenized_query_vectors: vec![],
+            tokenized_query_token_vectors: vec![],
             company_similarity_states: vec![],
             results: vec![],
         }
@@ -88,12 +88,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         self.company_similarity_states.clear();
         self.results.clear();
 
-        self.tokenized_query_vectors = self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
+        self.tokenized_query_token_vectors =
+            self.text_doc_tokenizer.tokenize_to_charcode_vectors(&text);
 
         // TODO: Remove
         println!(
             "Tokenized query: {:?}",
-            Tokenizer::charcode_vectors_to_tokens(&self.tokenized_query_vectors)
+            Tokenizer::charcode_vectors_to_tokens(&self.tokenized_query_token_vectors)
         );
 
         // Begin parsing at the first page
@@ -162,20 +163,22 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // TODO: Remove
         println!("Token window index: {}", token_window_index);
 
-        for (query_token_index, query_vector) in self.tokenized_query_vectors.iter().enumerate() {
-            let query_vector_length = query_vector.len();
+        for (query_token_index, query_token_vector) in
+            self.tokenized_query_token_vectors.iter().enumerate()
+        {
+            let query_token_vector_length = query_token_vector.len();
 
             // TODO: Use to help make queries like "Google" -> "GOOGL" work
             // let min_token_length =
-            //     (query_vector_length - self.weights.token_length_diff_tolerance).clamp(1, query_vector_length);
-            // let max_token_length = query_vector_length + self.weights.token_length_diff_tolerance;
+            //     (query_token_vector_length - self.weights.token_length_diff_tolerance).clamp(1, query_token_vector_length);
+            // let max_token_length = query_token_vector_length + self.weights.token_length_diff_tolerance;
 
             // let include_source_types = &[CompanyTokenSourceType::CompanyName];
 
             let bins = self
                 .company_token_processor
                 .token_length_bins
-                .get(query_vector_length)
+                .get(query_token_vector_length)
                 .expect("Could not locate bins");
 
             for (company_index, tokenized_entry_index) in bins {
@@ -196,7 +199,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 if *company_token_index_by_source_type == token_window_index {
                     let company_name_similarity_at_index =
-                        index_difference_similarity(&query_vector, company_token_vector);
+                        index_difference_similarity(&query_token_vector, company_token_vector);
 
                     if company_name_similarity_at_index
                         >= self.user_config.min_text_doc_token_sim_threshold
@@ -214,7 +217,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                                 ticker_symbol,
                                 company_name_similarity_at_index,
                                 self.user_config.min_text_doc_token_sim_threshold,
-                                Tokenizer::charcode_vector_to_token(query_vector),
+                                Tokenizer::charcode_vector_to_token(query_token_vector),
                                 Tokenizer::charcode_vector_to_token(company_token_vector),
                                 query_token_index,
                                 company_token_index_by_source_type,
@@ -232,13 +235,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                         //     .get_company_name_tokens_length(*company_index);
 
                         // let company_name_similarity_at_index = similarity
-                        //     * (query_vector.len() as f32 / total_company_name_tokens_length as f32);
+                        //     * (query_token_vector.len() as f32 / total_company_name_tokens_length as f32);
 
                         self.company_similarity_states.push(
                             QueryVectorIntermediateSimilarityState {
                                 token_window_index,
                                 query_token_index,
-                                query_vector: query_vector.clone(),
+                                query_token_vector: query_token_vector.clone(),
                                 company_index: *company_index,
                                 company_token_source_type: *company_token_source_type,
                                 company_token_index_by_source_type:
@@ -320,7 +323,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         for state in &self.company_similarity_states {
             println!(
                 "Token: {}, State: {:?}",
-                Tokenizer::charcode_vector_to_token(&state.query_vector),
+                Tokenizer::charcode_vector_to_token(&state.query_token_vector),
                 state
             );
         }
@@ -370,7 +373,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     println!(
                         "\t\t Query Token Index: {}, Token: {}, {:?}",
                         state.query_token_index,
-                        Tokenizer::charcode_vector_to_token(&state.query_vector.to_vec()),
+                        Tokenizer::charcode_vector_to_token(&state.query_token_vector.to_vec()),
                         state
                     );
                 }
@@ -501,7 +504,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                 println!(
                     "symbol: {}, token: {}, query token index: {}, token window index: {}, company_token_index_by_source_type, {}, max_token_window_index: {}, consecutive_query_token_indices: {:?}",
-                    symbol, Tokenizer::charcode_vector_to_token(&state.query_vector), state.query_token_index, state.token_window_index, state.company_token_index_by_source_type, max_token_window_index, consecutive_query_token_indices
+                    symbol, Tokenizer::charcode_vector_to_token(&state.query_token_vector), state.query_token_index, state.token_window_index, state.company_token_index_by_source_type, max_token_window_index, consecutive_query_token_indices
                 );
 
                 if state.token_window_index == *max_token_window_index
@@ -632,7 +635,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //         //     for state in states {
     //         //         println!(
     //         //             "\t{:?}",
-    //         //             Tokenizer::charcode_vector_to_token(&state.query_vector)
+    //         //             Tokenizer::charcode_vector_to_token(&state.query_token_vector)
     //         //         );
     //         //         println!("\t{:?}", state,);
     //         //     }
@@ -644,7 +647,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //             //     println!(
     //             //         "calc_confidence_scores: symbol: {}, token: {:?}, state: {:?}",
     //             //         symbol,
-    //             //         Tokenizer::charcode_vector_to_token(&state.query_vector),
+    //             //         Tokenizer::charcode_vector_to_token(&state.query_token_vector),
     //             //         state
     //             //     );
     //             // }
@@ -661,7 +664,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //             //     println!(
     //             //         "calc_confidence_scores (pre filter): symbol: {}, token: {}, state: {:?}",
     //             //         symbol,
-    //             //         Tokenizer::charcode_vector_to_token(&state.query_vector),
+    //             //         Tokenizer::charcode_vector_to_token(&state.query_token_vector),
     //             //         state
     //             //     );
     //             // }
@@ -695,7 +698,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //             //     println!(
     //             //         "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
     //             //         symbol,
-    //             //         Tokenizer::charcode_vector_to_token(&state.query_vector),
+    //             //         Tokenizer::charcode_vector_to_token(&state.query_token_vector),
     //             //         symbol_confidence_score,
     //             //         state
     //             //     );
@@ -816,7 +819,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //         //     for state in &states {
     //         //         println!(
     //         //             "\t{:?}",
-    //         //             Tokenizer::charcode_vector_to_token(&state.query_vector)
+    //         //             Tokenizer::charcode_vector_to_token(&state.query_token_vector)
     //         //         );
     //         //         println!("\t{:?}", state,);
     //         //     }
@@ -896,7 +899,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     //             for state in &states {
     //                 println!(
     //                     "\t{:?}",
-    //                     Tokenizer::charcode_vector_to_token(&state.query_vector)
+    //                     Tokenizer::charcode_vector_to_token(&state.query_token_vector)
     //                 );
     //                 println!("\t{:?}", state,);
     //             }
