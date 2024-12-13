@@ -36,7 +36,7 @@ pub struct CompanyTokenProcessor<'a> {
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
-    pub token_frequency_map: TokenFrequencyMap,
+    pub company_name_token_frequency_map: TokenFrequencyMap,
     pub company_name_token_tdidf_scores: HashMap<CompanyIndex, Vec<f32>>,
 }
 
@@ -53,7 +53,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             tokenized_entries: vec![],
             max_corpus_token_length: 0,
             token_length_bins: vec![],
-            token_frequency_map: HashMap::new(),
+            company_name_token_frequency_map: HashMap::new(),
             company_name_token_tdidf_scores: HashMap::new(),
         };
 
@@ -68,7 +68,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn tokenize_all(&mut self) {
         self.max_corpus_token_length = 0;
         self.tokenized_entries.clear();
-        self.token_frequency_map.clear();
+        self.company_name_token_frequency_map.clear();
 
         // First pass: Tokenize and determine the maximum token length
         for (symbol, company_name) in self.company_symbols_list.iter() {
@@ -103,7 +103,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     ));
 
                     *self
-                        .token_frequency_map
+                        .company_name_token_frequency_map
                         .entry(token_vector.clone())
                         .or_insert(0) += 1;
                 }
@@ -160,7 +160,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             // Normalize TF and compute TF-IDF
             for (token_vector, tf) in token_tf_map.iter_mut() {
                 *tf /= token_count as f32; // Normalize TF
-                if let Some(df) = self.token_frequency_map.get(token_vector) {
+                if let Some(df) = self.company_name_token_frequency_map.get(token_vector) {
                     let idf = (total_documents / (1.0 + *df as f32)).ln(); // Compute IDF
                     tfidf_vector.push(*tf * idf); // Store TF-IDF score in vector
                 }
