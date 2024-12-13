@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 pub type TickerSymbol = String;
 pub type CompanyName = String;
 
