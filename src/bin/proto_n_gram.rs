@@ -39,7 +39,7 @@ fn main() {
 
     // TODO: Ensure that queries can't be performed in reverse
     // let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
-    let query = "Apple Apple Hospitality REIT Apple INC";
+    // let query = "Apple Apple Hospitality REIT Apple INC";
     // let query = "Apple Apple INC Apple Hospitality REIT";
     // let query = "Hathaway Berkshire";
     // let query = "Hospitality Apple";
@@ -147,7 +147,7 @@ fn main() {
     // "#;
 
     // TODO: [add test] This should only return Apple
-    // let query = "Apple Apple Inc";
+    // let query = "Apple Apple Inc Hospitality";
 
     // let query = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.";
 
@@ -158,6 +158,16 @@ fn main() {
 
     //     Invesco Dow Jones Industrial Average Dividend ETF has been able to manage assets worth $294.4 million while trading in a volume of 56,000 shares a day on average. It charges 7 bps in annual fees and has a Zacks ETF Rank #3.
     // "#;
+
+    let query = r#"
+    Palantir
+: Cramer praised the software company’s management and said the company’s third quarter, which sent shares surging 20%, was one of the best of the year. He also said he liked the company’s defense business, noting Palantir’s work for the Pentagon.
+Axon
+: Axon largely makes equipment for law enforcement, and Cramer suggested it is poised to do well as a GOP trifecta in Washington likely means police will receive more funding. The company also reported better-than-expected quarterly results, and it has new software that includes artificial intelligence, he added.
+Tesla
+: Tesla CEO Elon Musk is a close ally of President-elect Donald Trump, and Cramer said his loyalty will probably lead to rewards for the company and its automated vehicle business.
+
+    "#;
 
     // let query = " Invesco Dow Jones Industrial Average Dividend ETF ";
 

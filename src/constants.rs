@@ -21,6 +21,10 @@ pub const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
 // a utility to learn the words to use and how to properly weigh them. The
 // list could be learned from expected/actual results from the test cases,
 // and be wrapped up in the same tuning process that was used before.
+//
+// Alternatively, what might be actually a lot easier, is to look at the most
+// common first n-positioned words in the corpus, and have the
+// `DocumentTokenProcessor` do its own automatic filtering, or substitution.
 pub const IGNORE_WORDS: &[&str] = &[
     // Many State Street ETFs are commonly referenced without SPDR prefix
     "SPDR", "U.S.", "Strong",
