@@ -48,6 +48,7 @@ struct TickerSymbolRangeReport {
     ticker_symbol: TickerSymbol,
     vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
+    query_token_vectors: Vec<TokenizerVectorTokenType>,
     company_name_coverage: f32,
 }
 
@@ -366,8 +367,21 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let range_reports =
             self.calculate_symbol_range_reports(symbol_consecutive_query_token_indices);
 
-        println!("\n\nRange reports:");
+        println!("\n\nRange reports:\n-----------------");
         for range_report in &range_reports {
+            println!("Ticker Symbol: {}", range_report.ticker_symbol);
+            println!(
+                "Query Token Indices: {:?}",
+                range_report.query_token_indices
+            );
+            println!(
+                "Query Tokens: {:?}",
+                Tokenizer::charcode_vectors_to_tokens(&range_report.query_token_vectors)
+            );
+            println!(
+                "Company Name Coverage: {}",
+                range_report.company_name_coverage
+            );
             println!("{:?}\n\n", range_report);
         }
 
@@ -425,7 +439,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             for query_token_indices in consecutive_query_token_index_ranges {
                 println!("\t Range: {:?}", &query_token_indices);
 
-                let mut range_query_token_vectors = Vec::new();
+                let mut query_token_vectors = Vec::new();
 
                 let mut vector_similarity_states = Vec::new();
 
@@ -437,7 +451,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
                     vector_similarity_states.push(state.clone());
 
-                    range_query_token_vectors.push(state.query_token_vector.clone());
+                    query_token_vectors.push(state.query_token_vector.clone());
 
                     println!(
                         "\t\t Query Token Index: {}, Token: {}, {:?}",
@@ -447,7 +461,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     );
                 }
 
-                let summed_range_token_length: usize = range_query_token_vectors
+                let summed_range_token_length: usize = query_token_vectors
                     .iter()
                     .map(|token| token.len()) // Map each token to its length
                     .sum(); // Sum up all the lengths
@@ -469,6 +483,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     ticker_symbol: ticker_symbol.clone(),
                     vector_similarity_states,
                     query_token_indices,
+                    query_token_vectors,
                     company_name_coverage,
                 })
             }
