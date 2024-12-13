@@ -403,29 +403,30 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         symbol_to_highest_token_window_index_map
     }
 
+    fn upsert_consecutive_query_token_indices(
+        &self,
+        symbol: &TickerSymbol,
+        symbol_consecutive_query_token_indices: &mut HashMap<String, Vec<Vec<usize>>>,
+        consecutive_query_token_indices: &mut Vec<usize>,
+    ) {
+        symbol_consecutive_query_token_indices
+            .entry(symbol.clone())
+            .and_modify(|existing_ranges| {
+                let next = consecutive_query_token_indices.clone();
+
+                if !existing_ranges.contains(&next) {
+                    existing_ranges.push(next);
+                }
+            })
+            .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+    }
+
     fn identify_query_token_index_ranges(
         &self,
         symbol_to_highest_possible_token_window_index_map: HashMap<TickerSymbol, usize>,
     ) -> HashMap<TickerSymbol, Vec<Vec<usize>>> {
         let mut symbol_consecutive_query_token_indices: HashMap<TickerSymbol, Vec<Vec<usize>>> =
             HashMap::new();
-
-        fn upsert_consecutive_query_token_indices(
-            symbol: &TickerSymbol,
-            symbol_consecutive_query_token_indices: &mut HashMap<String, Vec<Vec<usize>>>,
-            consecutive_query_token_indices: &mut Vec<usize>,
-        ) {
-            symbol_consecutive_query_token_indices
-                .entry(symbol.clone())
-                .and_modify(|existing_ranges| {
-                    let next = consecutive_query_token_indices.clone();
-
-                    if !existing_ranges.contains(&next) {
-                        existing_ranges.push(next);
-                    }
-                })
-                .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
-        }
 
         // Identify query token index ranges which make up the full range
         for (symbol, max_token_window_index) in &symbol_to_highest_possible_token_window_index_map {
@@ -453,7 +454,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 {
                     // Insert existing partial range before clearing
                     if consecutive_query_token_indices.len() > 0 {
-                        upsert_consecutive_query_token_indices(
+                        self.upsert_consecutive_query_token_indices(
                             symbol,
                             &mut symbol_consecutive_query_token_indices,
                             &mut consecutive_query_token_indices,
@@ -482,7 +483,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     symbol, max_token_window_index, consecutive_query_token_indices
                 );
                     // Insert max range
-                    upsert_consecutive_query_token_indices(
+                    self.upsert_consecutive_query_token_indices(
                         symbol,
                         &mut symbol_consecutive_query_token_indices,
                         &mut consecutive_query_token_indices,
@@ -497,7 +498,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             if !found_max_range && consecutive_query_token_indices.len() > 1 {
                 // Insert last partial range
-                upsert_consecutive_query_token_indices(
+                self.upsert_consecutive_query_token_indices(
                     symbol,
                     &mut symbol_consecutive_query_token_indices,
                     &mut consecutive_query_token_indices,
