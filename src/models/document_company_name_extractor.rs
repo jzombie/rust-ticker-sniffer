@@ -393,19 +393,19 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             let mut last_query_token_index = None;
 
             // TODO: Remove
-            if symbol == "DIA" {
-                println!(
-                    "calc_confidence_scores (initial states): symbol: {}",
-                    symbol,
-                );
-                for state in states {
-                    println!(
-                        "\t{:?}",
-                        Tokenizer::charcode_vector_to_token(&state.query_vector)
-                    );
-                    println!("\t{:?}", state,);
-                }
-            }
+            // // if symbol == "DIA" {
+            //     println!(
+            //         "calc_confidence_scores (initial states): symbol: {}",
+            //         symbol,
+            //     );
+            //     for state in states {
+            //         println!(
+            //             "\t{:?}",
+            //             Tokenizer::charcode_vector_to_token(&state.query_vector)
+            //         );
+            //         println!("\t{:?}", state,);
+            //     }
+            // // }
 
             for (i, state) in states.iter().enumerate() {
                 // TODO: Remove
@@ -460,15 +460,15 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     state.company_name_similarity_at_index + continuity_reward;
 
                 // TODO: Remove
-                if symbol == "DIA" {
-                    println!(
-                        "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
-                        symbol,
-                        Tokenizer::charcode_vector_to_token(&state.query_vector),
-                        symbol_confidence_score,
-                        state
-                    );
-                }
+                // if symbol == "DIA" {
+                //     println!(
+                //         "calc_confidence_scores: symbol: {}, token: {:?}, conf: {}, state: {:?}",
+                //         symbol,
+                //         Tokenizer::charcode_vector_to_token(&state.query_vector),
+                //         symbol_confidence_score,
+                //         state
+                //     );
+                // }
 
                 last_token_window_index = Some(state.token_window_index);
                 last_query_token_index = Some(state.query_token_index);
@@ -572,26 +572,38 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             Vec<QueryVectorIntermediateSimilarityState>,
         > = HashMap::new();
 
+        // Step 1: Obtain max token window index
+        // println!("coverage increases: {:?}", coverage_increase_states);
+
         for (symbol, states) in grouped_states {
-            if symbol == "DIA" {
-                println!(
-                    "collect_coverage_filtered_results (initial states): symbol: {}",
-                    symbol,
-                );
-                for state in &states {
-                    println!(
-                        "\t{:?}",
-                        Tokenizer::charcode_vector_to_token(&state.query_vector)
-                    );
-                    println!("\t{:?}", state,);
-                }
-            }
+            // TODO: Remove
+            // if symbol == "DIA" {
+            //     println!(
+            //         "collect_coverage_filtered_results (initial states): symbol: {}",
+            //         symbol,
+            //     );
+            //     for state in &states {
+            //         println!(
+            //             "\t{:?}",
+            //             Tokenizer::charcode_vector_to_token(&state.query_vector)
+            //         );
+            //         println!("\t{:?}", state,);
+            //     }
+            // }
 
             // TODO: Remove
             // println!("CF RESULTS: Symbol: {}, States: {:?}", symbol, states);
 
             let empty_vec = Vec::new();
-            let coverage_increase = coverage_increase_states.get(&symbol).unwrap_or(&empty_vec);
+            let coverage_increase = match coverage_increase_states {
+                Ok(ref states) => states.get(&symbol).unwrap_or(&empty_vec),
+                Err(ref err) => {
+                    // eprintln!("Error occurred: {}", err);
+                    // &empty_vec // Or handle this case appropriately
+                    // TODO: Bubble error up
+                    panic!("Error occurred: {}", err);
+                }
+            };
 
             let has_coverage_increase = coverage_increase.len() > 0;
             let min_coverage_increase_query_token_index = if has_coverage_increase {
@@ -603,6 +615,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             for state in states {
                 // TODO: Remove
                 // println!("coverage measure  {}, {:?}", symbol, state);
+                // if symbol == "DIA" {
+                //     println!("coverage increase: {}, {:?}", has_coverage_increase, state);
+                // }
 
                 if has_coverage_increase
                     && state.query_token_index < min_coverage_increase_query_token_index
@@ -621,12 +636,33 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     }
 
     /// Determines the query token indexes which contribute to company name coverage increases.
-    fn analyze_coverage_increases(&self) -> HashMap<TickerSymbol, Vec<QueryTokenIndex>> {
-        let mut results = HashMap::new();
+    fn analyze_coverage_increases(
+        &self,
+    ) -> Result<HashMap<TickerSymbol, Vec<QueryTokenIndex>>, String> {
+        let mut coverage_increases = HashMap::new();
 
-        for (symbol, states) in self.group_by_symbol() {
+        let symbol_grouping = self.group_by_symbol();
+
+        for (symbol, states) in symbol_grouping {
             let mut last_coverage: usize = 0;
             let mut increasing_range = Vec::new();
+
+            // TODO: Remove
+            if symbol == "DIA" {
+                println!(
+                    "analyze_coverage_increases (initial states): symbol: {}",
+                    symbol,
+                );
+                for state in &states {
+                    println!(
+                        "\t{:?}",
+                        Tokenizer::charcode_vector_to_token(&state.query_vector)
+                    );
+                    println!("\t{:?}", state,);
+                }
+            }
+
+            // TODO: First determine max token window index in range
 
             for (i, state) in states.iter().enumerate() {
                 let current_coverage = state.token_window_index + 1;
@@ -640,11 +676,17 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     // Add the current index to the increasing range
                     increasing_range.push(state.query_token_index);
                 } else if current_coverage < last_coverage {
+                    return Err(format!(
+                        "Coverage decreases are not expected if sorted by token window index. \
+                        Symbol: {}, Current Coverage: {}, Last Coverage: {}",
+                        symbol, current_coverage, last_coverage
+                    ));
+
                     // Coverage decreased; store the current range and reset
-                    if !increasing_range.is_empty() {
-                        results.insert(symbol.clone(), increasing_range.clone());
-                        increasing_range.clear();
-                    }
+                    // if !increasing_range.is_empty() {
+                    //     coverage_increases.insert(symbol.clone(), increasing_range.clone());
+                    //     increasing_range.clear();
+                    // }
                 }
 
                 // Update the last coverage value
@@ -653,11 +695,11 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
             // Store any remaining increasing range
             if !increasing_range.is_empty() {
-                results.insert(symbol, increasing_range);
+                coverage_increases.insert(symbol, increasing_range);
             }
         }
 
-        results
+        Ok(coverage_increases)
     }
 
     /// Groups company similarity states by symbol.

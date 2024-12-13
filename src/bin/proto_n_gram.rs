@@ -31,7 +31,7 @@ fn main() {
     // let query = "REIT Hospitality Apple stuff";
     // let query = "Arbor";
     // let query = "Arbor Realty";
-    let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
+    // let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
     // let query = "Apple";
 
     // let query = "Apple";
@@ -135,9 +135,13 @@ fn main() {
     // "#;
 
     // TODO: Ensure DIA gets extracted from company name extractor only
-    let query = r#"
-     Given this, investors seeking to tap the potential strength in the Dow Jones trend could consider SPDR Dow Jones Industrial Average ETF (DIA Quick QuoteDIA - Free Report) , iShares Dow Jones U.S. ETF (IYY Quick QuoteIYY - Free Report) , Invesco Dow Jones Industrial Average Dividend ETF (DJD Quick QuoteDJD - Free Report) and First Trust Dow 30 Equal Weight ETF (EDOW Quick QuoteEDOW - Free Report) .
-    "#;
+    // let query = r#"
+    //     Given this, investors seeking to tap the potential strength in the Dow Jones trend could consider SPDR Dow Jones Industrial Average ETF (DIA Quick QuoteDIA - Free Report) , iShares Dow Jones U.S. ETF (IYY Quick QuoteIYY - Free Report) , Invesco Dow Jones Industrial Average Dividend ETF (DJD Quick QuoteDJD - Free Report) and First Trust Dow 30 Equal Weight ETF (EDOW Quick QuoteEDOW - Free Report) .
+    // "#;
+
+    // TODO: This should only return Apple
+    // let query = "Apple Apple Inc";
+
     // let query = r#"SPDR Dow Jones Industrial Average ETF Invesco Dow Jones Industrial Average Dividend ETF iShares Dow Jones U.S. ETF"#;
 
     let results = extract_tickers_from_text(&query, &company_symbols_list);
