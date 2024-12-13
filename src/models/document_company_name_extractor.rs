@@ -51,6 +51,7 @@ struct TickerSymbolRangeReport {
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorTokenType>,
     // TODO: query_token_vector_frequencies: Track frequency of query tokens across document
+    // TODO: Track token TF-IDF scores based on company name "corpus"
     company_name_token_vectors: Vec<TokenizerVectorTokenType>,
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
