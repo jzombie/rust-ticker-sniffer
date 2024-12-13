@@ -5,7 +5,7 @@ use crate::utils::index_difference_similarity;
 use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Tokenizer};
 use core::f32;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
 use std::cmp::Ordering;
 
@@ -387,6 +387,23 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         let mut symbol_consecutive_query_token_indices: HashMap<TickerSymbol, Vec<Vec<usize>>> =
             HashMap::new();
 
+        fn upsert_consecutive_query_token_indices(
+            symbol: &TickerSymbol,
+            symbol_consecutive_query_token_indices: &mut HashMap<String, Vec<Vec<usize>>>,
+            consecutive_query_token_indices: &mut Vec<usize>,
+        ) {
+            symbol_consecutive_query_token_indices
+                .entry(symbol.clone())
+                .and_modify(|existing_ranges| {
+                    let next = consecutive_query_token_indices.clone();
+
+                    if !existing_ranges.contains(&next) {
+                        existing_ranges.push(next)
+                    }
+                })
+                .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+        }
+
         // Identify query token index ranges which make up the full range
         for (symbol, max_token_window_index) in &symbol_to_highest_token_window_index_map {
             let company_index = self
@@ -411,17 +428,28 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 if (state.query_token_index != last_query_token_index + 1)
                     || (state.token_window_index != last_token_window_index + 1)
                 {
-                    println!("... clear");
+                    // Insert existing partial range before clearing
+                    if consecutive_query_token_indices.len() > 0 {
+                        upsert_consecutive_query_token_indices(
+                            symbol,
+                            &mut symbol_consecutive_query_token_indices,
+                            &mut consecutive_query_token_indices,
+                        );
+                    }
 
+                    println!("--- clear");
                     consecutive_query_token_indices.clear();
                 }
 
-                println!(
-                    "symbol: {}, token: {}, query token index: {}, token window index: {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}",
-                    symbol, Tokenizer::charcode_vector_to_token(&state.query_vector), state.query_token_index, state.token_window_index, max_token_window_index, consecutive_query_token_indices
-                );
+                if state.token_window_index == consecutive_query_token_indices.len() {
+                    println!("--- INSERT");
+                    consecutive_query_token_indices.push(state.query_token_index);
+                }
 
-                consecutive_query_token_indices.push(state.query_token_index);
+                println!(
+                    "symbol: {}, token: {}, query token index: {}, token window index: {}, company_token_index_by_source_type, {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}",
+                    symbol, Tokenizer::charcode_vector_to_token(&state.query_vector), state.query_token_index, state.token_window_index, state.company_token_index_by_source_type, max_token_window_index, consecutive_query_token_indices
+                );
 
                 if state.token_window_index == *max_token_window_index
                     && consecutive_query_token_indices.len() == *max_token_window_index + 1
@@ -430,13 +458,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     "-- Bingo: symbol: {}, max_token_window_index: {}, consecutive_query_token_indexes: {:?}\n",
                     symbol, max_token_window_index, consecutive_query_token_indices
                 );
-                    // Upsert max range
-                    symbol_consecutive_query_token_indices
-                        .entry(symbol.clone())
-                        .and_modify(|existing_ranges| {
-                            existing_ranges.push(consecutive_query_token_indices.clone())
-                        })
-                        .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+                    // Insert max range
+                    upsert_consecutive_query_token_indices(
+                        symbol,
+                        &mut symbol_consecutive_query_token_indices,
+                        &mut consecutive_query_token_indices,
+                    );
 
                     found_max_range = true;
                 }
@@ -445,14 +472,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 last_token_window_index = state.token_window_index;
             }
 
-            if !found_max_range && consecutive_query_token_indices.len() > 0 {
-                // Upsert partial range
-                symbol_consecutive_query_token_indices
-                    .entry(symbol.clone())
-                    .and_modify(|existing_ranges| {
-                        existing_ranges.push(consecutive_query_token_indices.clone())
-                    })
-                    .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+            if !found_max_range && consecutive_query_token_indices.len() > 1 {
+                // Insert last partial range
+                upsert_consecutive_query_token_indices(
+                    symbol,
+                    &mut symbol_consecutive_query_token_indices,
+                    &mut consecutive_query_token_indices,
+                );
             }
         }
 

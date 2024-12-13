@@ -38,9 +38,9 @@ fn main() {
     // let query = "Berkshire";
 
     // TODO: Ensure that queries can't be performed in reverse
-    let query = "Hathaway Berkshire Hospitality Hathaway Apple Apple Hospitality INC REIT 222";
+    let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
     // let query = "Apple Apple Hospitality REIT Apple INC";
-    // let query = "Apple INC Apple Hospitality REIT";
+    // let query = "Apple Apple INC Apple Hospitality REIT";
     // let query = "Hathaway Berkshire";
     // let query = "Hospitality Apple";
 
