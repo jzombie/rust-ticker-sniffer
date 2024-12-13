@@ -63,9 +63,10 @@ impl Tokenizer {
                     .min_uppercase_ratio
                     .map_or(true, |ratio| uppercase_ratio(word) >= ratio);
 
-                let passes_any_caps = word.chars().any(|c| c.is_uppercase()); // Check if any letter is capitalized
+                let passes_any_caps_or_is_number =
+                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric());
 
-                passes_uppercase_ratio && passes_any_caps
+                passes_uppercase_ratio && passes_any_caps_or_is_number
             })
             // Remove TLD extensions (i.e. so `Amazon` and `Amazon.com` are treated the same)
             .map(|word| {

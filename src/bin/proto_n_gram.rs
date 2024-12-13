@@ -38,11 +38,11 @@ fn main() {
     // let query = "Berkshire";
 
     // TODO: Ensure that queries can't be performed in reverse
-    // let query = "Hathaway Berkshire";
+    // let query = "Hathaway Berkshire Hospitality Hathaway Apple INC REIT 222";
     // let query = "Berkshire Hathaway";
     // let query = "Hospitality Apple";
 
-    let query = "Apple Apple Hospitality REIT";
+    // let query = "Apple Walmart Hospitality REIT";
     // let query = "Alphabet";
     // let query = "Amazon";
 
@@ -149,13 +149,15 @@ fn main() {
 
     // let query = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.";
 
-    // let query = r#"
-    // Invesco Dow Jones Industrial Average Dividend ETF (DJD Quick QuoteDJD - Free Report)
+    let query = r#"
+    Invesco Dow Jones Industrial Average Dividend ETF (DJD Quick QuoteDJD - Free Report)
 
-    //     Invesco Dow Jones Industrial Average Dividend ETF offers exposure to dividend-paying companies included in the Dow Jones Industrial Average by their 12-month dividend yield over the prior 12 months. It holds 27 stocks in its basket, with none accounting for more than 12% of the assets.
+        Invesco Dow Jones Industrial Average Dividend ETF offers exposure to dividend-paying companies included in the Dow Jones Industrial Average by their 12-month dividend yield over the prior 12 months. It holds 27 stocks in its basket, with none accounting for more than 12% of the assets.
 
-    //     Invesco Dow Jones Industrial Average Dividend ETF has been able to manage assets worth $294.4 million while trading in a volume of 56,000 shares a day on average. It charges 7 bps in annual fees and has a Zacks ETF Rank #3.
-    // "#;
+        Invesco Dow Jones Industrial Average Dividend ETF has been able to manage assets worth $294.4 million while trading in a volume of 56,000 shares a day on average. It charges 7 bps in annual fees and has a Zacks ETF Rank #3.
+    "#;
+
+    let query = " Invesco Dow Jones Industrial Average Dividend ETF ";
 
     // let query = r#"SPDR Dow Jones Industrial Average ETF Invesco Dow Jones Industrial Average Dividend ETF iShares Dow Jones U.S. ETF"#;
 

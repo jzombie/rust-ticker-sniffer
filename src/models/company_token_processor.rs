@@ -76,9 +76,13 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             if let Some(company_name) = company_name {
+                // Workaround for "urban-gro, Inc."
+                // The tokenizer filters on words with uppercase letters, which this does not have
+                let uc_company_name = company_name.to_uppercase();
+
                 let company_name_token_vectors = self
                     .text_doc_tokenizer
-                    .tokenize_to_charcode_vectors(company_name);
+                    .tokenize_to_charcode_vectors(&uc_company_name);
                 for (index_by_source_type, token) in company_name_token_vectors.iter().enumerate() {
                     company_tokenized_entries.push((
                         token.to_vec(),
