@@ -31,13 +31,18 @@ fn main() {
     // let query = "REIT Hospitality Apple stuff";
     // let query = "Arbor";
     // let query = "Arbor Realty";
-    let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
+    // let query = "Berkshire Hathaway is not Apple, but owns Apple, of course, which is not Apple Hospitality REIT.";
     // let query = "Apple";
 
     // let query = "Apple";
     // let query = "Berkshire";
+
+    // TODO: Ensure that queries can't be performed in reverse
+    // let query = "Hathaway Berkshire";
     // let query = "Berkshire Hathaway";
-    // let query = "Apple";
+    // let query = "Hospitality Apple";
+
+    let query = "Apple Apple Hospitality REIT";
     // let query = "Alphabet";
     // let query = "Amazon";
 
