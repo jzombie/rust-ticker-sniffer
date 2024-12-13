@@ -353,6 +353,39 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         //          Range: [13, 14, 15, 16]
         //          Range: [19, 20, 21, 22]
         //          Range: [26, 27, 28, 29]
+        self.calculate_symbol_range_report(symbol_consecutive_query_token_indices);
+
+        // println!("{:?}", symbol_consecutive_query_token_indices);
+
+        // // Iterate through each query token index, obtaining symbols and confidence levels
+        // for (_query_token_index, (symbols, confidence_level)) in query_token_rankings {
+        //     if confidence_level < self.user_config.min_confidence_level_threshold {
+        //         continue;
+        //     }
+
+        //     for symbol in symbols {
+        //         // TODO: Remove
+        //         // println!("symbol: {}, score: {}", symbol, confidence_level);
+
+        //         symbols_with_confidence
+        //             .entry(symbol.clone())
+        //             .and_modify(|existing_score| {
+        //                 if *existing_score < confidence_level {
+        //                     *existing_score = confidence_level; // Update with higher score
+        //                 }
+        //             })
+        //             .or_insert(confidence_level);
+        //     }
+        // }
+
+        Ok(symbols_with_confidence)
+    }
+
+    // TODO: Work out return type
+    fn calculate_symbol_range_report(
+        &self,
+        symbol_consecutive_query_token_indices: HashMap<TickerSymbol, Vec<Vec<usize>>>,
+    ) {
         for (symbol, consecutive_query_token_index_ranges) in symbol_consecutive_query_token_indices
         {
             let company_index = self.get_company_index_with_symbol(&symbol).expect(&format!(
@@ -405,31 +438,6 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 println!("\n");
             }
         }
-
-        // println!("{:?}", symbol_consecutive_query_token_indices);
-
-        // // Iterate through each query token index, obtaining symbols and confidence levels
-        // for (_query_token_index, (symbols, confidence_level)) in query_token_rankings {
-        //     if confidence_level < self.user_config.min_confidence_level_threshold {
-        //         continue;
-        //     }
-
-        //     for symbol in symbols {
-        //         // TODO: Remove
-        //         // println!("symbol: {}, score: {}", symbol, confidence_level);
-
-        //         symbols_with_confidence
-        //             .entry(symbol.clone())
-        //             .and_modify(|existing_score| {
-        //                 if *existing_score < confidence_level {
-        //                     *existing_score = confidence_level; // Update with higher score
-        //                 }
-        //             })
-        //             .or_insert(confidence_level);
-        //     }
-        // }
-
-        Ok(symbols_with_confidence)
     }
 
     /// Note: This method is used as a preprocessor for identify_query_token_index_ranges
