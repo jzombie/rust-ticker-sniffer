@@ -398,7 +398,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     let next = consecutive_query_token_indices.clone();
 
                     if !existing_ranges.contains(&next) {
-                        existing_ranges.push(next)
+                        existing_ranges.push(next);
                     }
                 })
                 .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
