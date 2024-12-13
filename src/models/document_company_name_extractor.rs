@@ -304,16 +304,16 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         //  - Symbols with higher token_window_index have higher confidence rating for their particular symbol (assuming query token indexes are in order)
         //  - Consecutive query token indexes which make up the full range of these token window indexes therefore have higher confidence scores
 
-        let symbol_to_highest_token_window_index_map =
-            self.get_symbol_to_highest_token_window_index_map();
+        let symbol_to_highest_possible_token_window_index_map =
+            self.get_symbol_to_highest_possible_token_window_index_map();
 
         println!(
-            "symbol_to_highest_token_window_index_map: {:?}",
-            symbol_to_highest_token_window_index_map
+            "symbol_to_highest_possible_token_window_index_map: {:?}",
+            symbol_to_highest_possible_token_window_index_map
         );
 
-        let symbol_consecutive_query_token_indices =
-            self.identify_query_token_index_ranges(symbol_to_highest_token_window_index_map);
+        let symbol_consecutive_query_token_indices = self
+            .identify_query_token_index_ranges(symbol_to_highest_possible_token_window_index_map);
 
         for (symbol, consecutive_query_token_index_ranges) in symbol_consecutive_query_token_indices
         {
@@ -356,7 +356,12 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         symbols_with_confidence
     }
 
-    fn get_symbol_to_highest_token_window_index_map(&self) -> HashMap<TickerSymbol, usize> {
+    /// Note: This method is used as a preprocessor for identify_query_token_index_ranges
+    /// and does not directly account for query tokens which may be out of order, thus
+    /// affecting the "actual" highest token window for any particular range.
+    fn get_symbol_to_highest_possible_token_window_index_map(
+        &self,
+    ) -> HashMap<TickerSymbol, usize> {
         let mut symbol_to_highest_token_window_index_map: HashMap<TickerSymbol, usize> =
             HashMap::new();
 
@@ -382,7 +387,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
 
     fn identify_query_token_index_ranges(
         &self,
-        symbol_to_highest_token_window_index_map: HashMap<TickerSymbol, usize>,
+        symbol_to_highest_possible_token_window_index_map: HashMap<TickerSymbol, usize>,
     ) -> HashMap<TickerSymbol, Vec<Vec<usize>>> {
         let mut symbol_consecutive_query_token_indices: HashMap<TickerSymbol, Vec<Vec<usize>>> =
             HashMap::new();
@@ -405,7 +410,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         }
 
         // Identify query token index ranges which make up the full range
-        for (symbol, max_token_window_index) in &symbol_to_highest_token_window_index_map {
+        for (symbol, max_token_window_index) in &symbol_to_highest_possible_token_window_index_map {
             let company_index = self
                 .company_symbols_list
                 .iter()
