@@ -11,8 +11,7 @@ pub use models::{
 pub mod types;
 mod utils;
 pub use types::{
-    CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenFrequencyMap,
-    TokenizerVectorToken,
+    CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorToken,
 };
 
 // TODO: Add dedicated type instead of f32

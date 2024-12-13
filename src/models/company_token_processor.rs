@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::{
-    CompanySymbolList, CompanyTokenSourceType, TokenFrequencyMap, TokenizerVectorToken,
-};
+use crate::types::{CompanySymbolList, CompanyTokenSourceType, TokenizerVectorToken};
 use crate::Tokenizer;
 
 type CompanyTokenIndexBySourceType = usize;
@@ -36,7 +34,7 @@ pub struct CompanyTokenProcessor<'a> {
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
-    pub company_name_token_frequency_map: TokenFrequencyMap,
+    pub company_name_token_frequency_map: HashMap<TokenizerVectorToken, usize>,
     pub company_name_token_tdidf_scores: HashMap<CompanyIndex, Vec<f32>>,
 }
 
