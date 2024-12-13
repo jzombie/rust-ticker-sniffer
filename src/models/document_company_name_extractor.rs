@@ -35,7 +35,7 @@ struct QueryVectorIntermediateSimilarityState {
     query_token_index: QueryTokenIndex,
     query_vector: TokenizerVectorTokenType,
     company_index: usize, // TODO: Add more specific type
-    company_token_type: CompanyTokenSourceType,
+    company_token_source_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize, // TODO: Add more specific type
     company_token_vector: TokenizerVectorTokenType,
     company_name_similarity_at_index: f32,
@@ -186,11 +186,14 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     continue;
                 }
 
-                let (company_token_vector, company_token_type, company_token_index_by_source_type) =
-                    &self.company_token_processor.tokenized_entries[*company_index]
-                        [*tokenized_entry_index];
+                let (
+                    company_token_vector,
+                    company_token_source_type,
+                    company_token_index_by_source_type,
+                ) = &self.company_token_processor.tokenized_entries[*company_index]
+                    [*tokenized_entry_index];
 
-                if *company_token_type != CompanyTokenSourceType::CompanyName {
+                if *company_token_source_type != CompanyTokenSourceType::CompanyName {
                     continue;
                 }
 
@@ -238,7 +241,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                                 query_token_index,
                                 query_vector: query_vector.clone(),
                                 company_index: *company_index,
-                                company_token_type: *company_token_type,
+                                company_token_source_type: *company_token_source_type,
                                 company_token_index_by_source_type:
                                     *company_token_index_by_source_type,
                                 company_token_vector: company_token_vector.clone(),
