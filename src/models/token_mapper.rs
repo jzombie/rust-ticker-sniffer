@@ -16,16 +16,9 @@ impl TokenMapper {
         }
     }
 
-    /// Converts a string slice into a vector of char codes (u32)
-    // fn to_char_codes(token: &str) -> TokenizerVectorToken {
-    //     token.chars().map(|c| c as u32).collect()
-    // }
-
     /// Adds a token (as a string) to the map if it doesn't exist,
     /// and returns its unique ID
     pub fn upsert_token(&mut self, token: &str) -> usize {
-        // TODO: Use Tokenizer for this
-        // let char_codes = Self::to_char_codes(token);
         let token_vector = Tokenizer::token_to_charcode_vector(token);
 
         if let Some(&id) = self.token_map.get(&token_vector) {
