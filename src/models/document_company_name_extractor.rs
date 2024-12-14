@@ -44,8 +44,6 @@ struct QueryVectorIntermediateSimilarityState {
 #[derive(Debug, Clone)]
 struct TickerSymbolRangeReport {
     ticker_symbol: TickerSymbol,
-    // TODO: Track total number of ranges, despite this being a single range itself
-    //
     // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
