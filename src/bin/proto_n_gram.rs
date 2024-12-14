@@ -41,12 +41,15 @@ fn main() {
     // let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
     // let query = "Apple Apple Hospitality REIT Apple INC";
     // let query = "Apple Apple INC Apple Hospitality REIT";
-    // let query = "Hathaway Berkshire";
+    // let query = "Berkshire Hathaway Berkshire Hathaway";
+    // let query = "Hathaway";
     // let query = "Hospitality Apple";
 
     // let query = "Apple Walmart Hospitality REIT";
     // let query = "Alphabet";
     // let query = "Amazon";
+    // let query = "SPDR Dow Jones Industrial Average";
+    let query = "Dow Jones Industrial";
 
     // TODO: Locate source
     // TODO: [add test] Figure out why APLE is showing up instead of AAPL
@@ -159,15 +162,15 @@ fn main() {
     //     Invesco Dow Jones Industrial Average Dividend ETF has been able to manage assets worth $294.4 million while trading in a volume of 56,000 shares a day on average. It charges 7 bps in annual fees and has a Zacks ETF Rank #3.
     // "#;
 
-    let query = r#"
-    Palantir
-: Cramer praised the software company’s management and said the company’s third quarter, which sent shares surging 20%, was one of the best of the year. He also said he liked the company’s defense business, noting Palantir’s work for the Pentagon.
-Axon
-: Axon largely makes equipment for law enforcement, and Cramer suggested it is poised to do well as a GOP trifecta in Washington likely means police will receive more funding. The company also reported better-than-expected quarterly results, and it has new software that includes artificial intelligence, he added.
-Tesla
-: Tesla CEO Elon Musk is a close ally of President-elect Donald Trump, and Cramer said his loyalty will probably lead to rewards for the company and its automated vehicle business.
+    //     let query = r#"
+    //     Palantir
+    // : Cramer praised the software company’s management and said the company’s third quarter, which sent shares surging 20%, was one of the best of the year. He also said he liked the company’s defense business, noting Palantir’s work for the Pentagon.
+    // Axon
+    // : Axon largely makes equipment for law enforcement, and Cramer suggested it is poised to do well as a GOP trifecta in Washington likely means police will receive more funding. The company also reported better-than-expected quarterly results, and it has new software that includes artificial intelligence, he added.
+    // Tesla
+    // : Tesla CEO Elon Musk is a close ally of President-elect Donald Trump, and Cramer said his loyalty will probably lead to rewards for the company and its automated vehicle business.
 
-    "#;
+    //     "#;
 
     // let query = " Invesco Dow Jones Industrial Average Dividend ETF ";
 
