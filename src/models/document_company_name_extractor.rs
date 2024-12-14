@@ -410,6 +410,13 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             println!("{:?}\n\n", range_report);
         }
 
+        // TODO: For each query token index, associate the reports which have the longest query token
+        // range for that index, and use this to preliminairly filter down.  If there are multiple
+        // reports sharing the same number of query tokens, include them. Scoring will be performed
+        // subsequently.
+
+        // --------
+
         // TODO: Remove
         // println!("{:?}", self.company_token_processor.token_frequency_map);
         // println!(
