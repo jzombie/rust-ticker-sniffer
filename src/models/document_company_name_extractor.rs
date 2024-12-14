@@ -52,7 +52,7 @@ struct TickerSymbolRangeReport {
     company_name_token_frequencies: Vec<usize>,
     company_name_token_frequencies_softmax: Vec<f64>,
     company_name_token_vectors: Vec<TokenizerVectorToken>,
-    company_name_token_tdidf_scores: Vec<f32>,
+    company_name_token_tf_idf_scores: Vec<f32>,
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
 }
@@ -399,7 +399,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             );
             println!(
                 "Company Name TF-IDF Scores: {:?}",
-                range_report.company_name_token_tdidf_scores
+                range_report.company_name_token_tf_idf_scores
             );
 
             // Note: In some instances character coverage will be higher, other times, token coverage
@@ -426,7 +426,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
         // println!("{:?}", self.company_token_processor.token_frequency_map);
         // println!(
         //     "{:?}",
-        //     self.company_token_processor.company_name_token_tdidf_scores
+        //     self.company_token_processor.company_name_token_tf_idf_scores
         // );
 
         // println!("{:?}", symbol_consecutive_query_token_indices);
@@ -506,9 +506,9 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 .collect();
             let company_name_token_frequencies_softmax = softmax(&log_scaled_frequencies);
 
-            let company_name_token_tdidf_scores = self
+            let company_name_token_tf_idf_scores = self
                 .company_token_processor
-                .company_name_token_tdidf_scores
+                .company_name_token_tf_idf_scores
                 .get(&company_index)
                 .expect(&format!(
                     "Could not retrieve company name TD-IDF scores for company with index: {}",
@@ -574,7 +574,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     company_name_token_frequencies_softmax: company_name_token_frequencies_softmax
                         .clone(),
                     company_name_token_vectors: company_name_token_vectors.clone(),
-                    company_name_token_tdidf_scores: company_name_token_tdidf_scores.to_vec(),
+                    company_name_token_tf_idf_scores: company_name_token_tf_idf_scores.to_vec(),
                     company_name_char_coverage,
                     company_name_token_coverage,
                 })

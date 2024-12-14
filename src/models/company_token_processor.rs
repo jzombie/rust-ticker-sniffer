@@ -35,7 +35,7 @@ pub struct CompanyTokenProcessor<'a> {
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
     pub company_name_token_frequency_map: HashMap<TokenizerVectorToken, usize>,
-    pub company_name_token_tdidf_scores: HashMap<CompanyIndex, Vec<f32>>,
+    pub company_name_token_tf_idf_scores: HashMap<CompanyIndex, Vec<f32>>,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -52,12 +52,12 @@ impl<'a> CompanyTokenProcessor<'a> {
             max_corpus_token_length: 0,
             token_length_bins: vec![],
             company_name_token_frequency_map: HashMap::new(),
-            company_name_token_tdidf_scores: HashMap::new(),
+            company_name_token_tf_idf_scores: HashMap::new(),
         };
 
         instance.tokenize_all();
         instance.bin_tokens_by_length();
-        instance.compute_company_name_token_tfidf_scores();
+        instance.compute_company_name_token_tf_idf_scores();
 
         instance
     }
@@ -140,8 +140,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
-    fn compute_company_name_token_tfidf_scores(&mut self) {
-        self.company_name_token_tdidf_scores.clear();
+    fn compute_company_name_token_tf_idf_scores(&mut self) {
+        self.company_name_token_tf_idf_scores.clear();
 
         let total_documents = self.tokenized_entries.len() as f32;
 
@@ -158,22 +158,50 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             // Create a vector to store TF-IDF scores
-            let mut tfidf_vector = Vec::new();
+            let mut tf_idf_vector = Vec::new();
 
             // Normalize TF and compute TF-IDF
             for (token_vector, tf) in token_tf_map.iter_mut() {
                 *tf /= token_count as f32; // Normalize TF
                 if let Some(df) = self.company_name_token_frequency_map.get(token_vector) {
                     let idf = (total_documents / (1.0 + *df as f32)).ln(); // Compute IDF
-                    tfidf_vector.push(*tf * idf); // Store TF-IDF score in vector
+                    tf_idf_vector.push(*tf * idf); // Store TF-IDF score in vector
                 }
             }
 
             // Store the vector in the map
-            self.company_name_token_tdidf_scores
-                .insert(company_index, tfidf_vector);
+            self.company_name_token_tf_idf_scores
+                .insert(company_index, tf_idf_vector);
         }
     }
+
+    // TODO: Implement
+    // pub fn compute_tf_idf_scores_for_query_token_vectors(
+    //     &self,
+    //     query_token_vectors: &[TokenizerVectorToken],
+    // ) -> HashMap<TokenizerVectorToken, f32> {
+    //     let total_documents = self.tokenized_entries.len() as f32;
+
+    //     // Map to store the IDF scores for each token in the input
+    //     let mut idf_scores = HashMap::new();
+
+    //     for token_vector in query_token_vectors {
+    //         // Retrieve document frequency from the precomputed map
+    //         let document_frequency = self
+    //             .company_name_token_frequency_map
+    //             .get(token_vector)
+    //             .copied()
+    //             .unwrap_or(0);
+
+    //         // Calculate IDF
+    //         let idf = (total_documents / (1.0 + document_frequency as f32)).ln();
+
+    //         // Store the score
+    //         idf_scores.insert(token_vector.clone(), idf);
+    //     }
+
+    //     idf_scores
+    // }
 
     pub fn get_company_name_token_vectors(
         &self,
