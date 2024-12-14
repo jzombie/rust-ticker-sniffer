@@ -38,7 +38,7 @@ fn main() {
     // let query = "Berkshire";
 
     // TODO: Ensure that queries can't be performed in reverse
-    // let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
+    let query = "Hathaway Berkshire Hospitality Hathaway Berkshire Hathaway Apple Apple Hospitality REIT INC REIT 222";
     // let query = "Apple Apple Hospitality REIT Apple INC";
     // let query = "Apple Apple INC Apple Hospitality REIT";
     // let query = "Berkshire Hathaway Berkshire Hathaway";
@@ -49,7 +49,8 @@ fn main() {
     // let query = "Alphabet";
     // let query = "Amazon";
     // let query = "SPDR Dow Jones Industrial Average";
-    let query = "Dow Jones Industrial";
+    // let query = "Dow Jones Industrial, and well, Apple Computers.";
+    // let query = "The article mentions Dow Chemical Company as one of the key players in the recycled plastic market, indicating their involvement and potential to benefit from the market growth.";
 
     // TODO: Locate source
     // TODO: [add test] Figure out why APLE is showing up instead of AAPL

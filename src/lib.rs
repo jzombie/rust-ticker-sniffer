@@ -6,7 +6,7 @@ pub use constants::{
 };
 pub use models::{
     CompanyTokenProcessor, DocumentCompanyNameExtractor, DocumentCompanyNameExtractorConfig,
-    DocumentEntityExtractor, Error, Tokenizer,
+    DocumentEntityExtractor, Error, TokenMapper, Tokenizer,
 };
 pub mod types;
 mod utils;
@@ -33,19 +33,39 @@ pub fn extract_tickers_from_text_with_custom_weights(
     company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> Result<Vec<(TickerSymbol, f32)>, Error> {
-    let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
-        &company_symbols_list,
-        &document_company_name_extractor_config,
-        &text,
-    )?;
+    // let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
+    //     &company_symbols_list,
+    //     &document_company_name_extractor_config,
+    //     &text,
+    // )?;
 
-    // TODO: Do symbol extraction, discarding `consumed_query_token_indices` from the query tokens
+    // // TODO: Do symbol extraction, discarding `consumed_query_token_indices` from the query tokens
 
-    // TODO: Remove
-    println!(
-        "Consumed query token indices: {:?}",
-        consumed_query_token_indices
-    );
+    // // TODO: Remove
+    // println!(
+    //     "Consumed query token indices: {:?}",
+    //     consumed_query_token_indices
+    // );
+
+    let mut token_mapper = TokenMapper::new();
+    let company_name_tokenizer = Tokenizer::text_doc_parser();
+    for (ticker_symbol, company_name) in company_symbols_list {
+        // println!("{}", ticker_symbol);
+
+        // Workaround for "urban-gro, Inc."
+        // The tokenizer filters on words with uppercase letters, which this does not have
+        let uc_company_name = company_name.clone().unwrap().to_uppercase();
+
+        let company_name_tokens = company_name_tokenizer.tokenize(&uc_company_name);
+        for token in company_name_tokens {
+            token_mapper.upsert_token(&token);
+        }
+    }
+
+    println!("Token map: {:?}", token_mapper.token_map);
+
+    // TODO: Remove mock
+    let symbols_with_confidence = vec![];
 
     Ok(symbols_with_confidence)
 }

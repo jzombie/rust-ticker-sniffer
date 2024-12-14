@@ -15,3 +15,6 @@ pub use document_company_name_extractor::DocumentCompanyNameExtractor;
 
 pub mod tokenizer;
 pub use tokenizer::Tokenizer;
+
+pub mod token_mapper;
+pub use token_mapper::TokenMapper;
