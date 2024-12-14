@@ -26,6 +26,12 @@ pub fn load_company_symbol_list_from_file(
         // Extract values based on header names
         let symbol = record.get(headers.iter().position(|h| h == "Symbol").unwrap());
         let company_name = record.get(headers.iter().position(|h| h == "Company Name").unwrap());
+        let alternative_names = record.get(
+            headers
+                .iter()
+                .position(|h| h == "Alternative Names")
+                .unwrap(),
+        );
 
         if let Some(symbol) = symbol {
             company_symbols_list.push((
