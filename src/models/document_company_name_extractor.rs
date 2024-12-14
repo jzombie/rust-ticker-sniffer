@@ -1,5 +1,5 @@
 use crate::types::{CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorToken};
-use crate::utils::index_difference_similarity;
+use crate::utils::{index_difference_similarity, softmax};
 use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Error, Tokenizer};
 use core::f32;
@@ -50,6 +50,7 @@ struct TickerSymbolRangeReport {
     query_token_indices: Vec<QueryTokenIndex>,
     query_token_vectors: Vec<TokenizerVectorToken>,
     company_name_token_frequencies: Vec<usize>,
+    company_name_token_frequencies_softmax: Vec<f64>,
     company_name_token_vectors: Vec<TokenizerVectorToken>,
     company_name_token_tdidf_scores: Vec<f32>,
     company_name_char_coverage: f32,
@@ -393,6 +394,10 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 range_report.company_name_token_frequencies
             );
             println!(
+                "Company Name Token Frequencies Softmax: {:?}",
+                range_report.company_name_token_frequencies_softmax
+            );
+            println!(
                 "Company Name TF-IDF Scores: {:?}",
                 range_report.company_name_token_tdidf_scores
             );
@@ -493,6 +498,14 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 company_name_token_frequencies.push(company_name_token_frequency.clone());
             }
 
+            // Log scaled frequencies help prevent sharp distrubutions making softmax scores such as
+            // [0.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+            let log_scaled_frequencies: Vec<f32> = company_name_token_frequencies
+                .iter()
+                .map(|&freq| (freq as f32).ln())
+                .collect();
+            let company_name_token_frequencies_softmax = softmax(&log_scaled_frequencies);
+
             let company_name_token_tdidf_scores = self
                 .company_token_processor
                 .company_name_token_tdidf_scores
@@ -558,6 +571,8 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                     query_token_indices,
                     query_token_vectors,
                     company_name_token_frequencies: company_name_token_frequencies.clone(),
+                    company_name_token_frequencies_softmax: company_name_token_frequencies_softmax
+                        .clone(),
                     company_name_token_vectors: company_name_token_vectors.clone(),
                     company_name_token_tdidf_scores: company_name_token_tdidf_scores.to_vec(),
                     company_name_char_coverage,
