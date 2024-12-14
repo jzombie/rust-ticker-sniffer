@@ -27,7 +27,7 @@ pub const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
 // `DocumentTokenProcessor` do its own automatic filtering, or substitution.
 pub const IGNORE_WORDS: &[&str] = &[
     // Many State Street ETFs are commonly referenced without SPDR prefix
-    // "SPDR", "U.S.", "Strong",
+    "SPDR", "U.S.", "Strong",
 ];
 
 pub const STOP_WORDS: &[&str] = &[
