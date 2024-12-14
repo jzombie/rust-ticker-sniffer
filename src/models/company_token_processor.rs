@@ -20,6 +20,9 @@ type CompanyTokenIndex = usize;
 type CompanyTokenBinEntry = (CompanyIndex, CompanyTokenIndex);
 type CompanyTokenBin = Vec<CompanyTokenBinEntry>;
 
+// TODO: Remove token binning
+// TODO: Identify longest [alternative] company name segment and use that for rolling window comparisons
+//
 // For all nested vectors:
 //  - Outer vector elements are indexed by company index
 //  - Inner vector elements are for multiple entries, per company
