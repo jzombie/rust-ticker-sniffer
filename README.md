@@ -37,3 +37,7 @@ Probably not going to use n-gram itself, but this is the latest prototype.
 ```bash
 RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="csv-support rand-support libc-support"
 ```
+
+## ChatGPT-based Alternative Name Suggester
+
+https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternative-name-suggester
