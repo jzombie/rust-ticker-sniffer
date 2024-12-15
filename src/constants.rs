@@ -13,8 +13,7 @@ pub const DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS: &[(u64, f32)] = &[];
 
 pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
 
-// TODO: Replace w/ https://crates.io/crates/url?
-// (may be completely overkill for this use case; just need TLDs)
+// TODO: Remove
 pub const TLD_LIST: [&str; 5] = ["com", "org", "net", "edu", "gov"];
 
 // TODO: Remove?
