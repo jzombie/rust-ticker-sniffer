@@ -55,16 +55,17 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
         // Workaround for "urban-gro, Inc."
         // The tokenizer filters on words with uppercase letters, which this does not have
-        let uc_company_name = company_name.clone().unwrap().to_uppercase();
+        // let uc_company_name = company_name.clone().unwrap().to_uppercase();
 
-        let company_name_tokens = company_name_tokenizer.tokenize(&uc_company_name);
+        let company_name_tokens = company_name_tokenizer.tokenize(&company_name.clone().unwrap());
         for token in company_name_tokens {
             token_mapper.upsert_token(&token);
         }
 
         for alternate_company_name in alternate_company_names {
-            let uc_alternate_name = alternate_company_name.clone().to_uppercase();
-            let alternate_company_name_tokens = company_name_tokenizer.tokenize(&uc_alternate_name);
+            // let uc_alternate_name = alternate_company_name.clone().to_uppercase();
+            let alternate_company_name_tokens =
+                company_name_tokenizer.tokenize(&alternate_company_name.clone());
 
             for token in alternate_company_name_tokens {
                 token_mapper.upsert_token(&token);
