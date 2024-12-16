@@ -12,7 +12,7 @@ pub struct Tokenizer {
     pre_processed_ignored_words: Option<HashSet<String>>,
 }
 
-// TODO: Company name and alternative names may not match the predefined rules (some may
+// TODO: Company name and alternate names may not match the predefined rules (some may
 // be lowercase due to branding, etc.). The tokenizer should include a configuration which
 // uses those [potentially special-case] names as a corpus of items to tokenize against.
 impl Tokenizer {

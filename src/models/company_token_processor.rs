@@ -21,7 +21,7 @@ type CompanyTokenBinEntry = (CompanyIndex, CompanyTokenIndex);
 type CompanyTokenBin = Vec<CompanyTokenBinEntry>;
 
 // TODO: Remove token binning
-// TODO: Identify longest [alternative] company name segment and use that for rolling window comparisons
+// TODO: Identify longest [alternate] company name segment and use that for rolling window comparisons
 //
 // For all nested vectors:
 //  - Outer vector elements are indexed by company index
@@ -72,7 +72,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         self.company_name_token_frequency_map.clear();
 
         // First pass: Tokenize and determine the maximum token length
-        for (symbol, company_name) in self.company_symbols_list.iter() {
+        for (symbol, company_name, _alternate_names) in self.company_symbols_list.iter() {
             let mut company_tokenized_entries: Vec<CompanyTokenizedEntry> = Vec::new();
 
             // Handle the symbol token as a single token

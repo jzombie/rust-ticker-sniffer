@@ -11,7 +11,8 @@ pub use models::{
 pub mod types;
 mod utils;
 pub use types::{
-    CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorToken,
+    AlternateCompanyName, CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol,
+    TokenizerVectorToken,
 };
 
 // TODO: Add dedicated type instead of f32
@@ -49,7 +50,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
 
     let mut token_mapper = TokenMapper::new();
     let company_name_tokenizer = Tokenizer::text_doc_parser();
-    for (ticker_symbol, company_name) in company_symbols_list {
+    for (ticker_symbol, company_name, alternate_company_names) in company_symbols_list {
         // println!("{}", ticker_symbol);
 
         // Workaround for "urban-gro, Inc."
@@ -60,9 +61,22 @@ pub fn extract_tickers_from_text_with_custom_weights(
         for token in company_name_tokens {
             token_mapper.upsert_token(&token);
         }
+
+        for alternate_company_name in alternate_company_names {
+            let uc_alternate_name = alternate_company_name.clone().to_uppercase();
+            let alternate_company_name_tokens = company_name_tokenizer.tokenize(&uc_alternate_name);
+
+            for token in alternate_company_name_tokens {
+                token_mapper.upsert_token(&token);
+            }
+        }
     }
 
-    println!("Token map: {:?}", token_mapper.token_map);
+    // TODO: Remove
+    println!(
+        "Token map values: {}",
+        token_mapper.token_map.values().len()
+    );
 
     // TODO: Remove mock
     let symbols_with_confidence = vec![];

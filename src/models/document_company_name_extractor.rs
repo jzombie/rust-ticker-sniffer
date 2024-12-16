@@ -124,7 +124,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
                 let symbol = self
                     .company_symbols_list
                     .get(state.company_index)
-                    .map(|(s, _)| s);
+                    .map(|(s, _, _)| s);
 
                 if let Some(symbol) = symbol {
                     if symbols_with_confidence.contains_key(symbol) {
@@ -313,7 +313,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
     fn get_company_index_with_symbol(&self, symbol: &str) -> Option<usize> {
         self.company_symbols_list
             .iter()
-            .position(|(target_symbol, _)| symbol == target_symbol)
+            .position(|(target_symbol, _, _)| symbol == target_symbol)
     }
 
     fn get_similarity_state_with_query_token_index(
@@ -597,7 +597,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             let symbol = self
                 .company_symbols_list
                 .get(state.company_index)
-                .map(|(s, _)| s.clone())
+                .map(|(s, _, _)| s.clone())
                 .expect("Failed to retrieve symbol for company index");
 
             symbol_to_highest_token_window_index_map
@@ -643,7 +643,7 @@ impl<'a> DocumentCompanyNameExtractor<'a> {
             let company_index = self
                 .company_symbols_list
                 .iter()
-                .position(|(target_symbol, _)| target_symbol == symbol);
+                .position(|(target_symbol, _, _)| target_symbol == symbol);
 
             let mut consecutive_query_token_indices: Vec<usize> = Vec::new();
             let mut last_query_token_index: usize = usize::MAX - 1; // 1 adds headroom for +1 checks
