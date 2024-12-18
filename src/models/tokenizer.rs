@@ -4,12 +4,12 @@ use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
-    pub min_uppercase_ratio: Option<f32>,
-    pub hyphens_as_potential_multiple_words: bool,
-    pub filter_stop_words: bool,
-    pub filter_ignored_words: bool,
-    pre_processed_stop_words: Option<HashSet<String>>,
-    pre_processed_ignored_words: Option<HashSet<String>>,
+    pub min_uppercase_ratio: Option<f32>,          // TODO: Remove
+    pub hyphens_as_potential_multiple_words: bool, // TODO: Remove
+    pub filter_stop_words: bool,                   // TODO: Remove?
+    pub filter_ignored_words: bool,                // TODO: Remove
+    pre_processed_stop_words: Option<HashSet<String>>, // TODO: Remove?
+    pre_processed_ignored_words: Option<HashSet<String>>, // TODO: Remove?
 }
 
 // TODO: Company name and alternate names may not match the predefined rules (some may
