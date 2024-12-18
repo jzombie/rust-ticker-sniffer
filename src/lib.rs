@@ -49,13 +49,21 @@ pub fn extract_tickers_from_text_with_custom_weights(
     // );
 
     let mut token_mapper = TokenMapper::new();
+
+    let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
     let company_name_tokenizer = Tokenizer::text_doc_parser();
+
     for (ticker_symbol, company_name, alternate_company_names) in company_symbols_list {
         // println!("{}", ticker_symbol);
 
         // Workaround for "urban-gro, Inc."
         // The tokenizer filters on words with uppercase letters, which this does not have
         // let uc_company_name = company_name.clone().unwrap().to_uppercase();
+
+        let ticker_symbol_tokens = ticker_symbol_tokenizer.tokenize(&ticker_symbol);
+        for ticker_symbol_token in ticker_symbol_tokens {
+            token_mapper.upsert_token(&ticker_symbol_token);
+        }
 
         let company_name_tokens = company_name_tokenizer.tokenize(&company_name.clone().unwrap());
         for token in company_name_tokens {
