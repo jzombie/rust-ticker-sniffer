@@ -126,67 +126,76 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         }
 
         // Collect matches based on token IDs
-        let mut match_counts: HashMap<String, usize> = HashMap::new();
+        // let mut match_counts: HashMap<String, usize> = HashMap::new();
+
+        let mut first_match_token_ids = HashSet::new();
+        let mut first_match_ticker_symbols = HashSet::new();
 
         for token_id in &filtered_token_ids {
-            if let Some(ticker_symbols) = self.reverse_token_map.get(token_id) {
-                for ticker_symbol in ticker_symbols {
-                    if let Some(token_id_vectors) = self.company_name_token_map.get(ticker_symbol) {
-                        let mut max_match_count = 0;
+            if let Some(possible_ticker_symbols) = self.reverse_token_map.get(token_id) {
+                for ticker_symbol in possible_ticker_symbols {
+                    if let Some(token_ids_list) = self.company_name_token_map.get(ticker_symbol) {
+                        //     let mut max_match_count = 0;
 
-                        for token_vector in token_id_vectors {
-                            if token_vector.is_empty() {
+                        for token_ids in token_ids_list {
+                            if token_ids.is_empty() {
                                 continue;
                             }
 
-                            let mut company_idx = 0;
-                            let mut filtered_idx = 0;
-                            let mut current_match_count = 0;
+                            let company_name_first_token_id = token_ids[0];
 
-                            // Check for consecutive matches
-                            while company_idx < token_vector.len()
-                                && filtered_idx < filtered_token_ids.len()
-                            {
-                                if token_vector[company_idx] == filtered_token_ids[filtered_idx] {
-                                    company_idx += 1;
-                                    current_match_count += 1;
-                                } else {
-                                    // Reset match count if not consecutive
-                                    current_match_count = 0;
-                                    company_idx = 0; // Restart match from the beginning of the token vector
-                                }
-
-                                filtered_idx += 1;
-
-                                // If all tokens match consecutively, stop checking further
-                                if company_idx == token_vector.len() {
-                                    break;
-                                }
+                            if *token_id == company_name_first_token_id {
+                                first_match_token_ids.insert(token_id);
+                                first_match_ticker_symbols.insert(ticker_symbol);
                             }
 
-                            // Update max match count for this company
-                            max_match_count = max_match_count.max(current_match_count);
-                        }
+                            //         let mut company_idx = 0;
+                            //         let mut filtered_idx = 0;
+                            //         let mut current_match_count = 0;
 
-                        if max_match_count > 0 {
-                            match_counts
-                                .entry(ticker_symbol.clone())
-                                .and_modify(|count| *count = (*count).max(max_match_count))
-                                .or_insert(max_match_count);
+                            //         while filtered_idx < filtered_token_ids.len() {
+                            //             if token_id_vector[company_idx] == filtered_token_ids[filtered_idx]
+                            //             {
+                            //                 company_idx += 1;
+                            //                 current_match_count += 1;
+
+                            //                 // Stop when the entire sequence matches
+                            //                 if company_idx == token_id_vector.len() {
+                            //                     max_match_count = current_match_count;
+
+                            //                     break;
+                            //                 }
+                            //             } else {
+                            //                 // Reset on mismatch
+                            //                 company_idx = 0;
+                            //                 current_match_count = 0;
+                            //             }
+                            //             filtered_idx += 1;
+                            //         }
+                            //     }
+
+                            //     if max_match_count > 0 {
+                            //         match_counts
+                            //             .entry(ticker_symbol.clone())
+                            //             .and_modify(|count| *count = (*count).max(max_match_count))
+                            //             .or_insert(max_match_count);
                         }
                     }
                 }
             }
         }
 
-        // Convert matches to a Vec and sort by relevance
-        let mut possible_matches: Vec<(String, usize)> = match_counts.into_iter().collect();
-        possible_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))); // Sort by count, then alphabetically
+        // // Convert matches to a Vec and sort by relevance
+        // let mut possible_matches: Vec<(String, usize)> = match_counts.into_iter().collect();
+        // possible_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))); // Sort by count, then alphabetically
 
         // Print all relevant details
         println!("Text doc tokens: {:?}", text_doc_tokens);
         println!("Filtered tokens: {:?}", filtered_tokens);
         println!("Filtered token IDs: {:?}", filtered_token_ids);
-        println!("Possible matches: {:?}", possible_matches);
+        println!(
+            "Possible matches: {:?}, {:?}",
+            first_match_ticker_symbols, first_match_token_ids
+        );
     }
 }
