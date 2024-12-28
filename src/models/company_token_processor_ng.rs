@@ -127,38 +127,36 @@ impl<'a> CompanyTokenProcessorNg<'a> {
 
         // Collect matches based on token IDs
         let mut match_counts: HashMap<String, usize> = HashMap::new();
+        for token_id in &filtered_token_ids {
+            if let Some(companies) = self.reverse_token_map.get(token_id) {
+                for company in companies {
+                    // Check if this token ID corresponds to the first word of any name or alternate name
+                    if let Some(token_vectors) = self.company_name_token_map.get(company) {
+                        let mut matched_first_word = false;
 
-        for (symbol, token_id_vectors) in &self.company_name_token_map {
-            for company_token_ids in token_id_vectors {
-                // Inline logic for contiguous match
-                let mut company_idx = 0;
-                let mut filtered_idx = 0;
+                        for token_vector in token_vectors {
+                            if !token_vector.is_empty() && token_vector[0] == *token_id {
+                                matched_first_word = true;
+                                break;
+                            }
+                        }
 
-                while company_idx < company_token_ids.len()
-                    && filtered_idx < filtered_token_ids.len()
-                {
-                    if company_token_ids[company_idx] == filtered_token_ids[filtered_idx] {
-                        company_idx += 1;
-                    }
-                    filtered_idx += 1;
-
-                    // If we've matched all company_token_ids in order, it's a contiguous match
-                    if company_idx == company_token_ids.len() {
-                        *match_counts.entry(symbol.clone()).or_insert(0) += 1;
-                        break; // No need to check further for this company_token_ids
+                        if matched_first_word {
+                            *match_counts.entry(company.clone()).or_insert(0) += 1;
+                        }
                     }
                 }
             }
         }
 
-        // Convert matches to a Vec and sort by relevance
+        // Sort matches by their counts (descending order)
         let mut possible_matches: Vec<(String, usize)> = match_counts.into_iter().collect();
         possible_matches.sort_by(|a, b| b.1.cmp(&a.1));
 
-        // Print all relevant details, including filtered tokens
-        println!("Text doc tokens: {:?}", text_doc_tokens); // Original tokens
-        println!("Filtered tokens: {:?}", filtered_tokens); // Tokens present in the TokenMapper
-        println!("Filtered token IDs: {:?}", filtered_token_ids); // Corresponding token IDs
-        println!("Possible matches: {:?}", possible_matches); // Matches with counts
+        // Print all relevant details
+        println!("Text doc tokens: {:?}", text_doc_tokens);
+        println!("Filtered tokens: {:?}", filtered_tokens);
+        println!("Filtered token IDs: {:?}", filtered_token_ids);
+        println!("Possible matches: {:?}", possible_matches);
     }
 }
