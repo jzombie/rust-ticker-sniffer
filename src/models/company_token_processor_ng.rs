@@ -105,6 +105,13 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         // Tokenize the input text
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
+        if text_doc_tokens.is_empty() {
+            println!("No tokens found in the text document. Exiting.");
+            return;
+        }
+
+        let first_word = text_doc_tokens[0].as_str();
+
         // Get the filtered tokens (tokens present in the TokenMapper)
         let filtered_tokens = self
             .token_mapper
@@ -115,15 +122,18 @@ impl<'a> CompanyTokenProcessorNg<'a> {
             .token_mapper
             .get_filtered_token_ids(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
+        // Get the token IDs for the first word
+        let first_word_token_ids = self.token_mapper.get_filtered_token_ids(vec![first_word]);
+
         // Collect all companies associated with the token IDs and track matches
         let mut match_counts: HashMap<String, HashSet<usize>> = HashMap::new();
-        for token_id in &filtered_token_ids {
+        for (index, token_id) in filtered_token_ids.iter().enumerate() {
             if let Some(companies) = self.reverse_token_map.get(token_id) {
                 for company in companies {
                     match_counts
                         .entry(company.clone())
                         .or_insert_with(HashSet::new)
-                        .insert(*token_id);
+                        .insert(index); // Store token index instead of token ID
                 }
             }
         }
@@ -131,7 +141,28 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         // Flatten the HashMap into a Vec with the count of unique matches
         let mut possible_matches: Vec<(String, usize)> = match_counts
             .into_iter()
-            .map(|(company, token_ids)| (company, token_ids.len()))
+            .filter_map(|(company, indices)| {
+                let mut indices: Vec<usize> = indices.into_iter().collect();
+                indices.sort();
+
+                // Check if indices are contiguous
+                let is_contiguous = indices.windows(2).all(|pair| pair[1] == pair[0] + 1);
+
+                // Check if the company's tokens include any token IDs for the first word
+                let first_word_matches = first_word_token_ids.iter().any(|id| {
+                    self.reverse_token_map
+                        .get(id)
+                        .map_or(false, |companies| companies.contains(&company))
+                });
+
+                // Include matches if they are contiguous and the first word matches OR
+                // the company matches other filtered token IDs
+                if is_contiguous && (first_word_matches || !indices.is_empty()) {
+                    Some((company, indices.len()))
+                } else {
+                    None
+                }
+            })
             .collect();
 
         // Sort by hit count (descending)
@@ -141,7 +172,7 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         println!("Text doc tokens: {:?}", text_doc_tokens); // Original
         println!("Filtered tokens: {:?}", filtered_tokens); // Original
         println!("Filtered token IDs: {:?}", filtered_token_ids); // Original
-        println!("Possible matches: {:?}", possible_matches); // Corrected hit counts
+        println!("Possible matches: {:?}", possible_matches); // Includes matches for Walmart, Amazon
     }
 
     // pub fn process_company_name(&mut self, company_name: &str) -> Vec<usize> {
