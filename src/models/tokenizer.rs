@@ -4,11 +4,9 @@ use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
-    pub min_uppercase_ratio: Option<f32>,          // TODO: Remove
-    pub hyphens_as_potential_multiple_words: bool, // TODO: Remove
-    pub filter_stop_words: bool,                   // TODO: Remove?
-    pub filter_ignored_words: bool,                // TODO: Remove
-    pre_processed_stop_words: Option<HashSet<String>>, // TODO: Remove?
+    pub filter_stop_words: bool,                          // TODO: Remove?
+    pub filter_ignored_words: bool,                       // TODO: Remove
+    pre_processed_stop_words: Option<HashSet<String>>,    // TODO: Remove?
     pre_processed_ignored_words: Option<HashSet<String>>, // TODO: Remove?
 }
 
@@ -19,8 +17,7 @@ impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
         Self {
-            min_uppercase_ratio: Some(0.9),
-            hyphens_as_potential_multiple_words: false,
+            // min_uppercase_ratio: Some(0.9),
             filter_stop_words: false,
             filter_ignored_words: false,
             pre_processed_stop_words: None,
@@ -31,8 +28,6 @@ impl Tokenizer {
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
         Self {
-            min_uppercase_ratio: None,
-            hyphens_as_potential_multiple_words: true,
             filter_stop_words: true,
             filter_ignored_words: true,
             pre_processed_stop_words: Some(Self::preprocess_stop_words()),
@@ -43,14 +38,14 @@ impl Tokenizer {
     /// Tokenizer function to split the text into individual tokens.
     pub fn tokenize(&self, text: &str) -> Vec<String> {
         // Helper function to calculate uppercase ratio
-        fn uppercase_ratio(word: &str) -> f32 {
-            let total_chars = word.chars().count() as f32;
-            if total_chars == 0.0 {
-                return 0.0;
-            }
-            let uppercase_chars = word.chars().filter(|c| c.is_uppercase()).count() as f32;
-            uppercase_chars / total_chars
-        }
+        // fn uppercase_ratio(word: &str) -> f32 {
+        //     let total_chars = word.chars().count() as f32;
+        //     if total_chars == 0.0 {
+        //         return 0.0;
+        //     }
+        //     let uppercase_chars = word.chars().filter(|c| c.is_uppercase()).count() as f32;
+        //     uppercase_chars / total_chars
+        // }
 
         // Preprocess and tokenize the text
         text.replace("-\n", "") // Merge hyphenated words across lines
@@ -60,17 +55,15 @@ impl Tokenizer {
             .replace(",", " ") // Normalize commas to spaces
             .split_whitespace() // Split into words
             // Filter by original capitalization
-            .filter(|word| {
-                // Apply uppercase ratio filter and any capital letter requirement
-                let passes_uppercase_ratio = self
-                    .min_uppercase_ratio
-                    .map_or(true, |ratio| uppercase_ratio(word) >= ratio);
-
-                let passes_any_caps_or_is_number =
-                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric());
-
-                passes_uppercase_ratio && passes_any_caps_or_is_number
-            })
+            // .filter(|word| {
+            //     // Apply uppercase ratio filter and any capital letter requirement
+            //     let passes_uppercase_ratio = self
+            //         .min_uppercase_ratio
+            //         .map_or(true, |ratio| uppercase_ratio(word) >= ratio);
+            //     let passes_any_caps_or_is_number =
+            //         word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric());
+            //     passes_uppercase_ratio && passes_any_caps_or_is_number
+            // })
             // Remove TLD extensions (i.e. so `Amazon` and `Amazon.com` are treated the same)
             .map(|word| {
                 // Normalize TLDs and strip them if found
@@ -87,21 +80,22 @@ impl Tokenizer {
                     .filter(|c| c.is_alphanumeric())
                     .collect::<String>()
             })
-            // Handle hyphenated words
+            // Split hyphenated words into multiple words
             .flat_map(|word| {
-                word.split('-')
+                let parts: Vec<String> = word
+                    .split('-')
                     .map(|part| {
                         part.chars()
                             .filter(|c| c.is_alphanumeric())
                             .collect::<String>()
                     })
-                    .collect::<Vec<_>>()
-                    .into_iter()
-                    .chain(if self.hyphens_as_potential_multiple_words {
-                        Vec::new().into_iter()
-                    } else {
-                        vec![word.replace('-', "")].into_iter()
-                    })
+                    .collect();
+
+                if parts.len() > 1 {
+                    parts.into_iter() // Only split into parts if there are multiple segments
+                } else {
+                    vec![word.replace('-', "")].into_iter() // Otherwise, use the whole word
+                }
             })
             // Filter to alphanumeric and uppercase
             .map(|word| {

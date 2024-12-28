@@ -38,6 +38,13 @@ impl TokenMapper {
         self.token_map.get(&token_vector).copied()
     }
 
+    pub fn get_filtered_tokens<'a>(&'a self, tokens: Vec<&'a str>) -> Vec<&str> {
+        tokens
+            .into_iter()
+            .filter(|token| self.get_token_id(token).is_some())
+            .collect()
+    }
+
     /// Gets the total number of unique tokens
     pub fn token_count(&self) -> usize {
         self.token_map.len()

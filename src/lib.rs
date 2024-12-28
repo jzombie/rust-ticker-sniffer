@@ -20,7 +20,7 @@ pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolList,
 ) -> Result<Vec<(TickerSymbol, f32)>, Error> {
-    let symbols_with_confidence = extract_tickers_from_text_with_custom_weights(
+    let symbols_with_confidence = extract_tickers_from_text_with_custom_config(
         &text,
         &company_symbols_list,
         DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG,
@@ -29,7 +29,8 @@ pub fn extract_tickers_from_text(
     Ok(symbols_with_confidence)
 }
 
-pub fn extract_tickers_from_text_with_custom_weights(
+// TODO: Refactor accordingly
+pub fn extract_tickers_from_text_with_custom_config(
     text: &str,
     company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
@@ -53,6 +54,7 @@ pub fn extract_tickers_from_text_with_custom_weights(
     let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
     let company_name_tokenizer = Tokenizer::text_doc_parser();
 
+    // Extract company tokens
     for (ticker_symbol, company_name, alternate_company_names) in company_symbols_list {
         // println!("{}", ticker_symbol);
 
@@ -81,7 +83,24 @@ pub fn extract_tickers_from_text_with_custom_weights(
         }
     }
 
+    let text_doc_tokenizer = Tokenizer::text_doc_parser();
+    let text_doc_tokens = text_doc_tokenizer.tokenize(&text);
+
+    println!("Text doc tokens: {:?}", text_doc_tokens);
+
+    println!(
+        "Filtered tokens: {:?}",
+        token_mapper.get_filtered_tokens(text_doc_tokens.iter().map(|s| s.as_str()).collect()),
+    );
+
+    // for token in text_doc_tokens {
+    //     let token_id = token_mapper.get_token_id(&token);
+
+    //     println!("Token: {}, ID: {:?}", token, token_id);
+    // }
+
     // TODO: Remove
+    println!("Text: {}", text);
     println!(
         "Token map values: {}",
         token_mapper.token_map.values().len()

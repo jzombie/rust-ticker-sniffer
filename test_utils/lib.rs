@@ -2,7 +2,7 @@ use csv::Reader;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
-    extract_tickers_from_text_with_custom_weights, CompanySymbolList,
+    extract_tickers_from_text_with_custom_config, CompanySymbolList,
     DocumentCompanyNameExtractorConfig, Error as LibError, TickerSymbol,
 };
 pub mod models;
@@ -116,7 +116,7 @@ pub fn run_test_for_file(
         .join("\n");
 
     // Extract tickers from the filtered text
-    let results_with_confidence = extract_tickers_from_text_with_custom_weights(
+    let results_with_confidence = extract_tickers_from_text_with_custom_config(
         &filtered_text,
         &symbols_map,
         company_name_extractor_config,
