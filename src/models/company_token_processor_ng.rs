@@ -105,6 +105,11 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         // Tokenize the input text
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
+        if text_doc_tokens.is_empty() {
+            println!("No tokens found in the text document. Exiting.");
+            return;
+        }
+
         // Get the filtered tokens (tokens present in the TokenMapper)
         let filtered_tokens = self
             .token_mapper
@@ -115,60 +120,45 @@ impl<'a> CompanyTokenProcessorNg<'a> {
             .token_mapper
             .get_filtered_token_ids(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
-        // Collect all companies associated with the token IDs and track matches
-        let mut match_counts: HashMap<String, HashSet<usize>> = HashMap::new();
-        for (index, token_id) in filtered_token_ids.iter().enumerate() {
-            if let Some(companies) = self.reverse_token_map.get(token_id) {
-                for company in companies {
-                    match_counts
-                        .entry(company.clone())
-                        .or_insert_with(HashSet::new)
-                        .insert(index); // Store token index instead of token ID
+        if filtered_token_ids.is_empty() {
+            println!("No token IDs found in the document.");
+            return;
+        }
+
+        // Collect matches based on token IDs
+        let mut match_counts: HashMap<String, usize> = HashMap::new();
+
+        for (symbol, token_id_vectors) in &self.company_name_token_map {
+            for company_token_ids in token_id_vectors {
+                // Inline logic for contiguous match
+                let mut company_idx = 0;
+                let mut filtered_idx = 0;
+
+                while company_idx < company_token_ids.len()
+                    && filtered_idx < filtered_token_ids.len()
+                {
+                    if company_token_ids[company_idx] == filtered_token_ids[filtered_idx] {
+                        company_idx += 1;
+                    }
+                    filtered_idx += 1;
+
+                    // If we've matched all company_token_ids in order, it's a contiguous match
+                    if company_idx == company_token_ids.len() {
+                        *match_counts.entry(symbol.clone()).or_insert(0) += 1;
+                        break; // No need to check further for this company_token_ids
+                    }
                 }
             }
         }
 
-        // Flatten the HashMap into a Vec with the count of unique matches
-        let mut possible_matches: Vec<(String, usize)> = match_counts
-            .into_iter()
-            .filter_map(|(company, indices)| {
-                let mut indices: Vec<usize> = indices.into_iter().collect();
-                indices.sort();
-
-                // Check if indices are contiguous
-                let is_contiguous = indices.windows(2).all(|pair| pair[1] == pair[0] + 1);
-
-                if is_contiguous {
-                    Some((company, indices.len()))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        // Sort by hit count (descending)
+        // Convert matches to a Vec and sort by relevance
+        let mut possible_matches: Vec<(String, usize)> = match_counts.into_iter().collect();
         possible_matches.sort_by(|a, b| b.1.cmp(&a.1));
 
-        // Print all relevant details
-        println!("Text doc tokens: {:?}", text_doc_tokens); // Original
-        println!("Filtered tokens: {:?}", filtered_tokens); // Original
-        println!("Filtered token IDs: {:?}", filtered_token_ids); // Original
-        println!("Possible matches: {:?}", possible_matches); // Excludes matches with gaps
+        // Print all relevant details, including filtered tokens
+        println!("Text doc tokens: {:?}", text_doc_tokens); // Original tokens
+        println!("Filtered tokens: {:?}", filtered_tokens); // Tokens present in the TokenMapper
+        println!("Filtered token IDs: {:?}", filtered_token_ids); // Corresponding token IDs
+        println!("Possible matches: {:?}", possible_matches); // Matches with counts
     }
-
-    // pub fn process_company_name(&mut self, company_name: &str) -> Vec<usize> {
-    //     let tokens = self.tokenizer.tokenize(company_name);
-    //     tokens
-    //         .iter()
-    //         .map(|token| self.token_mapper.upsert_token(token))
-    //         .collect()
-    // }
-
-    // pub fn get_token_id(&self, token: &str) -> Option<usize> {
-    //     self.token_mapper.get_token_id(token)
-    // }
-
-    // pub fn get_token_count(&self) -> usize {
-    //     self.token_mapper.token_count()
-    // }
 }
