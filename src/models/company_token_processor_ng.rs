@@ -127,47 +127,61 @@ impl<'a> CompanyTokenProcessorNg<'a> {
 
         // Collect matches based on token IDs
         let mut match_counts: HashMap<String, usize> = HashMap::new();
+
         for token_id in &filtered_token_ids {
             if let Some(companies) = self.reverse_token_map.get(token_id) {
                 for company in companies {
-                    // Check if this token ID corresponds to the first word of any name or alternate name
-                    if let Some(token_vectors) = self.company_name_token_map.get(company) {
-                        for token_vector in token_vectors {
+                    if let Some(token_id_vectors) = self.company_name_token_map.get(company) {
+                        let mut max_match_count = 0;
+
+                        for token_vector in token_id_vectors {
                             if token_vector.is_empty() {
                                 continue;
                             }
 
-                            // Check if the first word matches
-                            if token_vector[0] == *token_id {
-                                // Check for consecutive token matching
-                                let mut company_idx = 0;
-                                let mut filtered_idx = 0;
+                            let mut company_idx = 0;
+                            let mut filtered_idx = 0;
+                            let mut current_match_count = 0;
 
-                                while company_idx < token_vector.len()
-                                    && filtered_idx < filtered_token_ids.len()
-                                {
-                                    if token_vector[company_idx] == filtered_token_ids[filtered_idx]
-                                    {
-                                        company_idx += 1;
-                                    }
-                                    filtered_idx += 1;
+                            // Check for consecutive matches
+                            while company_idx < token_vector.len()
+                                && filtered_idx < filtered_token_ids.len()
+                            {
+                                if token_vector[company_idx] == filtered_token_ids[filtered_idx] {
+                                    company_idx += 1;
+                                    current_match_count += 1;
+                                } else {
+                                    // Reset match count if not consecutive
+                                    current_match_count = 0;
+                                    company_idx = 0; // Restart match from the beginning of the token vector
+                                }
 
-                                    // If all tokens in the vector match consecutively
-                                    if company_idx == token_vector.len() {
-                                        *match_counts.entry(company.clone()).or_insert(0) += 1;
-                                        break; // Break after a successful match
-                                    }
+                                filtered_idx += 1;
+
+                                // If all tokens match consecutively, stop checking further
+                                if company_idx == token_vector.len() {
+                                    break;
                                 }
                             }
+
+                            // Update max match count for this company
+                            max_match_count = max_match_count.max(current_match_count);
+                        }
+
+                        if max_match_count > 0 {
+                            match_counts
+                                .entry(company.clone())
+                                .and_modify(|count| *count = (*count).max(max_match_count))
+                                .or_insert(max_match_count);
                         }
                     }
                 }
             }
         }
 
-        // Sort matches by their counts (descending order)
+        // Convert matches to a Vec and sort by relevance
         let mut possible_matches: Vec<(String, usize)> = match_counts.into_iter().collect();
-        possible_matches.sort_by(|a, b| b.1.cmp(&a.1));
+        possible_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))); // Sort by count, then alphabetically
 
         // Print all relevant details
         println!("Text doc tokens: {:?}", text_doc_tokens);
