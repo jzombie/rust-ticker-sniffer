@@ -5,8 +5,8 @@ pub use constants::{
     DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
 };
 pub use models::{
-    CompanyTokenProcessor, DocumentCompanyNameExtractor, DocumentCompanyNameExtractorConfig,
-    DocumentEntityExtractor, Error, TokenMapper, Tokenizer,
+    CompanyTokenProcessor, CompanyTokenProcessorNg, DocumentCompanyNameExtractor,
+    DocumentCompanyNameExtractorConfig, DocumentEntityExtractor, Error, TokenMapper, Tokenizer,
 };
 pub mod types;
 mod utils;
@@ -35,76 +35,8 @@ pub fn extract_tickers_from_text_with_custom_config(
     company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> Result<Vec<(TickerSymbol, f32)>, Error> {
-    // let (symbols_with_confidence, consumed_query_token_indices) = DocumentEntityExtractor::extract(
-    //     &company_symbols_list,
-    //     &document_company_name_extractor_config,
-    //     &text,
-    // )?;
-
-    // // TODO: Do symbol extraction, discarding `consumed_query_token_indices` from the query tokens
-
-    // // TODO: Remove
-    // println!(
-    //     "Consumed query token indices: {:?}",
-    //     consumed_query_token_indices
-    // );
-
-    let mut token_mapper = TokenMapper::new();
-
-    let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
-    let company_name_tokenizer = Tokenizer::text_doc_parser();
-
-    // Extract company tokens
-    for (ticker_symbol, company_name, alternate_company_names) in company_symbols_list {
-        // println!("{}", ticker_symbol);
-
-        // Workaround for "urban-gro, Inc."
-        // The tokenizer filters on words with uppercase letters, which this does not have
-        // let uc_company_name = company_name.clone().unwrap().to_uppercase();
-
-        let ticker_symbol_tokens = ticker_symbol_tokenizer.tokenize(&ticker_symbol);
-        for ticker_symbol_token in ticker_symbol_tokens {
-            token_mapper.upsert_token(&ticker_symbol_token);
-        }
-
-        let company_name_tokens = company_name_tokenizer.tokenize(&company_name.clone().unwrap());
-        for token in company_name_tokens {
-            token_mapper.upsert_token(&token);
-        }
-
-        for alternate_company_name in alternate_company_names {
-            // let uc_alternate_name = alternate_company_name.clone().to_uppercase();
-            let alternate_company_name_tokens =
-                company_name_tokenizer.tokenize(&alternate_company_name.clone());
-
-            for token in alternate_company_name_tokens {
-                token_mapper.upsert_token(&token);
-            }
-        }
-    }
-
-    let text_doc_tokenizer = Tokenizer::text_doc_parser();
-    let text_doc_tokens = text_doc_tokenizer.tokenize(&text);
-
-    println!("Text doc tokens: {:?}", text_doc_tokens);
-
-    println!(
-        "Filtered tokens: {:?}",
-        token_mapper.get_filtered_tokens(text_doc_tokens.iter().map(|s| s.as_str()).collect()),
-    );
-
-    // for token in text_doc_tokens {
-    //     let token_id = token_mapper.get_token_id(&token);
-
-    //     println!("Token: {}, ID: {:?}", token, token_id);
-    // }
-
-    // TODO: Remove
-    println!("Text: {}", text);
-    println!(
-        "Token map values: {}",
-        token_mapper.token_map.values().len()
-    );
+    let mut company_token_processor = CompanyTokenProcessorNg::new(company_symbols_list);
+    company_token_processor.process_text_doc(text);
 
     // TODO: Remove mock
     let symbols_with_confidence = vec![];
