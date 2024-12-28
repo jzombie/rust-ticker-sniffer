@@ -129,9 +129,9 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         let mut match_counts: HashMap<String, usize> = HashMap::new();
 
         for token_id in &filtered_token_ids {
-            if let Some(companies) = self.reverse_token_map.get(token_id) {
-                for company in companies {
-                    if let Some(token_id_vectors) = self.company_name_token_map.get(company) {
+            if let Some(ticker_symbols) = self.reverse_token_map.get(token_id) {
+                for ticker_symbol in ticker_symbols {
+                    if let Some(token_id_vectors) = self.company_name_token_map.get(ticker_symbol) {
                         let mut max_match_count = 0;
 
                         for token_vector in token_id_vectors {
@@ -170,7 +170,7 @@ impl<'a> CompanyTokenProcessorNg<'a> {
 
                         if max_match_count > 0 {
                             match_counts
-                                .entry(company.clone())
+                                .entry(ticker_symbol.clone())
                                 .and_modify(|count| *count = (*count).max(max_match_count))
                                 .or_insert(max_match_count);
                         }
