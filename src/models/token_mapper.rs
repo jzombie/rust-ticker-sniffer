@@ -45,6 +45,13 @@ impl TokenMapper {
             .collect()
     }
 
+    pub fn get_filtered_token_ids<'a>(&'a self, tokens: Vec<&'a str>) -> Vec<usize> {
+        tokens
+            .into_iter()
+            .filter_map(|token| self.get_token_id(token))
+            .collect()
+    }
+
     /// Gets the total number of unique tokens
     pub fn token_count(&self) -> usize {
         self.token_map.len()

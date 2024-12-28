@@ -78,10 +78,14 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         let filtered_tokens = self
             .token_mapper
             .get_filtered_tokens(text_doc_tokens.iter().map(|s| s.as_str()).collect());
+        let filtered_token_ids = self
+            .token_mapper
+            .get_filtered_token_ids(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
         // TODO: Remove
         println!("Text doc tokens: {:?}", text_doc_tokens);
         println!("Filtered tokens: {:?}", filtered_tokens,);
+        println!("Filtered token IDs: {:?}", filtered_token_ids,);
     }
 
     // pub fn process_company_name(&mut self, company_name: &str) -> Vec<usize> {
