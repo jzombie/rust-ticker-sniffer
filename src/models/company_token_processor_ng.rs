@@ -132,17 +132,33 @@ impl<'a> CompanyTokenProcessorNg<'a> {
                 for company in companies {
                     // Check if this token ID corresponds to the first word of any name or alternate name
                     if let Some(token_vectors) = self.company_name_token_map.get(company) {
-                        let mut matched_first_word = false;
-
                         for token_vector in token_vectors {
-                            if !token_vector.is_empty() && token_vector[0] == *token_id {
-                                matched_first_word = true;
-                                break;
+                            if token_vector.is_empty() {
+                                continue;
                             }
-                        }
 
-                        if matched_first_word {
-                            *match_counts.entry(company.clone()).or_insert(0) += 1;
+                            // Check if the first word matches
+                            if token_vector[0] == *token_id {
+                                // Check for consecutive token matching
+                                let mut company_idx = 0;
+                                let mut filtered_idx = 0;
+
+                                while company_idx < token_vector.len()
+                                    && filtered_idx < filtered_token_ids.len()
+                                {
+                                    if token_vector[company_idx] == filtered_token_ids[filtered_idx]
+                                    {
+                                        company_idx += 1;
+                                    }
+                                    filtered_idx += 1;
+
+                                    // If all tokens in the vector match consecutively
+                                    if company_idx == token_vector.len() {
+                                        *match_counts.entry(company.clone()).or_insert(0) += 1;
+                                        break; // Break after a successful match
+                                    }
+                                }
+                            }
                         }
                     }
                 }
