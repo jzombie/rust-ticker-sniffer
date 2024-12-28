@@ -160,6 +160,13 @@ impl Tokenizer {
         token.chars().map(|c| c as u32).collect()
     }
 
+    pub fn tokens_to_charcode_vectors(tokens: &Vec<&str>) -> Vec<TokenizerVectorToken> {
+        tokens
+            .iter()
+            .map(|token| Tokenizer::token_to_charcode_vector(token))
+            .collect()
+    }
+
     pub fn charcode_vector_to_token(charcodes: &TokenizerVectorToken) -> String {
         charcodes
             .iter()

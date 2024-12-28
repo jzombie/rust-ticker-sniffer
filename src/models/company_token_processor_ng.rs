@@ -1,13 +1,15 @@
 use crate::types::CompanySymbolList;
 use crate::TokenMapper;
 use crate::Tokenizer;
+use std::collections::HashMap;
 
 // TODO: Rename without the `Ng` suffix
 pub struct CompanyTokenProcessorNg<'a> {
-    pub company_symbol_list: &'a CompanySymbolList,
-    pub token_mapper: TokenMapper,
-    pub ticker_symbol_tokenizer: Tokenizer,
-    pub text_doc_tokenizer: Tokenizer,
+    company_symbol_list: &'a CompanySymbolList,
+    token_mapper: TokenMapper,
+    ticker_symbol_tokenizer: Tokenizer,
+    text_doc_tokenizer: Tokenizer,
+    company_name_token_map: HashMap<String, Vec<Vec<usize>>>,
 }
 
 impl<'a> CompanyTokenProcessorNg<'a> {
@@ -17,6 +19,7 @@ impl<'a> CompanyTokenProcessorNg<'a> {
             token_mapper: TokenMapper::new(),
             ticker_symbol_tokenizer: Tokenizer::ticker_symbol_parser(),
             text_doc_tokenizer: Tokenizer::text_doc_parser(),
+            company_name_token_map: HashMap::new(),
         };
 
         instance.ingest_company_tokens();
@@ -24,39 +27,50 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         instance
     }
 
+    /// Ingests tokens from the company symbol list
     fn ingest_company_tokens(&mut self) {
-        for (ticker_symbol, company_name, alternate_company_names) in self.company_symbol_list {
-            // println!("{}", ticker_symbol);
+        for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
+            // let company_name_key = company_name.clone().unwrap();
 
-            // Workaround for "urban-gro, Inc."
-            // The tokenizer filters on words with uppercase letters, which this does not have
-            // let uc_company_name = company_name.clone().unwrap().to_uppercase();
+            let mut all_company_name_token_ids = Vec::new();
 
+            // Tokenize the ticker symbol and upsert token IDs
             let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
             for ticker_symbol_token in ticker_symbol_tokens {
-                self.token_mapper.upsert_token(&ticker_symbol_token);
+                let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
+                all_company_name_token_ids.push(vec![ticker_symbol_token_id]);
             }
 
-            let company_name_tokens = self
-                .text_doc_tokenizer
-                .tokenize(&company_name.clone().unwrap());
-            for token in company_name_tokens {
-                // TODO: Retain map of company name token associations
-                self.token_mapper.upsert_token(&token);
+            if let Some(company_name) = company_name {
+                let company_name_token_ids = self.process_company_name_tokens(&company_name);
+                all_company_name_token_ids.push(company_name_token_ids);
             }
 
-            for alternate_company_name in alternate_company_names {
-                // let uc_alternate_name = alternate_company_name.clone().to_uppercase();
-                let alternate_company_name_tokens = self
-                    .text_doc_tokenizer
-                    .tokenize(&alternate_company_name.clone());
-
-                for token in alternate_company_name_tokens {
-                    // TODO: Retain map of alternate company name token associations
-                    self.token_mapper.upsert_token(&token);
-                }
+            // Process alternate company names
+            for alt_company_name in alt_company_names {
+                let alt_company_name_token_ids =
+                    self.process_company_name_tokens(&alt_company_name);
+                all_company_name_token_ids.push(alt_company_name_token_ids);
             }
+
+            // Insert the collected token IDs into the map
+            self.company_name_token_map
+                .entry(ticker_symbol.clone())
+                .or_insert_with(Vec::new)
+                .extend(all_company_name_token_ids);
         }
+    }
+
+    /// Helper method for per-company token ingestion
+    fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<usize> {
+        let company_name_tokens = self.text_doc_tokenizer.tokenize(&company_name);
+        let mut company_name_token_ids = Vec::new();
+        for token in company_name_tokens {
+            let token_id = self.token_mapper.upsert_token(&token);
+            company_name_token_ids.push(token_id);
+        }
+
+        company_name_token_ids
     }
 
     pub fn process_text_doc(&mut self, text: &str) {
