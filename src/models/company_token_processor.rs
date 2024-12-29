@@ -260,15 +260,15 @@ impl<'a> CompanyTokenProcessor<'a> {
                 }
 
                 // Debug print for the token parity state
-                println!(
-                    "ticker symbol: {}, {}, {}, {:?}",
-                    token_pairity_state.ticker_symbol,
-                    token_pairity_state.filtered_token_idx,
-                    self.token_mapper
-                        .get_token_by_id(token_pairity_state.filtered_token_id)
-                        .unwrap(),
-                    token_pairity_state
-                );
+                // println!(
+                //     "ticker symbol: {}, {}, {}, {:?}",
+                //     token_pairity_state.ticker_symbol,
+                //     token_pairity_state.filtered_token_idx,
+                //     self.token_mapper
+                //         .get_token_by_id(token_pairity_state.filtered_token_id)
+                //         .unwrap(),
+                //     token_pairity_state
+                // );
 
                 // Aggregate into range states
                 let key = (
@@ -336,12 +336,14 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Print the range states for debugging
         for token_range_state in &token_range_states {
-            println!(
-                "{:?}, Tokens: {:?}",
-                token_range_state,
-                self.token_mapper
-                    .get_tokens_by_ids(&token_range_state.filtered_token_ids)
-            );
+            if token_range_state.company_token_coverage >= 0.5 {
+                println!(
+                    "{:?}, Tokens: {:?}",
+                    token_range_state,
+                    self.token_mapper
+                        .get_tokens_by_ids(&token_range_state.filtered_token_ids)
+                );
+            }
         }
 
         // Convert the scores HashMap into a sorted Vec
