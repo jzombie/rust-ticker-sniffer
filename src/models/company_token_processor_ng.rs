@@ -128,57 +128,43 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         // Collect matches based on token IDs
         // let mut match_counts: HashMap<String, usize> = HashMap::new();
 
-        let mut first_match_token_ids = HashSet::new();
-        let mut first_match_ticker_symbols = HashSet::new();
+        let mut potential_token_id_sequences: HashMap<String, Vec<Vec<usize>>> = HashMap::new();
 
-        for token_id in &filtered_token_ids {
-            if let Some(possible_ticker_symbols) = self.reverse_token_map.get(token_id) {
+        for filtered_token_id in &filtered_token_ids {
+            if let Some(possible_ticker_symbols) = self.reverse_token_map.get(filtered_token_id) {
                 for ticker_symbol in possible_ticker_symbols {
-                    if let Some(token_ids_list) = self.company_name_token_map.get(ticker_symbol) {
-                        //     let mut max_match_count = 0;
-
-                        for token_ids in token_ids_list {
-                            if token_ids.is_empty() {
+                    if let Some(company_name_variations_token_ids_list) =
+                        self.company_name_token_map.get(ticker_symbol)
+                    {
+                        for company_name_variations_token_ids in
+                            company_name_variations_token_ids_list
+                        {
+                            if company_name_variations_token_ids.is_empty() {
                                 continue;
                             }
 
-                            let company_name_first_token_id = token_ids[0];
+                            let company_name_first_token_id = company_name_variations_token_ids[0];
 
-                            if *token_id == company_name_first_token_id {
-                                first_match_token_ids.insert(token_id);
-                                first_match_ticker_symbols.insert(ticker_symbol);
+                            if *filtered_token_id == company_name_first_token_id {
+                                // Add or update the hashmap entry for this ticker_symbol
+                                potential_token_id_sequences
+                                    .entry(ticker_symbol.clone())
+                                    .or_insert_with(Vec::new) // Create an empty Vec if the key doesn't exist
+                                    .retain(|existing_vec| {
+                                        *existing_vec != *company_name_variations_token_ids
+                                    }); // Remove duplicates
+
+                                if !potential_token_id_sequences
+                                    .get(&ticker_symbol.clone())
+                                    .unwrap()
+                                    .contains(&company_name_variations_token_ids)
+                                {
+                                    potential_token_id_sequences
+                                        .get_mut(&ticker_symbol.to_string())
+                                        .unwrap()
+                                        .push(company_name_variations_token_ids.clone());
+                                }
                             }
-
-                            //         let mut company_idx = 0;
-                            //         let mut filtered_idx = 0;
-                            //         let mut current_match_count = 0;
-
-                            //         while filtered_idx < filtered_token_ids.len() {
-                            //             if token_id_vector[company_idx] == filtered_token_ids[filtered_idx]
-                            //             {
-                            //                 company_idx += 1;
-                            //                 current_match_count += 1;
-
-                            //                 // Stop when the entire sequence matches
-                            //                 if company_idx == token_id_vector.len() {
-                            //                     max_match_count = current_match_count;
-
-                            //                     break;
-                            //                 }
-                            //             } else {
-                            //                 // Reset on mismatch
-                            //                 company_idx = 0;
-                            //                 current_match_count = 0;
-                            //             }
-                            //             filtered_idx += 1;
-                            //         }
-                            //     }
-
-                            //     if max_match_count > 0 {
-                            //         match_counts
-                            //             .entry(ticker_symbol.clone())
-                            //             .and_modify(|count| *count = (*count).max(max_match_count))
-                            //             .or_insert(max_match_count);
                         }
                     }
                 }
@@ -193,9 +179,6 @@ impl<'a> CompanyTokenProcessorNg<'a> {
         println!("Text doc tokens: {:?}", text_doc_tokens);
         println!("Filtered tokens: {:?}", filtered_tokens);
         println!("Filtered token IDs: {:?}", filtered_token_ids);
-        println!(
-            "Possible matches: {:?}, {:?}",
-            first_match_ticker_symbols, first_match_token_ids
-        );
+        println!("Possible matches:  {:?}", potential_token_id_sequences);
     }
 }
