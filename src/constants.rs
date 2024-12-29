@@ -8,9 +8,3 @@ pub const DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG: DocumentCompanyNameExtractorCon
         low_confidence_penalty_factor: 0.5,
         min_confidence_level_threshold: 0.5,
     };
-
-// TODO: Remove
-pub const DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS: &[(u64, f32)] = &[];
-
-// TODO: Remove
-pub const DEFAULT_BIAS_ADJUSTER_SCORE: f32 = 0.5;
