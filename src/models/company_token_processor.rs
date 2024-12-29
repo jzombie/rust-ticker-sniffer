@@ -13,6 +13,15 @@ pub struct CompanyTokenProcessor<'a> {
     company_reverse_token_map: HashMap<usize, Vec<TickerSymbol>>,
 }
 
+#[derive(Debug, Clone)]
+struct TokenParityState {
+    filtered_token_idx: usize,
+    filtered_token_id: usize,
+    ticker_symbol: TickerSymbol,
+    company_sequence_idx: usize,
+    company_sequence_token_idx: usize,
+}
+
 impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(company_symbol_list: &'a CompanySymbolList) -> Self {
         let mut instance = CompanyTokenProcessor {
@@ -171,85 +180,58 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
+        let mut token_pairity_states = Vec::new();
+
+        // Aggregate token pairity states
         for (ticker_symbol, company_token_sequences) in &potential_token_id_sequences {
-            // let mut scores: HashMap<String, f32> = HashMap::new();
-
-            for company_sequence_token_ids in company_token_sequences {
-                let total_sequence_token_ids = company_sequence_token_ids.len();
-
-                // let mut sequence_score = 0.0;
-                // let sequence_score_multiplier = 1.0 / total_sequence_token_ids as f32;
-
-                // let mut has_match_sequence_started = false;
-                // let mut has_match_sequence_ended = false;
-
-                // let mut sub_sequence_matches = Vec::new();
-
-                let mut is_partial_parity = false;
-
+            for (company_sequence_idx, company_sequence_token_ids) in
+                company_token_sequences.iter().enumerate()
+            {
                 for (filtered_token_idx, filtered_token_id) in filtered_token_ids.iter().enumerate()
                 {
                     for (company_sequence_token_idx, company_sequence_token_id) in
                         company_sequence_token_ids.iter().enumerate()
                     {
                         if company_sequence_token_id == filtered_token_id {
-                            if !is_partial_parity && company_sequence_token_idx == 0 {
-                                println!(
-                                    "ticker symbol: {}, {}",
-                                    ticker_symbol,
-                                    self.token_mapper
-                                        .get_token_by_id(*filtered_token_id)
-                                        .unwrap()
-                                );
-                            }
+                            token_pairity_states.push(TokenParityState {
+                                filtered_token_idx,
+                                filtered_token_id: *filtered_token_id,
+                                ticker_symbol: ticker_symbol.to_string(),
+                                company_sequence_idx,
+                                company_sequence_token_idx,
+                            });
                         }
-
-                        // if has_match_sequence_ended {
-                        //     break;
-                        // }
-
-                        // if !has_match_sequence_started && company_sequence_token_idx == 0
-                        //     || has_match_sequence_started
-                        //         && filtered_token_id == company_sequence_token_id
-                        // {
-                        //     has_match_sequence_started = true;
-
-                        //     println!(
-                        //         "{}, filtered token idx: {}, cmpy. seq. token idx: {}",
-                        //         ticker_symbol, filtered_token_idx, company_sequence_token_idx
-                        //     );
-
-                        //     sequence_score += sequence_score_multiplier;
-                        // } else if has_match_sequence_started {
-                        //     has_match_sequence_ended = true;
-                        //     break;
-                        // }
                     }
                 }
-
-                // if sequence_score > 0.0 {
-                //     println!(
-                //         "Ticker sequence score: {}, {}, {:?}",
-                //         ticker_symbol, sequence_score, total_sequence_token_ids
-                //     );
-                // }
-
-                // Add length of the sequence to the score
-                // score += sequence.len() as f32;
-
-                // Check if the sequence is in order within the filtered tokens
-                // if is_in_order(sequence, filtered_token_ids) {
-                //     score += 10.0; // Bonus for correct order
-                // }
-
-                // Add proximity score based on token distances in filtered tokens
-                // score += calculate_proximity(sequence, filtered_token_ids);
             }
+        }
 
-            // Add a frequency-based score
-            // score += (sequences.len() as f32) * 5.0;
+        // Reorder token_pairity_states
+        token_pairity_states.sort_by(|a, b| {
+            (
+                a.filtered_token_idx,
+                &a.ticker_symbol,
+                a.company_sequence_idx,
+                a.company_sequence_token_idx,
+            )
+                .cmp(&(
+                    b.filtered_token_idx,
+                    &b.ticker_symbol,
+                    b.company_sequence_idx,
+                    b.company_sequence_token_idx,
+                ))
+        });
 
-            // scores.insert(ticker_symbol.clone(), score);
+        for token_pairity_state in token_pairity_states {
+            println!(
+                "ticker symbol: {}, {}, {}, {:?}",
+                token_pairity_state.ticker_symbol,
+                token_pairity_state.filtered_token_idx,
+                self.token_mapper
+                    .get_token_by_id(token_pairity_state.filtered_token_id)
+                    .unwrap(),
+                token_pairity_state
+            );
         }
 
         // Convert the scores HashMap into a sorted Vec
