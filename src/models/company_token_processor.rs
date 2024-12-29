@@ -33,12 +33,21 @@ struct TokenRangeState {
     company_sequence_idx: usize,
     company_sequence_length: usize,
     company_sequence_token_indices: Vec<usize>,
+    company_token_coverage: f32,
     // company_name_token_frequencies: Vec<usize>,
     // company_name_token_frequencies_softmax: Vec<f64>,
     // company_name_token_vectors: Vec<TokenizerVectorToken>,
     // company_name_token_tf_idf_scores: Vec<f32>,
     // company_name_char_coverage: f32,
     // company_name_token_coverage: f32,
+}
+
+impl TokenRangeState {
+    /// Recalculates the coverage based on the filtered indices and sequence length
+    fn update_coverage(&mut self) {
+        self.company_token_coverage =
+            self.filtered_token_indices.len() as f32 / self.company_sequence_length as f32;
+    }
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -278,6 +287,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                             }
                         }
 
+                        // Update state with new values
                         state
                             .filtered_token_indices
                             .push(token_pairity_state.filtered_token_idx);
@@ -287,19 +297,29 @@ impl<'a> CompanyTokenProcessor<'a> {
                         state
                             .company_sequence_token_indices
                             .push(token_pairity_state.company_sequence_token_idx);
+
+                        // Centralized coverage calculation
+                        state.update_coverage();
                     })
-                    .or_insert_with(|| TokenRangeState {
-                        ticker_symbol: token_pairity_state.ticker_symbol.clone(),
-                        filtered_token_indices: vec![token_pairity_state.filtered_token_idx],
-                        filtered_token_ids: vec![token_pairity_state.filtered_token_id],
-                        company_sequence_idx: token_pairity_state.company_sequence_idx,
-                        company_sequence_length: potential_token_id_sequences
-                            .get(&token_pairity_state.ticker_symbol)
-                            .unwrap()[token_pairity_state.company_sequence_idx]
-                            .len(),
-                        company_sequence_token_indices: vec![
-                            token_pairity_state.company_sequence_token_idx,
-                        ],
+                    .or_insert_with(|| {
+                        let mut new_state = TokenRangeState {
+                            ticker_symbol: token_pairity_state.ticker_symbol.clone(),
+                            filtered_token_indices: vec![token_pairity_state.filtered_token_idx],
+                            filtered_token_ids: vec![token_pairity_state.filtered_token_id],
+                            company_sequence_idx: token_pairity_state.company_sequence_idx,
+                            company_sequence_length: potential_token_id_sequences
+                                .get(&token_pairity_state.ticker_symbol)
+                                .unwrap()[token_pairity_state.company_sequence_idx]
+                                .len(),
+                            company_sequence_token_indices: vec![
+                                token_pairity_state.company_sequence_token_idx,
+                            ],
+                            company_token_coverage: 0.0, // Initialize to zero
+                        };
+
+                        // Centralized coverage calculation
+                        new_state.update_coverage();
+                        new_state
                     });
             }
         }
@@ -307,9 +327,21 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Collect range states from the map
         token_range_states.extend(range_state_map.into_values());
 
+        // Sort the range states by coverage in descending order
+        token_range_states.sort_by(|a, b| {
+            b.company_token_coverage
+                .partial_cmp(&a.company_token_coverage)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         // Print the range states for debugging
         for token_range_state in &token_range_states {
-            println!("{:?}", token_range_state);
+            println!(
+                "{:?}, Tokens: {:?}",
+                token_range_state,
+                self.token_mapper
+                    .get_tokens_by_ids(&token_range_state.filtered_token_ids)
+            );
         }
 
         // Convert the scores HashMap into a sorted Vec

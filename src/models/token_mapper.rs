@@ -61,6 +61,12 @@ impl TokenMapper {
             .map(|token_vector| Tokenizer::charcode_vector_to_token(token_vector))
     }
 
+    pub fn get_tokens_by_ids(&self, ids: &[usize]) -> Vec<Option<String>> {
+        ids.iter()
+            .map(|&id| self.get_token_by_id(id)) // Call the wrapped `get_token_by_id`
+            .collect()
+    }
+
     /// Gets the total number of unique tokens
     pub fn token_count(&self) -> usize {
         self.token_map.len()
