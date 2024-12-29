@@ -1,14 +1,31 @@
+use crate::constants::STOP_WORDS;
 use crate::types::TokenizerVectorToken;
 use std::char;
+use std::collections::HashSet;
 
-pub struct Tokenizer {}
+pub struct Tokenizer {
+    pub filter_stop_words: bool,
+    pre_processed_stop_words: Option<HashSet<String>>,
+}
 
 // TODO: Company name and alternate names may not match the predefined rules (some may
 // be lowercase due to branding, etc.). The tokenizer should include a configuration which
 // uses those [potentially special-case] names as a corpus of items to tokenize against.
 impl Tokenizer {
-    pub fn new() -> Self {
-        Self {}
+    /// Configuration specifically for ticker symbol parsing
+    pub fn ticker_symbol_parser() -> Self {
+        Self {
+            // min_uppercase_ratio: Some(0.9),
+            filter_stop_words: false,
+            pre_processed_stop_words: None,
+        }
+    }
+    /// Configuration for arbitrary text doc parsing
+    pub fn text_doc_parser() -> Self {
+        Self {
+            filter_stop_words: true,
+            pre_processed_stop_words: Some(Self::preprocess_stop_words()),
+        }
     }
 
     /// Tokenizer function to split the text into individual tokens.
@@ -22,6 +39,8 @@ impl Tokenizer {
         //     let uppercase_chars = word.chars().filter(|c| c.is_uppercase()).count() as f32;
         //     uppercase_chars / total_chars
         // }
+
+        let stop_words = self.pre_processed_stop_words.as_ref();
 
         // Preprocess and tokenize the text
         text.replace("-\n", "") // Merge hyphenated words across lines
@@ -63,8 +82,21 @@ impl Tokenizer {
                     .collect::<String>() // Collect filtered characters into a String
                     .to_uppercase() // Convert to uppercase
             })
-            // Skip empty words
-            .filter(|word| !word.is_empty())
+            // Skip empty words and stop words
+            .filter(|word| word.is_empty() || stop_words.map_or(false, |sw| !sw.contains(word)))
+            .collect()
+    }
+
+    /// Pre-process the stop words by removing non-alphanumeric characters and converting to uppercase
+    fn preprocess_stop_words() -> HashSet<String> {
+        STOP_WORDS
+            .iter()
+            .map(|word| {
+                word.chars()
+                    .filter(|c| c.is_alphanumeric())
+                    .collect::<String>()
+                    .to_uppercase()
+            })
             .collect()
     }
 
