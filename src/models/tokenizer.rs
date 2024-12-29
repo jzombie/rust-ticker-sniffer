@@ -104,22 +104,19 @@ impl Tokenizer {
                     .collect::<String>() // Collect filtered characters into a String
                     .to_uppercase() // Convert to uppercase
             })
-            // Filter stop words and ignored words
+            // Filter empty words, stop words, ignored words
             .filter(|word| {
-                // Use preprocessed stop words for filtering
-                let passes_stop_words = !self.filter_stop_words
-                    || !self
-                        .pre_processed_stop_words
-                        .as_ref()
-                        .map_or(false, |stop_words| stop_words.contains(word));
-
-                let passes_ignored_words = !self.filter_ignored_words
-                    || !self
-                        .pre_processed_ignored_words
-                        .as_ref()
-                        .map_or(false, |ignored_words| ignored_words.contains(word));
-
-                passes_stop_words && passes_ignored_words
+                !word.is_empty() // Skip empty words
+                    && (!self.filter_stop_words
+                        || !self
+                            .pre_processed_stop_words
+                            .as_ref()
+                            .map_or(false, |stop_words| stop_words.contains(word)))
+                    && (!self.filter_ignored_words
+                        || !self
+                            .pre_processed_ignored_words
+                            .as_ref()
+                            .map_or(false, |ignored_words| ignored_words.contains(word)))
             })
             .collect()
     }
