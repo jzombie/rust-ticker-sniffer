@@ -4,7 +4,8 @@ use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
-    pub filter_stop_words: bool,
+    min_uppercase_ratio: Option<f32>,
+    filter_stop_words: bool,
     pre_processed_stop_words: Option<HashSet<String>>,
 }
 
@@ -15,7 +16,7 @@ impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
         Self {
-            // min_uppercase_ratio: Some(0.9),
+            min_uppercase_ratio: Some(0.9),
             filter_stop_words: false,
             pre_processed_stop_words: None,
         }
@@ -23,6 +24,7 @@ impl Tokenizer {
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
         Self {
+            min_uppercase_ratio: None,
             filter_stop_words: true,
             pre_processed_stop_words: Some(Self::preprocess_stop_words()),
         }
@@ -58,6 +60,17 @@ impl Tokenizer {
                     .filter(|c| c.is_alphanumeric())
                     .collect::<String>()
             })
+            .filter(|word| {
+                // Apply uppercase ratio filter and any capital letter requirement
+                let passes_uppercase_ratio = self
+                    .min_uppercase_ratio
+                    .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
+
+                let passes_any_caps_or_is_number =
+                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric());
+
+                passes_uppercase_ratio && passes_any_caps_or_is_number
+            })
             // Split hyphenated words into multiple words
             .flat_map(|word| {
                 let parts: Vec<String> = word
@@ -85,6 +98,15 @@ impl Tokenizer {
             // Skip empty words and stop words
             .filter(|word| word.is_empty() || stop_words.map_or(false, |sw| !sw.contains(word)))
             .collect()
+    }
+
+    fn calc_uppercase_ratio(&self, word: &str) -> f32 {
+        let total_chars = word.chars().count() as f32;
+        if total_chars == 0.0 {
+            return 0.0;
+        }
+        let uppercase_chars = word.chars().filter(|c| c.is_uppercase()).count() as f32;
+        uppercase_chars / total_chars
     }
 
     /// Pre-process the stop words by removing non-alphanumeric characters and converting to uppercase
