@@ -2,7 +2,7 @@ mod constants;
 pub mod models;
 pub use constants::{
     DEFAULT_BIAS_ADJUSTER_SCORE, DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG,
-    DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
+    DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS,
 };
 pub use models::{
     CompanyTokenProcessor, DocumentCompanyNameExtractorConfig, Error, TokenMapper, Tokenizer,

@@ -6,8 +6,7 @@ use std::collections::HashMap;
 pub struct CompanyTokenProcessor<'a> {
     company_symbol_list: &'a CompanySymbolList,
     token_mapper: TokenMapper,
-    ticker_symbol_tokenizer: Tokenizer,
-    text_doc_tokenizer: Tokenizer,
+    tokenizer: Tokenizer,
     // TODO: Use id instead of String
     company_name_token_map: HashMap<String, Vec<Vec<usize>>>,
     reverse_token_map: HashMap<usize, Vec<String>>,
@@ -18,8 +17,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let mut instance = CompanyTokenProcessor {
             company_symbol_list,
             token_mapper: TokenMapper::new(),
-            ticker_symbol_tokenizer: Tokenizer::ticker_symbol_parser(),
-            text_doc_tokenizer: Tokenizer::text_doc_parser(),
+            tokenizer: Tokenizer::new(),
             company_name_token_map: HashMap::with_capacity(company_symbol_list.len()),
             reverse_token_map: HashMap::new(),
         };
@@ -40,7 +38,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             let mut all_company_name_token_ids = Vec::new();
 
             // Tokenize the ticker symbol and upsert token IDs
-            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
+            let ticker_symbol_tokens = self.tokenizer.tokenize(&ticker_symbol);
             for ticker_symbol_token in ticker_symbol_tokens {
                 let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
                 all_company_name_token_ids.push(vec![ticker_symbol_token_id]);
@@ -90,7 +88,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     /// Helper method for per-company token ingestion
     fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<usize> {
-        let company_name_tokens = self.text_doc_tokenizer.tokenize(&company_name);
+        let company_name_tokens = self.tokenizer.tokenize(&company_name);
         let mut company_name_token_ids = Vec::new();
         for token in company_name_tokens {
             let token_id = self.token_mapper.upsert_token(&token);
@@ -102,7 +100,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     pub fn process_text_doc(&mut self, text: &str) {
         // Tokenize the input text
-        let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
+        let text_doc_tokens = self.tokenizer.tokenize(text);
 
         if text_doc_tokens.is_empty() {
             println!("No tokens found in the text document. Exiting.");
