@@ -15,11 +15,30 @@ pub struct CompanyTokenProcessor<'a> {
 
 #[derive(Debug, Clone)]
 struct TokenParityState {
+    ticker_symbol: TickerSymbol,
     filtered_token_idx: usize,
     filtered_token_id: usize,
-    ticker_symbol: TickerSymbol,
     company_sequence_idx: usize,
     company_sequence_token_idx: usize,
+}
+
+#[derive(Debug, Clone)]
+struct TokenRangeState {
+    ticker_symbol: TickerSymbol,
+    // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
+    // TODO: Track vector_similarity_state_indices?
+    // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
+    filtered_token_indices: Vec<usize>,
+    filtered_token_ids: Vec<usize>,
+    company_sequence_idx: usize,
+    company_sequence_length: usize,
+    company_sequence_token_indices: Vec<usize>,
+    // company_name_token_frequencies: Vec<usize>,
+    // company_name_token_frequencies_softmax: Vec<f64>,
+    // company_name_token_vectors: Vec<TokenizerVectorToken>,
+    // company_name_token_tf_idf_scores: Vec<f32>,
+    // company_name_char_coverage: f32,
+    // company_name_token_coverage: f32,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -194,9 +213,9 @@ impl<'a> CompanyTokenProcessor<'a> {
                     {
                         if company_sequence_token_id == filtered_token_id {
                             token_pairity_states.push(TokenParityState {
+                                ticker_symbol: ticker_symbol.to_string(),
                                 filtered_token_idx,
                                 filtered_token_id: *filtered_token_id,
-                                ticker_symbol: ticker_symbol.to_string(),
                                 company_sequence_idx,
                                 company_sequence_token_idx,
                             });
@@ -222,16 +241,75 @@ impl<'a> CompanyTokenProcessor<'a> {
                 ))
         });
 
-        for token_pairity_state in token_pairity_states {
-            println!(
-                "ticker symbol: {}, {}, {}, {:?}",
-                token_pairity_state.ticker_symbol,
-                token_pairity_state.filtered_token_idx,
-                self.token_mapper
-                    .get_token_by_id(token_pairity_state.filtered_token_id)
-                    .unwrap(),
-                token_pairity_state
-            );
+        let mut token_range_states: Vec<TokenRangeState> = Vec::new();
+        let mut range_state_map: HashMap<(String, usize), TokenRangeState> = HashMap::new();
+
+        for (ticker_symbol, _company_token_sequences) in &potential_token_id_sequences {
+            for token_pairity_state in &token_pairity_states {
+                if token_pairity_state.ticker_symbol != *ticker_symbol {
+                    continue;
+                }
+
+                // Debug print for the token parity state
+                println!(
+                    "ticker symbol: {}, {}, {}, {:?}",
+                    token_pairity_state.ticker_symbol,
+                    token_pairity_state.filtered_token_idx,
+                    self.token_mapper
+                        .get_token_by_id(token_pairity_state.filtered_token_id)
+                        .unwrap(),
+                    token_pairity_state
+                );
+
+                // Aggregate into range states
+                let key = (
+                    token_pairity_state.ticker_symbol.clone(),
+                    token_pairity_state.company_sequence_idx,
+                );
+
+                range_state_map
+                    .entry(key.clone())
+                    .and_modify(|state| {
+                        // Ensure contiguity of filtered_token_indices
+                        if let Some(&last_idx) = state.filtered_token_indices.last() {
+                            if token_pairity_state.filtered_token_idx != last_idx + 1 {
+                                // Not contiguous, skip further additions
+                                return;
+                            }
+                        }
+
+                        state
+                            .filtered_token_indices
+                            .push(token_pairity_state.filtered_token_idx);
+                        state
+                            .filtered_token_ids
+                            .push(token_pairity_state.filtered_token_id);
+                        state
+                            .company_sequence_token_indices
+                            .push(token_pairity_state.company_sequence_token_idx);
+                    })
+                    .or_insert_with(|| TokenRangeState {
+                        ticker_symbol: token_pairity_state.ticker_symbol.clone(),
+                        filtered_token_indices: vec![token_pairity_state.filtered_token_idx],
+                        filtered_token_ids: vec![token_pairity_state.filtered_token_id],
+                        company_sequence_idx: token_pairity_state.company_sequence_idx,
+                        company_sequence_length: potential_token_id_sequences
+                            .get(&token_pairity_state.ticker_symbol)
+                            .unwrap()[token_pairity_state.company_sequence_idx]
+                            .len(),
+                        company_sequence_token_indices: vec![
+                            token_pairity_state.company_sequence_token_idx,
+                        ],
+                    });
+            }
+        }
+
+        // Collect range states from the map
+        token_range_states.extend(range_state_map.into_values());
+
+        // Print the range states for debugging
+        for token_range_state in &token_range_states {
+            println!("{:?}", token_range_state);
         }
 
         // Convert the scores HashMap into a sorted Vec

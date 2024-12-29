@@ -109,7 +109,8 @@ fn main() {
     //     Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
     // "#;
 
-    let query = "Dow Jones Industrial Average";
+    // let query = "Dow Jones Industrial Average";
+    let query = "Berkshire Hathaway";
 
     // TODO: This includes a lot of repeated "Capital" entries, with only initial 0 window indexes.
     // This type of pattern should be filtered out so it effectively removes them entirely.
