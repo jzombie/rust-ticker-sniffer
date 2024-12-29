@@ -1,4 +1,5 @@
 use crate::types::CompanySymbolList;
+use crate::types::TickerSymbol;
 use crate::TokenMapper;
 use crate::Tokenizer;
 use std::collections::HashMap;
@@ -7,9 +8,8 @@ pub struct CompanyTokenProcessor<'a> {
     company_symbol_list: &'a CompanySymbolList,
     token_mapper: TokenMapper,
     tokenizer: Tokenizer,
-    // TODO: Use id instead of String
-    company_name_token_map: HashMap<String, Vec<Vec<usize>>>,
-    reverse_token_map: HashMap<usize, Vec<String>>,
+    company_token_map: HashMap<TickerSymbol, Vec<Vec<usize>>>,
+    reverse_token_map: HashMap<usize, Vec<TickerSymbol>>,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -18,7 +18,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             company_symbol_list,
             token_mapper: TokenMapper::new(),
             tokenizer: Tokenizer::new(),
-            company_name_token_map: HashMap::with_capacity(company_symbol_list.len()),
+            company_token_map: HashMap::with_capacity(company_symbol_list.len()),
             reverse_token_map: HashMap::new(),
         };
 
@@ -29,7 +29,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     /// Ingests tokens from the company symbol list
     fn ingest_company_tokens(&mut self) {
-        self.company_name_token_map.clear();
+        self.company_token_map.clear();
         self.reverse_token_map.clear();
 
         for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
@@ -79,7 +79,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             // Insert the collected token IDs into the map
-            self.company_name_token_map
+            self.company_token_map
                 .entry(ticker_symbol.clone())
                 .or_insert_with(Vec::new)
                 .extend(all_company_name_token_ids);
@@ -98,6 +98,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         company_name_token_ids
     }
 
+    // TODO: Use Result type for output
     pub fn process_text_doc(&mut self, text: &str) {
         // Tokenize the input text
         let text_doc_tokens = self.tokenizer.tokenize(text);
@@ -122,16 +123,14 @@ impl<'a> CompanyTokenProcessor<'a> {
             return;
         }
 
-        // Collect matches based on token IDs
-        // let mut match_counts: HashMap<String, usize> = HashMap::new();
-
-        let mut potential_token_id_sequences: HashMap<String, Vec<Vec<usize>>> = HashMap::new();
+        let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>> =
+            HashMap::new();
 
         for filtered_token_id in &filtered_token_ids {
             if let Some(possible_ticker_symbols) = self.reverse_token_map.get(filtered_token_id) {
                 for ticker_symbol in possible_ticker_symbols {
                     if let Some(company_name_variations_token_ids_list) =
-                        self.company_name_token_map.get(ticker_symbol)
+                        self.company_token_map.get(ticker_symbol)
                     {
                         for company_name_variations_token_ids in
                             company_name_variations_token_ids_list
@@ -168,11 +167,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        // // Convert matches to a Vec and sort by relevance
-        // let mut possible_matches: Vec<(String, usize)> = match_counts.into_iter().collect();
-        // possible_matches.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0))); // Sort by count, then alphabetically
-
-        // Print all relevant details
+        // TODO: Remove
         println!("Text doc tokens: {:?}", text_doc_tokens);
         println!("Filtered tokens: {:?}", filtered_tokens);
         println!("Filtered token IDs: {:?}", filtered_token_ids);
