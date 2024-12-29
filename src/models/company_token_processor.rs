@@ -8,7 +8,8 @@ pub struct CompanyTokenProcessor<'a> {
     company_symbol_list: &'a CompanySymbolList,
     token_mapper: TokenMapper,
     tokenizer: Tokenizer,
-    company_token_map: HashMap<TickerSymbol, Vec<Vec<usize>>>,
+    // TODO: Use TokenId instead of usize
+    company_token_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>>,
     company_reverse_token_map: HashMap<usize, Vec<TickerSymbol>>,
 }
 
@@ -18,7 +19,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             company_symbol_list,
             token_mapper: TokenMapper::new(),
             tokenizer: Tokenizer::new(),
-            company_token_map: HashMap::with_capacity(company_symbol_list.len()),
+            company_token_sequences: HashMap::with_capacity(company_symbol_list.len()),
             company_reverse_token_map: HashMap::new(),
         };
 
@@ -29,7 +30,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     /// Ingests tokens from the company symbol list
     fn ingest_company_tokens(&mut self) {
-        self.company_token_map.clear();
+        self.company_token_sequences.clear();
         self.company_reverse_token_map.clear();
 
         for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
@@ -79,7 +80,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             // Insert the collected token IDs into the map
-            self.company_token_map
+            self.company_token_sequences
                 .entry(ticker_symbol.clone())
                 .or_insert_with(Vec::new)
                 .extend(all_company_name_token_ids);
@@ -133,7 +134,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             {
                 for ticker_symbol in possible_ticker_symbols {
                     if let Some(company_name_variations_token_ids_list) =
-                        self.company_token_map.get(ticker_symbol)
+                        self.company_token_sequences.get(ticker_symbol)
                     {
                         for company_name_variations_token_ids in
                             company_name_variations_token_ids_list
