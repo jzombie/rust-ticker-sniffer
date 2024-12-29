@@ -5,8 +5,7 @@ pub use constants::{
     DEFAULT_RESULT_BIAS_ADJUSTER_WEIGHTS, TLD_LIST,
 };
 pub use models::{
-    CompanyTokenProcessor, CompanyTokenProcessorNg, DocumentCompanyNameExtractor,
-    DocumentCompanyNameExtractorConfig, DocumentEntityExtractor, Error, TokenMapper, Tokenizer,
+    CompanyTokenProcessor, DocumentCompanyNameExtractorConfig, Error, TokenMapper, Tokenizer,
 };
 pub mod types;
 mod utils;
@@ -35,7 +34,7 @@ pub fn extract_tickers_from_text_with_custom_config(
     company_symbols_list: &CompanySymbolList,
     document_company_name_extractor_config: DocumentCompanyNameExtractorConfig,
 ) -> Result<Vec<(TickerSymbol, f32)>, Error> {
-    let mut company_token_processor = CompanyTokenProcessorNg::new(company_symbols_list);
+    let mut company_token_processor = CompanyTokenProcessor::new(company_symbols_list);
     company_token_processor.process_text_doc(text);
 
     // TODO: Remove mock
