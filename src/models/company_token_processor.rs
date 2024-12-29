@@ -126,6 +126,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>> =
             HashMap::new();
 
+        // Identify token ID sequences which start with the first token of a company token sequence
         for filtered_token_id in &filtered_token_ids {
             if let Some(possible_ticker_symbols) = self.reverse_token_map.get(filtered_token_id) {
                 for ticker_symbol in possible_ticker_symbols {
@@ -167,10 +168,81 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
+        for (ticker_symbol, company_token_sequences) in &potential_token_id_sequences {
+            // let mut scores: HashMap<String, f32> = HashMap::new();
+
+            for company_sequence_token_ids in company_token_sequences {
+                let total_sequence_token_ids = company_sequence_token_ids.len();
+
+                let mut sequence_score = 0.0;
+                let sequence_score_multiplier = 1.0 / total_sequence_token_ids as f32;
+
+                let mut has_match_sequence_started = false;
+                let mut has_match_sequence_ended = false;
+
+                for (company_sequence_token_idx, company_sequence_token_id) in
+                    company_sequence_token_ids.iter().enumerate()
+                {
+                    if has_match_sequence_ended {
+                        break;
+                    }
+
+                    for (filtered_token_idx, filtered_token_id) in
+                        filtered_token_ids.iter().enumerate()
+                    {
+                        if !has_match_sequence_started && company_sequence_token_idx == 0
+                            || has_match_sequence_started
+                                && filtered_token_id == company_sequence_token_id
+                        {
+                            has_match_sequence_started = true;
+
+                            println!(
+                                "{}, filtered token idx: {}, cmpy. seq. token idx: {}",
+                                ticker_symbol, filtered_token_idx, company_sequence_token_idx
+                            );
+
+                            sequence_score += sequence_score_multiplier;
+                        } else if has_match_sequence_started {
+                            has_match_sequence_ended = true;
+                            break;
+                        }
+                    }
+                }
+
+                if sequence_score > 0.0 {
+                    println!(
+                        "Ticker sequence score: {}, {}, {:?}",
+                        ticker_symbol, sequence_score, total_sequence_token_ids
+                    );
+                }
+
+                // Add length of the sequence to the score
+                // score += sequence.len() as f32;
+
+                // Check if the sequence is in order within the filtered tokens
+                // if is_in_order(sequence, filtered_token_ids) {
+                //     score += 10.0; // Bonus for correct order
+                // }
+
+                // Add proximity score based on token distances in filtered tokens
+                // score += calculate_proximity(sequence, filtered_token_ids);
+            }
+
+            // Add a frequency-based score
+            // score += (sequences.len() as f32) * 5.0;
+
+            // scores.insert(ticker_symbol.clone(), score);
+        }
+
+        // Convert the scores HashMap into a sorted Vec
+        // let mut sorted_scores: Vec<(String, f32)> = scores.clone().into_iter().collect();
+        // sorted_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap()); // Sort descending by score
+
         // TODO: Remove
         println!("Text doc tokens: {:?}", text_doc_tokens);
         println!("Filtered tokens: {:?}", filtered_tokens);
         println!("Filtered token IDs: {:?}", filtered_token_ids);
         println!("Possible matches: {:?}", potential_token_id_sequences);
+        // println!("Scores: {:?}", scores);
     }
 }

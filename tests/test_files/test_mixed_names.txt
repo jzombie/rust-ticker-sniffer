@@ -1,7 +1,9 @@
-Apple is not Walmart, but maybe Amazon is okay, Hospitality REIT?
+Apple is not Walmart, but maybe Amazon is okay, Berkshire Hathaway is great, but what is Hospitality REIT?
 
 EXPECTED: AAPL
 EXPECTED: WMT
 EXPECTED: AMZN
+EXPECTED: BRK-A
+EXPECTED: BRK-B
 
 COMMENT: Apple Hospitality REIT (APLE) should be be a result.
