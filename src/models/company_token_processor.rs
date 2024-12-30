@@ -166,10 +166,9 @@ impl<'a> CompanyTokenProcessor<'a> {
             return;
         }
 
+        // Identify token ID sequences which start with the first token of a company token sequence
         let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>> =
             HashMap::new();
-
-        // Identify token ID sequences which start with the first token of a company token sequence
         for filtered_token_id in &filtered_token_ids {
             if let Some(possible_ticker_symbols) =
                 self.company_reverse_token_map.get(filtered_token_id)
@@ -213,9 +212,8 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        let mut token_pairity_states = Vec::new();
-
-        // Aggregate token pairity states
+        // Aggregate token parity states
+        let mut token_parity_states = Vec::new();
         for (ticker_symbol, company_token_sequences) in &potential_token_id_sequences {
             for (company_sequence_idx, company_sequence_token_ids) in
                 company_token_sequences.iter().enumerate()
@@ -226,7 +224,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         company_sequence_token_ids.iter().enumerate()
                     {
                         if company_sequence_token_id == filtered_token_id {
-                            token_pairity_states.push(TokenParityState {
+                            token_parity_states.push(TokenParityState {
                                 ticker_symbol: ticker_symbol.to_string(),
                                 filtered_token_idx,
                                 filtered_token_id: *filtered_token_id,
@@ -239,8 +237,8 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        // Reorder token_pairity_states
-        token_pairity_states.sort_by(|a, b| {
+        // Reorder token_parity_states
+        token_parity_states.sort_by(|a, b| {
             (
                 a.filtered_token_idx,
                 &a.ticker_symbol,
@@ -255,30 +253,30 @@ impl<'a> CompanyTokenProcessor<'a> {
                 ))
         });
 
+        // Determine range states
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
         let mut range_state_map: HashMap<(String, usize), TokenRangeState> = HashMap::new();
-
         for (ticker_symbol, _company_token_sequences) in &potential_token_id_sequences {
-            for token_pairity_state in &token_pairity_states {
-                if token_pairity_state.ticker_symbol != *ticker_symbol {
+            for token_parity_state in &token_parity_states {
+                if token_parity_state.ticker_symbol != *ticker_symbol {
                     continue;
                 }
 
                 // Debug print for the token parity state
                 // println!(
                 //     "ticker symbol: {}, {}, {}, {:?}",
-                //     token_pairity_state.ticker_symbol,
-                //     token_pairity_state.filtered_token_idx,
+                //     token_parity_state.ticker_symbol,
+                //     token_parity_state.filtered_token_idx,
                 //     self.token_mapper
-                //         .get_token_by_id(token_pairity_state.filtered_token_id)
+                //         .get_token_by_id(token_parity_state.filtered_token_id)
                 //         .unwrap(),
-                //     token_pairity_state
+                //     token_parity_state
                 // );
 
                 // Aggregate into range states
                 let key = (
-                    token_pairity_state.ticker_symbol.clone(),
-                    token_pairity_state.company_sequence_idx,
+                    token_parity_state.ticker_symbol.clone(),
+                    token_parity_state.company_sequence_idx,
                 );
 
                 range_state_map
@@ -286,7 +284,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     .and_modify(|state| {
                         // Ensure contiguity of filtered_token_indices
                         if let Some(&last_idx) = state.filtered_token_indices.last() {
-                            if token_pairity_state.filtered_token_idx != last_idx + 1 {
+                            if token_parity_state.filtered_token_idx != last_idx + 1 {
                                 // Not contiguous, skip further additions
                                 return;
                             }
@@ -295,29 +293,29 @@ impl<'a> CompanyTokenProcessor<'a> {
                         // Update state with new values
                         state
                             .filtered_token_indices
-                            .push(token_pairity_state.filtered_token_idx);
+                            .push(token_parity_state.filtered_token_idx);
                         state
                             .filtered_token_ids
-                            .push(token_pairity_state.filtered_token_id);
+                            .push(token_parity_state.filtered_token_id);
                         state
                             .company_sequence_token_indices
-                            .push(token_pairity_state.company_sequence_token_idx);
+                            .push(token_parity_state.company_sequence_token_idx);
 
                         // Centralized coverage calculation
                         state.update_coverage();
                     })
                     .or_insert_with(|| {
                         let mut new_state = TokenRangeState {
-                            ticker_symbol: token_pairity_state.ticker_symbol.clone(),
-                            filtered_token_indices: vec![token_pairity_state.filtered_token_idx],
-                            filtered_token_ids: vec![token_pairity_state.filtered_token_id],
-                            company_sequence_idx: token_pairity_state.company_sequence_idx,
+                            ticker_symbol: token_parity_state.ticker_symbol.clone(),
+                            filtered_token_indices: vec![token_parity_state.filtered_token_idx],
+                            filtered_token_ids: vec![token_parity_state.filtered_token_id],
+                            company_sequence_idx: token_parity_state.company_sequence_idx,
                             company_sequence_length: potential_token_id_sequences
-                                .get(&token_pairity_state.ticker_symbol)
-                                .unwrap()[token_pairity_state.company_sequence_idx]
+                                .get(&token_parity_state.ticker_symbol)
+                                .unwrap()[token_parity_state.company_sequence_idx]
                                 .len(),
                             company_sequence_token_indices: vec![
-                                token_pairity_state.company_sequence_token_idx,
+                                token_parity_state.company_sequence_token_idx,
                             ],
                             company_token_coverage: 0.0, // Initialize to zero
                         };
