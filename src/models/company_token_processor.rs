@@ -349,6 +349,8 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
+        // TODO: Determine the highest scores which map to each filtered token index
+
         // Convert the scores HashMap into a sorted Vec
         // let mut sorted_scores: Vec<(String, f32)> = scores.clone().into_iter().collect();
         // sorted_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap()); // Sort descending by score
