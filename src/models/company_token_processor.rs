@@ -374,6 +374,12 @@ impl<'a> CompanyTokenProcessor<'a> {
                 }
             }
 
+            // Filter token_scores to retain only the highest scores
+            if !token_scores.is_empty() {
+                let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
+                token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
+            }
+
             // Debug output for the current token index
             println!(
                 "Filtered Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
