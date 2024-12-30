@@ -354,39 +354,33 @@ impl<'a> CompanyTokenProcessor<'a> {
             // Initialize a map to store scores for this token
             let mut token_scores: HashMap<String, f32> = HashMap::new();
 
-            // Iterate over possible ticker symbols for this token ID
-            if let Some(possible_ticker_symbols) =
-                self.company_reverse_token_map.get(filtered_token_id)
-            {
-                for ticker_symbol in possible_ticker_symbols {
-                    if let Some(company_sequences) = self.company_token_sequences.get(ticker_symbol)
-                    {
-                        for (seq_idx, sequence) in company_sequences.iter().enumerate() {
-                            if sequence.contains(filtered_token_id) {
-                                // Calculate a score (e.g., coverage or relevance)
-                                let score = sequence
-                                    .iter()
-                                    .filter(|&&id| id == *filtered_token_id)
-                                    .count() as f32
-                                    / sequence.len() as f32;
+            // Iterate over all token range states
+            for token_range_state in &token_range_states {
+                // Check if the current filtered token ID is part of the filtered token IDs in the range state
+                if token_range_state
+                    .filtered_token_ids
+                    .contains(filtered_token_id)
+                {
+                    // Use the company_token_coverage directly as the score
+                    let score = token_range_state.company_token_coverage;
 
-                                // Update the score map for this ticker symbol
-                                token_scores
-                                    .entry(ticker_symbol.clone())
-                                    .and_modify(|existing_score| {
-                                        *existing_score = (*existing_score).max(score)
-                                    })
-                                    .or_insert(score);
-                            }
-                        }
-                    }
+                    // Update the score map for this ticker symbol
+                    token_scores
+                        .entry(token_range_state.ticker_symbol.clone())
+                        .and_modify(|existing_score| {
+                            *existing_score = (*existing_score).max(score);
+                        })
+                        .or_insert(score);
                 }
             }
 
             // Debug output for the current token index
             println!(
-                "Filtered Token Index: {}, Token ID: {}, Scores: {:?}",
-                filtered_token_idx, filtered_token_id, token_scores
+                "Filtered Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
+                filtered_token_idx,
+                filtered_token_id,
+                self.token_mapper.get_token_by_id(*filtered_token_id),
+                token_scores
             );
         }
 
