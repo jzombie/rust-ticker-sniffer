@@ -359,8 +359,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                     continue;
                 }
 
-                is_new_sub_sequence = last_company_sequence_idx
-                    != token_parity_state.company_sequence_idx
+                is_new_sub_sequence = token_parity_state.company_sequence_token_idx == 0
+                    || last_company_sequence_idx != token_parity_state.company_sequence_idx
                     || token_parity_state.company_sequence_token_idx
                         != last_company_sequence_token_idx + 1
                     || token_parity_state.query_token_idx != last_query_token_idx + 1;
@@ -370,7 +370,10 @@ impl<'a> CompanyTokenProcessor<'a> {
                     if let Some(ref mut token_range_state) = token_range_state {
                         if !token_range_state.is_finalized {
                             token_range_state.finalize();
-                            token_range_states.push(token_range_state.clone());
+
+                            if !token_range_state.query_token_indices.is_empty() {
+                                token_range_states.push(token_range_state.clone());
+                            }
                         }
                     }
 
@@ -384,37 +387,20 @@ impl<'a> CompanyTokenProcessor<'a> {
                         // TODO: Replace with ?
                         .unwrap(),
                     ));
-
-                    //     println!(
-                    //         "-->  last seq. tok. idx: {}, curr seq. tok. idx: {}, last fti: {}, fti: {}",
-                    //         last_company_sequence_token_idx,
-                    //         token_parity_state.company_sequence_token_idx,
-                    //         last_query_token_idx,
-                    //         token_parity_state.query_token_idx
-                    //     );
                 }
 
-                // println!(
-                //     "{:?}, {:?}",
-                //     token_parity_state,
-                //     self.token_mapper
-                //         .get_token_by_id(token_parity_state.query_token_id)
-                // );
-
                 if let Some(ref mut token_range_state) = token_range_state {
-                    if ticker_symbol == "GJO" {
-                        println!(
-                            "GJO... {:?}",
-                            self.token_mapper
-                                .get_token_by_id((token_parity_state.query_token_id))
+                    // Only add the current token to the token range if:
+                    // - It's not a new subsequence, or
+                    // - It is the first token in the company sequence.
+                    if !(is_new_sub_sequence && token_parity_state.company_sequence_token_idx != 0)
+                    {
+                        token_range_state.add_partial_state(
+                            token_parity_state.query_token_idx,
+                            token_parity_state.query_token_id,
+                            token_parity_state.company_sequence_token_idx,
                         );
                     }
-
-                    token_range_state.add_partial_state(
-                        token_parity_state.query_token_idx,
-                        token_parity_state.query_token_id,
-                        token_parity_state.company_sequence_token_idx,
-                    );
                 }
 
                 last_company_sequence_idx = token_parity_state.company_sequence_idx;
@@ -428,7 +414,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             if let Some(ref mut token_range_state) = token_range_state {
                 if !token_range_state.is_finalized {
                     token_range_state.finalize();
-                    token_range_states.push(token_range_state.clone());
+
+                    if !token_range_state.query_token_indices.is_empty() {
+                        token_range_states.push(token_range_state.clone());
+                    }
                 }
             }
 
