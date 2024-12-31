@@ -234,8 +234,9 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // Identify token ID sequences which start with the first token of a company token sequence
-        let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>> =
+        let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<(usize, Vec<usize>)>> =
             HashMap::new();
+
         for query_token_id in &query_token_ids {
             if let Some(possible_ticker_symbols) =
                 self.company_reverse_token_map.get(query_token_id)
@@ -244,8 +245,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                     if let Some(company_name_variations_token_ids_list) =
                         self.company_token_sequences.get(ticker_symbol)
                     {
-                        for company_name_variations_token_ids in
-                            company_name_variations_token_ids_list
+                        for (company_token_sequence_idx, company_name_variations_token_ids) in
+                            company_name_variations_token_ids_list.iter().enumerate()
                         {
                             if company_name_variations_token_ids.is_empty() {
                                 continue;
@@ -258,19 +259,27 @@ impl<'a> CompanyTokenProcessor<'a> {
                                 potential_token_id_sequences
                                     .entry(ticker_symbol.clone())
                                     .or_insert_with(Vec::new) // Create an empty Vec if the key doesn't exist
-                                    .retain(|existing_vec| {
-                                        *existing_vec != *company_name_variations_token_ids
+                                    .retain(|(existing_idx, existing_vec)| {
+                                        *existing_idx != company_token_sequence_idx
+                                            || *existing_vec != *company_name_variations_token_ids
                                     }); // Remove duplicates
 
                                 if !potential_token_id_sequences
                                     .get(&ticker_symbol.clone())
                                     .unwrap()
-                                    .contains(&company_name_variations_token_ids)
+                                    .iter()
+                                    .any(|(existing_idx, existing_vec)| {
+                                        *existing_idx == company_token_sequence_idx
+                                            && *existing_vec == *company_name_variations_token_ids
+                                    })
                                 {
                                     potential_token_id_sequences
                                         .get_mut(&ticker_symbol.to_string())
                                         .unwrap()
-                                        .push(company_name_variations_token_ids.clone());
+                                        .push((
+                                            company_token_sequence_idx,
+                                            company_name_variations_token_ids.clone(),
+                                        ));
                                 }
                             }
                         }
@@ -282,10 +291,11 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Aggregate token parity states
         let mut token_parity_states = Vec::new();
         for (ticker_symbol, company_token_sequences) in &potential_token_id_sequences {
-            for (company_sequence_idx, company_sequence_token_ids) in
-                company_token_sequences.iter().enumerate()
-            {
+            for company_sequence_tuple in company_token_sequences {
                 for (query_token_idx, query_token_id) in query_token_ids.iter().enumerate() {
+                    let company_sequence_idx = &company_sequence_tuple.0;
+                    let company_sequence_token_ids = &company_sequence_tuple.1;
+
                     for (company_sequence_token_idx, company_sequence_token_id) in
                         company_sequence_token_ids.iter().enumerate()
                     {
@@ -294,7 +304,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                                 ticker_symbol: ticker_symbol.to_string(),
                                 query_token_idx,
                                 query_token_id: *query_token_id,
-                                company_sequence_idx,
+                                company_sequence_idx: *company_sequence_idx,
                                 company_sequence_token_idx,
                             });
                         }
