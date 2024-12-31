@@ -413,7 +413,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     token_range_state.add_partial_state(
                         token_parity_state.query_token_idx,
                         token_parity_state.query_token_id,
-                        token_parity_state.company_sequence_idx,
+                        token_parity_state.company_sequence_token_idx,
                     );
                 }
 
