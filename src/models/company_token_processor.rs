@@ -17,8 +17,8 @@ pub struct CompanyTokenProcessor<'a> {
 #[derive(Debug, Clone)]
 struct TokenParityState {
     ticker_symbol: TickerSymbol,
-    filtered_token_idx: usize,
-    filtered_token_id: usize,
+    query_token_idx: usize,
+    query_token_id: usize,
     company_sequence_idx: usize,
     company_sequence_token_idx: usize,
 }
@@ -29,8 +29,8 @@ struct TokenRangeState {
     // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
-    filtered_token_indices: Vec<usize>,
-    filtered_token_ids: Vec<usize>,
+    query_token_indices: Vec<usize>,
+    query_token_ids: Vec<usize>,
     company_sequence_idx: usize,
     company_sequence_length: usize,
     company_sequence_token_indices: Vec<usize>,
@@ -47,7 +47,7 @@ impl TokenRangeState {
     /// Recalculates the coverage based on the filtered indices and sequence length
     fn update_coverage(&mut self) {
         self.company_token_coverage =
-            self.filtered_token_indices.len() as f32 / self.company_sequence_length as f32;
+            self.query_token_indices.len() as f32 / self.company_sequence_length as f32;
     }
 }
 
@@ -152,16 +152,16 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // Get the filtered tokens (tokens present in the TokenMapper)
-        let filtered_tokens = self
+        let query_tokens = self
             .token_mapper
             .get_filtered_tokens(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
         // Get the filtered token IDs (IDs present in the TokenMapper)
-        let filtered_token_ids = self
+        let query_token_ids = self
             .token_mapper
             .get_filtered_token_ids(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
-        if filtered_token_ids.is_empty() {
+        if query_token_ids.is_empty() {
             println!("No token IDs found in the document.");
             return;
         }
@@ -169,9 +169,9 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Identify token ID sequences which start with the first token of a company token sequence
         let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>> =
             HashMap::new();
-        for filtered_token_id in &filtered_token_ids {
+        for query_token_id in &query_token_ids {
             if let Some(possible_ticker_symbols) =
-                self.company_reverse_token_map.get(filtered_token_id)
+                self.company_reverse_token_map.get(query_token_id)
             {
                 for ticker_symbol in possible_ticker_symbols {
                     if let Some(company_name_variations_token_ids_list) =
@@ -186,7 +186,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                             let company_name_first_token_id = company_name_variations_token_ids[0];
 
-                            if *filtered_token_id == company_name_first_token_id {
+                            if *query_token_id == company_name_first_token_id {
                                 // Add or update the hashmap entry for this ticker_symbol
                                 potential_token_id_sequences
                                     .entry(ticker_symbol.clone())
@@ -218,16 +218,15 @@ impl<'a> CompanyTokenProcessor<'a> {
             for (company_sequence_idx, company_sequence_token_ids) in
                 company_token_sequences.iter().enumerate()
             {
-                for (filtered_token_idx, filtered_token_id) in filtered_token_ids.iter().enumerate()
-                {
+                for (query_token_idx, query_token_id) in query_token_ids.iter().enumerate() {
                     for (company_sequence_token_idx, company_sequence_token_id) in
                         company_sequence_token_ids.iter().enumerate()
                     {
-                        if company_sequence_token_id == filtered_token_id {
+                        if company_sequence_token_id == query_token_id {
                             token_parity_states.push(TokenParityState {
                                 ticker_symbol: ticker_symbol.to_string(),
-                                filtered_token_idx,
-                                filtered_token_id: *filtered_token_id,
+                                query_token_idx,
+                                query_token_id: *query_token_id,
                                 company_sequence_idx,
                                 company_sequence_token_idx,
                             });
@@ -242,13 +241,13 @@ impl<'a> CompanyTokenProcessor<'a> {
             (
                 &a.ticker_symbol,
                 a.company_sequence_idx,
-                a.filtered_token_idx,
+                a.query_token_idx,
                 a.company_sequence_token_idx,
             )
                 .cmp(&(
                     &b.ticker_symbol,
                     b.company_sequence_idx,
-                    b.filtered_token_idx,
+                    b.query_token_idx,
                     b.company_sequence_token_idx,
                 ))
         });
@@ -258,7 +257,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         //         "{:?}, {:?}",
         //         token_parity_state,
         //         self.token_mapper
-        //             .get_token_by_id(token_parity_state.filtered_token_id)
+        //             .get_token_by_id(token_parity_state.query_token_id)
         //     );
         // }
 
@@ -266,10 +265,29 @@ impl<'a> CompanyTokenProcessor<'a> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
         let mut range_state_map: HashMap<String, Vec<TokenRangeState>> = HashMap::new();
 
+        // TODO: Refactor
+        // fn upsert_consecutive_query_token_indices(
+        //     &self,
+        //     ticker_symbol: &TickerSymbol,
+        //     symbol_consecutive_query_token_indices: &mut HashMap<String, Vec<Vec<usize>>>,
+        //     consecutive_query_token_indices: &mut Vec<usize>,
+        // ) {
+        //     symbol_consecutive_query_token_indices
+        //         .entry(symbol.clone())
+        //         .and_modify(|existing_ranges| {
+        //             let next = consecutive_query_token_indices.clone();
+
+        //             if !existing_ranges.contains(&next) {
+        //                 existing_ranges.push(next);
+        //             }
+        //         })
+        //         .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
+        // }
+
         for (ticker_symbol, _) in &potential_token_id_sequences {
             let mut last_company_sequence_idx = usize::MAX - 1;
             let mut last_company_sequence_token_idx = usize::MAX - 1;
-            let mut last_filtered_token_idx = usize::MAX - 1;
+            let mut last_query_token_idx = usize::MAX - 1;
 
             let mut is_new_sub_sequence = false;
 
@@ -279,7 +297,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                     last_company_sequence_idx = usize::MAX - 1;
                     last_company_sequence_token_idx = usize::MAX - 1;
-                    last_filtered_token_idx = usize::MAX - 1;
+                    last_query_token_idx = usize::MAX - 1;
 
                     continue;
                 }
@@ -288,7 +306,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     != token_parity_state.company_sequence_idx
                     || token_parity_state.company_sequence_token_idx
                         != last_company_sequence_token_idx + 1
-                    || token_parity_state.filtered_token_idx != last_filtered_token_idx + 1;
+                    || token_parity_state.query_token_idx != last_query_token_idx + 1;
 
                 if is_new_sub_sequence {
                     // TODO: Finalize previous batch, if exists
@@ -297,8 +315,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                         "-->  last seq. tok. idx: {}, curr seq. tok. idx: {}, last fti: {}, fti: {}",
                         last_company_sequence_token_idx,
                         token_parity_state.company_sequence_token_idx,
-                        last_filtered_token_idx,
-                        token_parity_state.filtered_token_idx
+                        last_query_token_idx,
+                        token_parity_state.query_token_idx
                     );
                 }
 
@@ -306,12 +324,12 @@ impl<'a> CompanyTokenProcessor<'a> {
                     "{:?}, {:?}",
                     token_parity_state,
                     self.token_mapper
-                        .get_token_by_id(token_parity_state.filtered_token_id)
+                        .get_token_by_id(token_parity_state.query_token_id)
                 );
 
                 last_company_sequence_idx = token_parity_state.company_sequence_idx;
                 last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
-                last_filtered_token_idx = token_parity_state.filtered_token_idx;
+                last_query_token_idx = token_parity_state.query_token_idx;
 
                 is_new_sub_sequence = false;
             }
@@ -328,8 +346,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         //         .filter(|state| state.ticker_symbol == *ticker_symbol)
         //         .collect();
 
-        //     // Sort by filtered_token_idx to ensure ordered processing
-        //     filtered_states.sort_by_key(|state| state.filtered_token_idx);
+        //     // Sort by query_token_idx to ensure ordered processing
+        //     filtered_states.sort_by_key(|state| state.query_token_idx);
 
         //     // Capture contiguous sequences
         //     let mut current_indices = Vec::new();
@@ -341,11 +359,11 @@ impl<'a> CompanyTokenProcessor<'a> {
         //             let last_sequence_index = current_token_indices.last().unwrap_or(&usize::MAX);
 
         //             // Merge if both indices increment together
-        //             if state.filtered_token_idx == last_filtered_index + 1
+        //             if state.query_token_idx == last_filtered_index + 1
         //                 && state.company_sequence_token_idx == *last_sequence_index + 1
         //             {
-        //                 current_indices.push(state.filtered_token_idx);
-        //                 current_ids.push(state.filtered_token_id);
+        //                 current_indices.push(state.query_token_idx);
+        //                 current_ids.push(state.query_token_id);
         //                 current_token_indices.push(state.company_sequence_token_idx);
         //                 continue;
         //             }
@@ -359,8 +377,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         //                 .or_insert_with(Vec::new)
         //                 .push(TokenRangeState {
         //                     ticker_symbol: ticker_symbol.clone(),
-        //                     filtered_token_indices: current_indices.clone(),
-        //                     filtered_token_ids: current_ids.clone(),
+        //                     query_token_indices: current_indices.clone(),
+        //                     query_token_ids: current_ids.clone(),
         //                     company_sequence_idx: state.company_sequence_idx, // Use the correct index
         //                     company_sequence_length,
         //                     company_sequence_token_indices: current_token_indices.clone(),
@@ -370,8 +388,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         //         }
 
         //         // Start a new sequence
-        //         current_indices = vec![state.filtered_token_idx];
-        //         current_ids = vec![state.filtered_token_id];
+        //         current_indices = vec![state.query_token_idx];
+        //         current_ids = vec![state.query_token_id];
         //         current_token_indices = vec![state.company_sequence_token_idx];
         //     }
 
@@ -383,8 +401,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         //             .or_insert_with(Vec::new)
         //             .push(TokenRangeState {
         //                 ticker_symbol: ticker_symbol.clone(),
-        //                 filtered_token_indices: current_indices.clone(),
-        //                 filtered_token_ids: current_ids.clone(),
+        //                 query_token_indices: current_indices.clone(),
+        //                 query_token_ids: current_ids.clone(),
         //                 company_sequence_idx: 0,
         //                 company_sequence_length,
         //                 company_sequence_token_indices: current_token_indices.clone(),
@@ -406,23 +424,20 @@ impl<'a> CompanyTokenProcessor<'a> {
                 "{:?}, Tokens: {:?}",
                 token_range_state,
                 self.token_mapper
-                    .get_tokens_by_ids(&token_range_state.filtered_token_ids)
+                    .get_tokens_by_ids(&token_range_state.query_token_ids)
             );
             // }
         }
 
         // TODO: Determine the highest scores which map to each filtered token index
-        for (filtered_token_idx, filtered_token_id) in filtered_token_ids.iter().enumerate() {
+        for (query_token_idx, query_token_id) in query_token_ids.iter().enumerate() {
             // Initialize a map to store scores for this token
             let mut token_scores: HashMap<String, f32> = HashMap::new();
 
             // Iterate over all token range states
             for token_range_state in &token_range_states {
                 // Check if the current filtered token ID is part of the filtered token IDs in the range state
-                if token_range_state
-                    .filtered_token_ids
-                    .contains(filtered_token_id)
-                {
+                if token_range_state.query_token_ids.contains(query_token_id) {
                     // Use the company_token_coverage directly as the score
                     let score = token_range_state.company_token_coverage;
 
@@ -445,9 +460,9 @@ impl<'a> CompanyTokenProcessor<'a> {
             // Debug output for the current token index
             println!(
                 "Filtered Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
-                filtered_token_idx,
-                filtered_token_id,
-                self.token_mapper.get_token_by_id(*filtered_token_id),
+                query_token_idx,
+                query_token_id,
+                self.token_mapper.get_token_by_id(*query_token_id),
                 token_scores
             );
         }
@@ -458,8 +473,8 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // TODO: Remove
         println!("Text doc tokens: {:?}", text_doc_tokens);
-        println!("Filtered tokens: {:?}", filtered_tokens);
-        println!("Filtered token IDs: {:?}", filtered_token_ids);
+        println!("Filtered tokens: {:?}", query_tokens);
+        println!("Filtered token IDs: {:?}", query_token_ids);
         println!("Possible matches: {:?}", potential_token_id_sequences);
         // println!("Scores: {:?}", scores);
     }
