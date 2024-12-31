@@ -32,22 +32,51 @@ struct TokenRangeState {
     query_token_indices: Vec<usize>,
     query_token_ids: Vec<usize>,
     company_sequence_idx: usize,
-    company_sequence_length: usize,
     company_sequence_token_indices: Vec<usize>,
+    company_sequence_max_length: usize,
     company_token_coverage: f32,
-    // company_name_token_frequencies: Vec<usize>,
-    // company_name_token_frequencies_softmax: Vec<f64>,
-    // company_name_token_vectors: Vec<TokenizerVectorToken>,
-    // company_name_token_tf_idf_scores: Vec<f32>,
-    // company_name_char_coverage: f32,
-    // company_name_token_coverage: f32,
+    is_finalized: bool,
 }
 
 impl TokenRangeState {
+    fn new(
+        ticker_symbol: TickerSymbol,
+        company_sequence_idx: usize,
+        company_sequence_max_length: usize,
+    ) -> Self {
+        TokenRangeState {
+            ticker_symbol,
+            query_token_indices: vec![],
+            query_token_ids: vec![],
+            company_sequence_idx,
+            company_sequence_token_indices: vec![],
+            company_sequence_max_length,
+            company_token_coverage: 0.0,
+            is_finalized: false,
+        }
+    }
+
+    fn add_partial_state(
+        &mut self,
+        query_token_idx: usize,
+        query_token_id: usize,
+        company_sequence_token_idx: usize,
+    ) {
+        self.query_token_indices.push(query_token_idx);
+        self.query_token_ids.push(query_token_id);
+        self.company_sequence_token_indices
+            .push(company_sequence_token_idx);
+    }
+
+    fn finalize(&mut self) {
+        self.update_coverage();
+        self.is_finalized = true;
+    }
+
     /// Recalculates the coverage based on the filtered indices and sequence length
     fn update_coverage(&mut self) {
         self.company_token_coverage =
-            self.query_token_indices.len() as f32 / self.company_sequence_length as f32;
+            self.query_token_indices.len() as f32 / self.company_sequence_max_length as f32;
     }
 }
 
@@ -65,6 +94,31 @@ impl<'a> CompanyTokenProcessor<'a> {
         instance.ingest_company_tokens();
 
         instance
+    }
+
+    fn get_company_token_sequence_max_length(
+        &self,
+        ticker_symbol: &TickerSymbol,
+        company_sequence_idx: usize,
+    ) -> Option<usize> {
+        // TODO: REmove
+        println!(
+            "{}, {:?}, {:?}",
+            ticker_symbol,
+            self.company_token_sequences
+                .get(ticker_symbol)
+                .and_then(|seq| seq.get(company_sequence_idx)),
+            self.token_mapper.get_tokens_by_ids(
+                self.company_token_sequences
+                    .get(ticker_symbol)
+                    .and_then(|seq| seq.get(company_sequence_idx))
+                    .unwrap()
+            )
+        );
+
+        self.company_token_sequences
+            .get(ticker_symbol)
+            .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 
     /// Ingests tokens from the company symbol list
@@ -263,26 +317,6 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Determine range states
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
-        let mut range_state_map: HashMap<String, Vec<TokenRangeState>> = HashMap::new();
-
-        // TODO: Refactor
-        // fn upsert_consecutive_query_token_indices(
-        //     &self,
-        //     ticker_symbol: &TickerSymbol,
-        //     symbol_consecutive_query_token_indices: &mut HashMap<String, Vec<Vec<usize>>>,
-        //     consecutive_query_token_indices: &mut Vec<usize>,
-        // ) {
-        //     symbol_consecutive_query_token_indices
-        //         .entry(symbol.clone())
-        //         .and_modify(|existing_ranges| {
-        //             let next = consecutive_query_token_indices.clone();
-
-        //             if !existing_ranges.contains(&next) {
-        //                 existing_ranges.push(next);
-        //             }
-        //         })
-        //         .or_insert_with(|| vec![consecutive_query_token_indices.clone()]);
-        // }
 
         for (ticker_symbol, _) in &potential_token_id_sequences {
             let mut last_company_sequence_idx = usize::MAX - 1;
@@ -291,10 +325,10 @@ impl<'a> CompanyTokenProcessor<'a> {
 
             let mut is_new_sub_sequence = false;
 
+            let mut token_range_state: Option<TokenRangeState> = None;
+
             for token_parity_state in &token_parity_states {
                 if token_parity_state.ticker_symbol != *ticker_symbol {
-                    // TODO: Finalize previous batch, if exists
-
                     last_company_sequence_idx = usize::MAX - 1;
                     last_company_sequence_token_idx = usize::MAX - 1;
                     last_query_token_idx = usize::MAX - 1;
@@ -309,23 +343,48 @@ impl<'a> CompanyTokenProcessor<'a> {
                     || token_parity_state.query_token_idx != last_query_token_idx + 1;
 
                 if is_new_sub_sequence {
-                    // TODO: Finalize previous batch, if exists
+                    // Finalize previous batch, if exists
+                    if let Some(ref mut token_range_state) = token_range_state {
+                        if !token_range_state.is_finalized {
+                            token_range_state.finalize();
+                            token_range_states.push(token_range_state.clone());
+                        }
+                    }
 
-                    println!(
-                        "-->  last seq. tok. idx: {}, curr seq. tok. idx: {}, last fti: {}, fti: {}",
-                        last_company_sequence_token_idx,
-                        token_parity_state.company_sequence_token_idx,
-                        last_query_token_idx,
-                        token_parity_state.query_token_idx
-                    );
+                    token_range_state = Some(TokenRangeState::new(
+                        ticker_symbol.to_string(),
+                        token_parity_state.company_sequence_idx,
+                        self.get_company_token_sequence_max_length(
+                            ticker_symbol,
+                            token_parity_state.company_sequence_idx,
+                        )
+                        // TODO: Replace with ?
+                        .unwrap(),
+                    ));
+
+                    //     println!(
+                    //         "-->  last seq. tok. idx: {}, curr seq. tok. idx: {}, last fti: {}, fti: {}",
+                    //         last_company_sequence_token_idx,
+                    //         token_parity_state.company_sequence_token_idx,
+                    //         last_query_token_idx,
+                    //         token_parity_state.query_token_idx
+                    //     );
                 }
 
-                println!(
-                    "{:?}, {:?}",
-                    token_parity_state,
-                    self.token_mapper
-                        .get_token_by_id(token_parity_state.query_token_id)
-                );
+                // println!(
+                //     "{:?}, {:?}",
+                //     token_parity_state,
+                //     self.token_mapper
+                //         .get_token_by_id(token_parity_state.query_token_id)
+                // );
+
+                if let Some(ref mut token_range_state) = token_range_state {
+                    token_range_state.add_partial_state(
+                        token_parity_state.query_token_idx,
+                        token_parity_state.query_token_id,
+                        token_parity_state.company_sequence_idx,
+                    );
+                }
 
                 last_company_sequence_idx = token_parity_state.company_sequence_idx;
                 last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
@@ -334,88 +393,16 @@ impl<'a> CompanyTokenProcessor<'a> {
                 is_new_sub_sequence = false;
             }
 
-            // TODO: Finalize previous batch, if exists
+            // Finalize previous batch, if exists
+            if let Some(ref mut token_range_state) = token_range_state {
+                if !token_range_state.is_finalized {
+                    token_range_state.finalize();
+                    token_range_states.push(token_range_state.clone());
+                }
+            }
 
-            println!("==========");
+            // println!("==========");
         }
-
-        // for (ticker_symbol, _company_token_sequences) in &potential_token_id_sequences {
-        //     // Collect all token parity states for this ticker
-        //     let mut filtered_states: Vec<_> = token_parity_states
-        //         .iter()
-        //         .filter(|state| state.ticker_symbol == *ticker_symbol)
-        //         .collect();
-
-        //     // Sort by query_token_idx to ensure ordered processing
-        //     filtered_states.sort_by_key(|state| state.query_token_idx);
-
-        //     // Capture contiguous sequences
-        //     let mut current_indices = Vec::new();
-        //     let mut current_ids = Vec::new();
-        //     let mut current_token_indices = Vec::new();
-
-        //     for state in filtered_states {
-        //         if let Some(&last_filtered_index) = current_indices.last() {
-        //             let last_sequence_index = current_token_indices.last().unwrap_or(&usize::MAX);
-
-        //             // Merge if both indices increment together
-        //             if state.query_token_idx == last_filtered_index + 1
-        //                 && state.company_sequence_token_idx == *last_sequence_index + 1
-        //             {
-        //                 current_indices.push(state.query_token_idx);
-        //                 current_ids.push(state.query_token_id);
-        //                 current_token_indices.push(state.company_sequence_token_idx);
-        //                 continue;
-        //             }
-        //         }
-
-        //         // Finalize the current sequence if there's a gap
-        //         if !current_indices.is_empty() {
-        //             let company_sequence_length = current_indices.len();
-        //             range_state_map
-        //                 .entry(ticker_symbol.clone())
-        //                 .or_insert_with(Vec::new)
-        //                 .push(TokenRangeState {
-        //                     ticker_symbol: ticker_symbol.clone(),
-        //                     query_token_indices: current_indices.clone(),
-        //                     query_token_ids: current_ids.clone(),
-        //                     company_sequence_idx: state.company_sequence_idx, // Use the correct index
-        //                     company_sequence_length,
-        //                     company_sequence_token_indices: current_token_indices.clone(),
-        //                     company_token_coverage: current_indices.len() as f32
-        //                         / company_sequence_length as f32,
-        //                 });
-        //         }
-
-        //         // Start a new sequence
-        //         current_indices = vec![state.query_token_idx];
-        //         current_ids = vec![state.query_token_id];
-        //         current_token_indices = vec![state.company_sequence_token_idx];
-        //     }
-
-        //     // Finalize the last sequence
-        //     if !current_indices.is_empty() {
-        //         let company_sequence_length = current_indices.len();
-        //         range_state_map
-        //             .entry(ticker_symbol.clone())
-        //             .or_insert_with(Vec::new)
-        //             .push(TokenRangeState {
-        //                 ticker_symbol: ticker_symbol.clone(),
-        //                 query_token_indices: current_indices.clone(),
-        //                 query_token_ids: current_ids.clone(),
-        //                 company_sequence_idx: 0,
-        //                 company_sequence_length,
-        //                 company_sequence_token_indices: current_token_indices.clone(),
-        //                 company_token_coverage: current_indices.len() as f32
-        //                     / company_sequence_length as f32,
-        //             });
-        //     }
-        // }
-
-        // // Flatten the results
-        // for (_, mut states) in range_state_map {
-        //     token_range_states.extend(states);
-        // }
 
         // Print the range states for debugging
         for token_range_state in &token_range_states {
