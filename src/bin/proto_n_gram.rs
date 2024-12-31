@@ -178,6 +178,8 @@ fn main() {
 
     // let query = r#"SPDR Dow Jones Industrial Average ETF Invesco Dow Jones Industrial Average Dividend ETF iShares Dow Jones U.S. ETF"#;
 
+    let query = "Apple Walmart Berkshire Hathaway Apple Wal-mart Berkshire Hathaway";
+
     let results = extract_tickers_from_text(&query, &company_symbols_list).unwrap();
 
     println!("Extracted Tickers:");

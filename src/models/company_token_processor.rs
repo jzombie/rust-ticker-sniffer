@@ -240,113 +240,175 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Reorder token_parity_states
         token_parity_states.sort_by(|a, b| {
             (
-                a.filtered_token_idx,
                 &a.ticker_symbol,
                 a.company_sequence_idx,
+                a.filtered_token_idx,
                 a.company_sequence_token_idx,
             )
                 .cmp(&(
-                    b.filtered_token_idx,
                     &b.ticker_symbol,
                     b.company_sequence_idx,
+                    b.filtered_token_idx,
                     b.company_sequence_token_idx,
                 ))
         });
 
+        // for token_parity_state in &token_parity_states {
+        //     println!(
+        //         "{:?}, {:?}",
+        //         token_parity_state,
+        //         self.token_mapper
+        //             .get_token_by_id(token_parity_state.filtered_token_id)
+        //     );
+        // }
+
         // Determine range states
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
-        let mut range_state_map: HashMap<(String, usize), TokenRangeState> = HashMap::new();
-        for (ticker_symbol, _company_token_sequences) in &potential_token_id_sequences {
+        let mut range_state_map: HashMap<String, Vec<TokenRangeState>> = HashMap::new();
+
+        for (ticker_symbol, _) in &potential_token_id_sequences {
+            let mut last_company_sequence_idx = usize::MAX - 1;
+            let mut last_company_sequence_token_idx = usize::MAX - 1;
+            let mut last_filtered_token_idx = usize::MAX - 1;
+
+            let mut is_new_sub_sequence = false;
+
             for token_parity_state in &token_parity_states {
                 if token_parity_state.ticker_symbol != *ticker_symbol {
+                    // TODO: Finalize previous batch, if exists
+
+                    last_company_sequence_idx = usize::MAX - 1;
+                    last_company_sequence_token_idx = usize::MAX - 1;
+                    last_filtered_token_idx = usize::MAX - 1;
+
                     continue;
                 }
 
-                // Debug print for the token parity state
-                // println!(
-                //     "ticker symbol: {}, {}, {}, {:?}",
-                //     token_parity_state.ticker_symbol,
-                //     token_parity_state.filtered_token_idx,
-                //     self.token_mapper
-                //         .get_token_by_id(token_parity_state.filtered_token_id)
-                //         .unwrap(),
-                //     token_parity_state
-                // );
+                is_new_sub_sequence = last_company_sequence_idx
+                    != token_parity_state.company_sequence_idx
+                    || token_parity_state.company_sequence_token_idx
+                        != last_company_sequence_token_idx + 1
+                    || token_parity_state.filtered_token_idx != last_filtered_token_idx + 1;
 
-                // Aggregate into range states
-                let key = (
-                    token_parity_state.ticker_symbol.clone(),
-                    token_parity_state.company_sequence_idx,
+                if is_new_sub_sequence {
+                    // TODO: Finalize previous batch, if exists
+
+                    println!(
+                        "-->  last seq. tok. idx: {}, curr seq. tok. idx: {}, last fti: {}, fti: {}",
+                        last_company_sequence_token_idx,
+                        token_parity_state.company_sequence_token_idx,
+                        last_filtered_token_idx,
+                        token_parity_state.filtered_token_idx
+                    );
+                }
+
+                println!(
+                    "{:?}, {:?}",
+                    token_parity_state,
+                    self.token_mapper
+                        .get_token_by_id(token_parity_state.filtered_token_id)
                 );
 
-                range_state_map
-                    .entry(key.clone())
-                    .and_modify(|state| {
-                        // Ensure contiguity of filtered_token_indices
-                        if let Some(&last_idx) = state.filtered_token_indices.last() {
-                            if token_parity_state.filtered_token_idx != last_idx + 1 {
-                                // Not contiguous, skip further additions
-                                return;
-                            }
-                        }
+                last_company_sequence_idx = token_parity_state.company_sequence_idx;
+                last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
+                last_filtered_token_idx = token_parity_state.filtered_token_idx;
 
-                        // Update state with new values
-                        state
-                            .filtered_token_indices
-                            .push(token_parity_state.filtered_token_idx);
-                        state
-                            .filtered_token_ids
-                            .push(token_parity_state.filtered_token_id);
-                        state
-                            .company_sequence_token_indices
-                            .push(token_parity_state.company_sequence_token_idx);
-
-                        // Centralized coverage calculation
-                        state.update_coverage();
-                    })
-                    .or_insert_with(|| {
-                        let mut new_state = TokenRangeState {
-                            ticker_symbol: token_parity_state.ticker_symbol.clone(),
-                            filtered_token_indices: vec![token_parity_state.filtered_token_idx],
-                            filtered_token_ids: vec![token_parity_state.filtered_token_id],
-                            company_sequence_idx: token_parity_state.company_sequence_idx,
-                            company_sequence_length: potential_token_id_sequences
-                                .get(&token_parity_state.ticker_symbol)
-                                .unwrap()[token_parity_state.company_sequence_idx]
-                                .len(),
-                            company_sequence_token_indices: vec![
-                                token_parity_state.company_sequence_token_idx,
-                            ],
-                            company_token_coverage: 0.0, // Initialize to zero
-                        };
-
-                        // Centralized coverage calculation
-                        new_state.update_coverage();
-                        new_state
-                    });
+                is_new_sub_sequence = false;
             }
+
+            // TODO: Finalize previous batch, if exists
+
+            println!("==========");
         }
 
-        // Collect range states from the map
-        token_range_states.extend(range_state_map.into_values());
+        // for (ticker_symbol, _company_token_sequences) in &potential_token_id_sequences {
+        //     // Collect all token parity states for this ticker
+        //     let mut filtered_states: Vec<_> = token_parity_states
+        //         .iter()
+        //         .filter(|state| state.ticker_symbol == *ticker_symbol)
+        //         .collect();
 
-        // Sort the range states by coverage in descending order
-        token_range_states.sort_by(|a, b| {
-            b.company_token_coverage
-                .partial_cmp(&a.company_token_coverage)
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
+        //     // Sort by filtered_token_idx to ensure ordered processing
+        //     filtered_states.sort_by_key(|state| state.filtered_token_idx);
+
+        //     // Capture contiguous sequences
+        //     let mut current_indices = Vec::new();
+        //     let mut current_ids = Vec::new();
+        //     let mut current_token_indices = Vec::new();
+
+        //     for state in filtered_states {
+        //         if let Some(&last_filtered_index) = current_indices.last() {
+        //             let last_sequence_index = current_token_indices.last().unwrap_or(&usize::MAX);
+
+        //             // Merge if both indices increment together
+        //             if state.filtered_token_idx == last_filtered_index + 1
+        //                 && state.company_sequence_token_idx == *last_sequence_index + 1
+        //             {
+        //                 current_indices.push(state.filtered_token_idx);
+        //                 current_ids.push(state.filtered_token_id);
+        //                 current_token_indices.push(state.company_sequence_token_idx);
+        //                 continue;
+        //             }
+        //         }
+
+        //         // Finalize the current sequence if there's a gap
+        //         if !current_indices.is_empty() {
+        //             let company_sequence_length = current_indices.len();
+        //             range_state_map
+        //                 .entry(ticker_symbol.clone())
+        //                 .or_insert_with(Vec::new)
+        //                 .push(TokenRangeState {
+        //                     ticker_symbol: ticker_symbol.clone(),
+        //                     filtered_token_indices: current_indices.clone(),
+        //                     filtered_token_ids: current_ids.clone(),
+        //                     company_sequence_idx: state.company_sequence_idx, // Use the correct index
+        //                     company_sequence_length,
+        //                     company_sequence_token_indices: current_token_indices.clone(),
+        //                     company_token_coverage: current_indices.len() as f32
+        //                         / company_sequence_length as f32,
+        //                 });
+        //         }
+
+        //         // Start a new sequence
+        //         current_indices = vec![state.filtered_token_idx];
+        //         current_ids = vec![state.filtered_token_id];
+        //         current_token_indices = vec![state.company_sequence_token_idx];
+        //     }
+
+        //     // Finalize the last sequence
+        //     if !current_indices.is_empty() {
+        //         let company_sequence_length = current_indices.len();
+        //         range_state_map
+        //             .entry(ticker_symbol.clone())
+        //             .or_insert_with(Vec::new)
+        //             .push(TokenRangeState {
+        //                 ticker_symbol: ticker_symbol.clone(),
+        //                 filtered_token_indices: current_indices.clone(),
+        //                 filtered_token_ids: current_ids.clone(),
+        //                 company_sequence_idx: 0,
+        //                 company_sequence_length,
+        //                 company_sequence_token_indices: current_token_indices.clone(),
+        //                 company_token_coverage: current_indices.len() as f32
+        //                     / company_sequence_length as f32,
+        //             });
+        //     }
+        // }
+
+        // // Flatten the results
+        // for (_, mut states) in range_state_map {
+        //     token_range_states.extend(states);
+        // }
 
         // Print the range states for debugging
         for token_range_state in &token_range_states {
-            if token_range_state.company_token_coverage >= 0.5 {
-                println!(
-                    "{:?}, Tokens: {:?}",
-                    token_range_state,
-                    self.token_mapper
-                        .get_tokens_by_ids(&token_range_state.filtered_token_ids)
-                );
-            }
+            // if token_range_state.company_token_coverage >= 0.5 {
+            println!(
+                "{:?}, Tokens: {:?}",
+                token_range_state,
+                self.token_mapper
+                    .get_tokens_by_ids(&token_range_state.filtered_token_ids)
+            );
+            // }
         }
 
         // TODO: Determine the highest scores which map to each filtered token index
@@ -375,10 +437,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             // Filter token_scores to retain only the highest scores
-            if !token_scores.is_empty() {
-                let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
-                token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
-            }
+            // if !token_scores.is_empty() {
+            //     let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
+            //     token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
+            // }
 
             // Debug output for the current token index
             println!(
