@@ -459,8 +459,15 @@ impl<'a> CompanyTokenProcessor<'a> {
                     .query_token_indices
                     .contains(&query_token_idx)
                 {
-                    // Use the company_token_coverage directly as the score
-                    let score = token_range_state.company_token_coverage;
+                    let score = token_range_state.company_token_coverage
+                        // Increase score by continuity
+                        // TODO: Weight this accordingly
+                        + token_range_state
+                            .query_token_indices
+                            .iter()
+                            .position(|&x| x == query_token_idx)
+                            .map(|idx| idx as f32)
+                            .unwrap_or(0.0);
 
                     // Update the score map for this ticker symbol
                     token_scores
@@ -480,7 +487,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
             // Debug output for the current token index
             println!(
-                "Filtered Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
+                "Query Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
                 query_token_idx,
                 query_token_id,
                 self.token_mapper.get_token_by_id(*query_token_id),
@@ -498,8 +505,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         // TODO: Remove
         println!("Text doc tokens: {:?}", text_doc_tokens);
         println!("Filtered tokens: {:?}", query_tokens);
-        println!("Filtered token IDs: {:?}", query_token_ids);
-        println!("Possible matches: {:?}", potential_token_id_sequences);
+        println!("Query token IDs: {:?}", query_token_ids);
+        // println!("Possible matches: {:?}", potential_token_id_sequences);
         // println!("Scores: {:?}", scores);
     }
 }
