@@ -244,8 +244,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                     if let Some(company_name_variations_token_ids_list) =
                         self.company_token_sequences.get(ticker_symbol)
                     {
-                        for (company_token_sequence_idx, company_name_variations_token_ids) in
-                            company_name_variations_token_ids_list.iter().enumerate()
+                        for company_name_variations_token_ids in
+                            company_name_variations_token_ids_list
                         {
                             if company_name_variations_token_ids.is_empty() {
                                 continue;
