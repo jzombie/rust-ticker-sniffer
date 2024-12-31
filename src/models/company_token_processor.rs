@@ -121,6 +121,19 @@ impl<'a> CompanyTokenProcessor<'a> {
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 
+    fn display_company_tokens(&self, ticker_symbol: &TickerSymbol) {
+        if let Some(company_token_sequences) = self.company_token_sequences.get(ticker_symbol) {
+            for company_token_sequence in company_token_sequences {
+                println!(
+                    "{:?}",
+                    self.token_mapper.get_tokens_by_ids(company_token_sequence)
+                );
+            }
+        } else {
+            println!("No tokens found for ticker symbol: {}", ticker_symbol);
+        }
+    }
+
     /// Ingests tokens from the company symbol list
     fn ingest_company_tokens(&mut self) {
         self.company_token_sequences.clear();
@@ -231,8 +244,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                     if let Some(company_name_variations_token_ids_list) =
                         self.company_token_sequences.get(ticker_symbol)
                     {
-                        for company_name_variations_token_ids in
-                            company_name_variations_token_ids_list
+                        for (company_token_sequence_idx, company_name_variations_token_ids) in
+                            company_name_variations_token_ids_list.iter().enumerate()
                         {
                             if company_name_variations_token_ids.is_empty() {
                                 continue;
@@ -306,14 +319,14 @@ impl<'a> CompanyTokenProcessor<'a> {
                 ))
         });
 
-        // for token_parity_state in &token_parity_states {
-        //     println!(
-        //         "{:?}, {:?}",
-        //         token_parity_state,
-        //         self.token_mapper
-        //             .get_token_by_id(token_parity_state.query_token_id)
-        //     );
-        // }
+        for token_parity_state in &token_parity_states {
+            println!(
+                "{:?}, {:?}",
+                token_parity_state,
+                self.token_mapper
+                    .get_token_by_id(token_parity_state.query_token_id)
+            );
+        }
 
         // Determine range states
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
@@ -379,6 +392,14 @@ impl<'a> CompanyTokenProcessor<'a> {
                 // );
 
                 if let Some(ref mut token_range_state) = token_range_state {
+                    if ticker_symbol == "GJO" {
+                        println!(
+                            "GJO... {:?}",
+                            self.token_mapper
+                                .get_token_by_id((token_parity_state.query_token_id))
+                        );
+                    }
+
                     token_range_state.add_partial_state(
                         token_parity_state.query_token_idx,
                         token_parity_state.query_token_id,
@@ -453,6 +474,9 @@ impl<'a> CompanyTokenProcessor<'a> {
                 token_scores
             );
         }
+
+        // TODO: Remove
+        self.display_company_tokens(&"GJO".to_string());
 
         // Convert the scores HashMap into a sorted Vec
         // let mut sorted_scores: Vec<(String, f32)> = scores.clone().into_iter().collect();
