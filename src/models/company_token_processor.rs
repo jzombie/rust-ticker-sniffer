@@ -455,7 +455,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             // Iterate over all token range states
             for token_range_state in &token_range_states {
                 // Check if the current filtered token ID is part of the filtered token IDs in the range state
-                if token_range_state.query_token_ids.contains(query_token_id) {
+                if token_range_state
+                    .query_token_indices
+                    .contains(&query_token_idx)
+                {
                     // Use the company_token_coverage directly as the score
                     let score = token_range_state.company_token_coverage;
 
