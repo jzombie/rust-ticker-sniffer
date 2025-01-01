@@ -494,6 +494,54 @@ impl<'a> CompanyTokenProcessor<'a> {
             );
         }
 
+        let mut top_range_states: Vec<Vec<&TokenRangeState>> =
+            vec![Vec::new(); query_token_ids.len()];
+
+        for token_range_state in &token_range_states {
+            for &query_token_idx in &token_range_state.query_token_indices {
+                if let Some(range_score) = token_range_state.range_score {
+                    if top_range_states[query_token_idx].is_empty() {
+                        // Initialize with the current range state if no state exists
+                        top_range_states[query_token_idx].push(token_range_state);
+                    } else {
+                        // Check the score of the existing states
+                        let existing_score =
+                            top_range_states[query_token_idx][0].range_score.unwrap();
+
+                        if range_score > existing_score {
+                            // Replace with a new top scorer
+                            top_range_states[query_token_idx].clear();
+                            top_range_states[query_token_idx].push(token_range_state);
+                        } else if (range_score - existing_score).abs() < f32::EPSILON {
+                            // Add to the top scorers in case of a tie
+                            top_range_states[query_token_idx].push(token_range_state);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Collect only the valid range states
+        let top_range_state_vector: Vec<&TokenRangeState> = top_range_states
+            .into_iter()
+            .flat_map(|states| states) // Flatten the vector of vectors
+            .collect();
+
+        // Debug: Print the top range states
+        println!("Top Range States for Each Query Token Index:");
+        for state in &top_range_state_vector {
+            println!("{:?}", state);
+        }
+
+        // for token_range_state in &token_range_states {
+        //     println!(
+        //         "{:?}, Tokens: {:?}",
+        //         token_range_state,
+        //         self.token_mapper
+        //             .get_tokens_by_ids(&token_range_state.query_token_ids)
+        //     );
+        // }
+
         // for (query_token_idx, token_range_states) in &query_token_idx_top_ranges {
         //     for token_range_state in token_range_states {
         //         println!(
