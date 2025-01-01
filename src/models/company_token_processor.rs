@@ -533,6 +533,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             println!("{:?}", state);
         }
 
+        // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
+        // TODO: Keep track of highest scores, for context
+        // TODO: Filter out token range states less than a minimum score threshold
+
         // for token_range_state in &token_range_states {
         //     println!(
         //         "{:?}, Tokens: {:?}",
