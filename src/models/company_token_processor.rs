@@ -169,26 +169,12 @@ impl<'a> CompanyTokenProcessor<'a> {
         ticker_symbol: &TickerSymbol,
         company_sequence_idx: usize,
     ) -> Option<usize> {
-        // TODO: Remove
-        // println!(
-        //     "{}, {:?}, {:?}",
-        //     ticker_symbol,
-        //     self.company_token_sequences
-        //         .get(ticker_symbol)
-        //         .and_then(|seq| seq.get(company_sequence_idx)),
-        //     self.token_mapper.get_tokens_by_ids(
-        //         self.company_token_sequences
-        //             .get(ticker_symbol)
-        //             .and_then(|seq| seq.get(company_sequence_idx))
-        //             .unwrap()
-        //     )
-        // );
-
         self.company_token_sequences
             .get(ticker_symbol)
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 
+    /// For debugging purposes
     fn display_company_tokens(&self, ticker_symbol: &TickerSymbol) {
         if let Some(company_token_sequences) = self.company_token_sequences.get(ticker_symbol) {
             for company_token_sequence in company_token_sequences {
@@ -508,13 +494,12 @@ impl<'a> CompanyTokenProcessor<'a> {
         token_range_states
     }
 
+    /// Determines the highest scores which map to each filtered token index.
     fn assign_token_range_scores(
         &self,
         query_token_ids: &[usize],
         token_range_states: &mut [TokenRangeState],
     ) {
-        // TODO: Determine the highest scores which map to each filtered token index
-        // let mut query_token_idx_top_ranges: HashMap<usize, Vec<TokenRangeState>> = HashMap::new();
         for (query_token_idx, _query_token_id) in query_token_ids.iter().enumerate() {
             // Initialize a map to store scores for this token
             let mut token_scores: HashMap<String, f32> = HashMap::new();
@@ -545,11 +530,6 @@ impl<'a> CompanyTokenProcessor<'a> {
                             *existing_score = (*existing_score).max(score);
                         })
                         .or_insert(score);
-
-                    // query_token_idx_top_ranges
-                    //     .entry(query_token_idx)
-                    //     .or_insert_with(Vec::new)
-                    //     .push(token_range_state.clone());
                 }
             }
 
@@ -558,15 +538,6 @@ impl<'a> CompanyTokenProcessor<'a> {
                 let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
                 token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
             }
-
-            // Debug output for the current token index
-            // println!(
-            //     "Query Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
-            //     query_token_idx,
-            //     query_token_id,
-            //     self.token_mapper.get_token_by_id(*query_token_id),
-            //     token_scores
-            // );
         }
     }
 
