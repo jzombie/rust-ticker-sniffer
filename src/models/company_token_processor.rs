@@ -419,12 +419,17 @@ impl<'a> CompanyTokenProcessor<'a> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
         for (ticker_symbol, _) in potential_token_id_sequences {
+            // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
             let mut last_company_sequence_token_idx = usize::MAX - 1;
             let mut last_query_token_idx = usize::MAX - 1;
 
+            // Indicates whether we are starting a new subsequence.
+            // A subsequence is a group of contiguous tokens from the query and company sequences
+            // that belong to the same ticker symbol and are aligned in both sequences.
             let mut is_new_sub_sequence = false;
 
+            // Current token range state being constructed.
             let mut token_range_state: Option<TokenRangeState> = None;
 
             for token_parity_state in token_parity_states {
@@ -466,6 +471,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     ));
                 }
 
+                // Add partial state to the current token range state
                 if let Some(ref mut token_range_state) = token_range_state {
                     // Only add the current token to the token range if:
                     // - It's not a new subsequence, or
@@ -497,8 +503,6 @@ impl<'a> CompanyTokenProcessor<'a> {
                     }
                 }
             }
-
-            // println!("==========");
         }
 
         token_range_states
