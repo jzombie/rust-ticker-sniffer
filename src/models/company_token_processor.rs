@@ -103,20 +103,20 @@ impl<'a> CompanyTokenProcessor<'a> {
         ticker_symbol: &TickerSymbol,
         company_sequence_idx: usize,
     ) -> Option<usize> {
-        // TODO: REmove
-        println!(
-            "{}, {:?}, {:?}",
-            ticker_symbol,
-            self.company_token_sequences
-                .get(ticker_symbol)
-                .and_then(|seq| seq.get(company_sequence_idx)),
-            self.token_mapper.get_tokens_by_ids(
-                self.company_token_sequences
-                    .get(ticker_symbol)
-                    .and_then(|seq| seq.get(company_sequence_idx))
-                    .unwrap()
-            )
-        );
+        // TODO: Remove
+        // println!(
+        //     "{}, {:?}, {:?}",
+        //     ticker_symbol,
+        //     self.company_token_sequences
+        //         .get(ticker_symbol)
+        //         .and_then(|seq| seq.get(company_sequence_idx)),
+        //     self.token_mapper.get_tokens_by_ids(
+        //         self.company_token_sequences
+        //             .get(ticker_symbol)
+        //             .and_then(|seq| seq.get(company_sequence_idx))
+        //             .unwrap()
+        //     )
+        // );
 
         self.company_token_sequences
             .get(ticker_symbol)
@@ -221,9 +221,9 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // Get the filtered tokens (tokens present in the TokenMapper)
-        let query_tokens = self
-            .token_mapper
-            .get_filtered_tokens(text_doc_tokens.iter().map(|s| s.as_str()).collect());
+        // let query_tokens = self
+        //     .token_mapper
+        //     .get_filtered_tokens(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_token_ids = self
@@ -331,14 +331,14 @@ impl<'a> CompanyTokenProcessor<'a> {
                 ))
         });
 
-        for token_parity_state in &token_parity_states {
-            println!(
-                "{:?}, {:?}",
-                token_parity_state,
-                self.token_mapper
-                    .get_token_by_id(token_parity_state.query_token_id)
-            );
-        }
+        // for token_parity_state in &token_parity_states {
+        //     println!(
+        //         "{:?}, {:?}",
+        //         token_parity_state,
+        //         self.token_mapper
+        //             .get_token_by_id(token_parity_state.query_token_id)
+        //     );
+        // }
 
         // Determine range states
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
@@ -427,16 +427,16 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // Print the range states for debugging
-        for token_range_state in &token_range_states {
-            // if token_range_state.company_token_coverage >= 0.5 {
-            println!(
-                "{:?}, Tokens: {:?}",
-                token_range_state,
-                self.token_mapper
-                    .get_tokens_by_ids(&token_range_state.query_token_ids)
-            );
-            // }
-        }
+        // for token_range_state in &token_range_states {
+        //     // if token_range_state.company_token_coverage >= 0.5 {
+        //     println!(
+        //         "{:?}, Tokens: {:?}",
+        //         token_range_state,
+        //         self.token_mapper
+        //             .get_tokens_by_ids(&token_range_state.query_token_ids)
+        //     );
+        //     // }
+        // }
 
         // TODO: Determine the highest scores which map to each filtered token index
         // let mut query_token_idx_top_ranges: HashMap<usize, Vec<TokenRangeState>> = HashMap::new();
@@ -485,13 +485,13 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             // Debug output for the current token index
-            println!(
-                "Query Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
-                query_token_idx,
-                query_token_id,
-                self.token_mapper.get_token_by_id(*query_token_id),
-                token_scores
-            );
+            // println!(
+            //     "Query Token Index: {}, Token ID: {}, Token: {:?}, Scores: {:?}",
+            //     query_token_idx,
+            //     query_token_id,
+            //     self.token_mapper.get_token_by_id(*query_token_id),
+            //     token_scores
+            // );
         }
 
         let mut top_range_states: Vec<Vec<&TokenRangeState>> =
@@ -552,16 +552,16 @@ impl<'a> CompanyTokenProcessor<'a> {
         // }
 
         // TODO: Remove
-        self.display_company_tokens(&"GJO".to_string());
+        // self.display_company_tokens(&"GJO".to_string());
 
         // Convert the scores HashMap into a sorted Vec
         // let mut sorted_scores: Vec<(String, f32)> = scores.clone().into_iter().collect();
         // sorted_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap()); // Sort descending by score
 
         // TODO: Remove
-        println!("Text doc tokens: {:?}", text_doc_tokens);
-        println!("Filtered tokens: {:?}", query_tokens);
-        println!("Query token IDs: {:?}", query_token_ids);
+        // println!("Text doc tokens: {:?}", text_doc_tokens);
+        // println!("Filtered tokens: {:?}", query_tokens);
+        // println!("Query token IDs: {:?}", query_token_ids);
         // println!("Possible matches: {:?}", potential_token_id_sequences);
         // println!("Scores: {:?}", scores);
     }
