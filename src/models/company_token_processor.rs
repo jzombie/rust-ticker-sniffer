@@ -35,6 +35,7 @@ struct TokenRangeState {
     company_sequence_token_indices: Vec<usize>,
     company_sequence_max_length: usize,
     company_token_coverage: f32,
+    range_score: Option<f32>,
     is_finalized: bool,
 }
 
@@ -52,6 +53,7 @@ impl TokenRangeState {
             company_sequence_token_indices: vec![],
             company_sequence_max_length,
             company_token_coverage: 0.0,
+            range_score: None,
             is_finalized: false,
         }
     }
@@ -437,12 +439,13 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // TODO: Determine the highest scores which map to each filtered token index
+        // let mut query_token_idx_top_ranges: HashMap<usize, Vec<TokenRangeState>> = HashMap::new();
         for (query_token_idx, query_token_id) in query_token_ids.iter().enumerate() {
             // Initialize a map to store scores for this token
             let mut token_scores: HashMap<String, f32> = HashMap::new();
 
             // Iterate over all token range states
-            for token_range_state in &token_range_states {
+            for token_range_state in &mut token_range_states {
                 // Check if the current filtered token ID is part of the filtered token IDs in the range state
                 if token_range_state
                     .query_token_indices
@@ -458,6 +461,8 @@ impl<'a> CompanyTokenProcessor<'a> {
                             .map(|idx| idx as f32)
                             .unwrap_or(0.0);
 
+                    token_range_state.range_score = Some(score);
+
                     // Update the score map for this ticker symbol
                     token_scores
                         .entry(token_range_state.ticker_symbol.clone())
@@ -465,14 +470,19 @@ impl<'a> CompanyTokenProcessor<'a> {
                             *existing_score = (*existing_score).max(score);
                         })
                         .or_insert(score);
+
+                    // query_token_idx_top_ranges
+                    //     .entry(query_token_idx)
+                    //     .or_insert_with(Vec::new)
+                    //     .push(token_range_state.clone());
                 }
             }
 
             // Filter token_scores to retain only the highest scores
-            // if !token_scores.is_empty() {
-            //     let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
-            //     token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
-            // }
+            if !token_scores.is_empty() {
+                let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
+                token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
+            }
 
             // Debug output for the current token index
             println!(
@@ -483,6 +493,15 @@ impl<'a> CompanyTokenProcessor<'a> {
                 token_scores
             );
         }
+
+        // for (query_token_idx, token_range_states) in &query_token_idx_top_ranges {
+        //     for token_range_state in token_range_states {
+        //         println!(
+        //             "query tok. idx: {:?}, {:?}",
+        //             query_token_idx, token_range_state
+        //         );
+        //     }
+        // }
 
         // TODO: Remove
         self.display_company_tokens(&"GJO".to_string());
