@@ -7,7 +7,8 @@ pub use models::{
 pub mod types;
 mod utils;
 pub use types::{
-    AlternateCompanyName, CompanyName, CompanySymbolList, TickerSymbol, TokenId, TokenVector,
+    AlternateCompanyName, CompanyName, CompanySymbolList, TickerSymbol, Token, TokenId, TokenRef,
+    TokenVector,
 };
 
 // TODO: Add dedicated type instead of f32

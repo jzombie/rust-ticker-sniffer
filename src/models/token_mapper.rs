@@ -1,4 +1,4 @@
-use crate::types::{TokenId, TokenVector};
+use crate::types::{TokenId, TokenRef, TokenVector};
 use crate::Tokenizer;
 use std::collections::HashMap;
 
@@ -35,20 +35,20 @@ impl TokenMapper {
     }
 
     /// Gets the ID for a token (as a string), or None if the token is not present
-    pub fn get_token_id(&self, token: &str) -> Option<TokenId> {
+    pub fn get_token_id(&self, token: &TokenRef) -> Option<TokenId> {
         let token_vector = Tokenizer::token_to_charcode_vector(token);
 
         self.token_map.get(&token_vector).copied()
     }
 
-    pub fn get_filtered_tokens<'a>(&'a self, tokens: Vec<&'a str>) -> Vec<&str> {
+    pub fn get_filtered_tokens<'a>(&'a self, tokens: Vec<&'a TokenRef>) -> Vec<&TokenRef> {
         tokens
             .into_iter()
             .filter(|token| self.get_token_id(token).is_some())
             .collect()
     }
 
-    pub fn get_filtered_token_ids<'a>(&'a self, tokens: Vec<&'a str>) -> Vec<TokenId> {
+    pub fn get_filtered_token_ids<'a>(&'a self, tokens: Vec<&'a TokenRef>) -> Vec<TokenId> {
         tokens
             .into_iter()
             .filter_map(|token| self.get_token_id(token))

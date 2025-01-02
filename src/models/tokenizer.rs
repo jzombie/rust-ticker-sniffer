@@ -1,11 +1,10 @@
 use crate::constants::STOP_WORDS;
-use crate::types::{Token, TokenVector};
+use crate::types::{Token, TokenRef, TokenVector};
 use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
     min_uppercase_ratio: Option<f32>,
-    filter_stop_words: bool,
     pre_processed_stop_words: Option<HashSet<String>>,
 }
 
@@ -17,7 +16,6 @@ impl Tokenizer {
     pub fn ticker_symbol_parser() -> Self {
         Self {
             min_uppercase_ratio: Some(0.9),
-            filter_stop_words: false,
             pre_processed_stop_words: None,
         }
     }
@@ -25,7 +23,6 @@ impl Tokenizer {
     pub fn text_doc_parser() -> Self {
         Self {
             min_uppercase_ratio: None,
-            filter_stop_words: true,
             pre_processed_stop_words: Some(Self::preprocess_stop_words()),
         }
     }
@@ -100,7 +97,7 @@ impl Tokenizer {
             .collect()
     }
 
-    fn calc_uppercase_ratio(&self, word: &str) -> f32 {
+    fn calc_uppercase_ratio(&self, word: &TokenRef) -> f32 {
         let total_chars = word.chars().count() as f32;
         if total_chars == 0.0 {
             return 0.0;
@@ -122,18 +119,18 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenVector> {
+    pub fn tokenize_to_charcode_vectors(&self, text: &TokenRef) -> Vec<TokenVector> {
         self.tokenize(text)
             .iter() // Use the existing `tokenize` function to get tokens
             .map(|token| Tokenizer::token_to_charcode_vector(&token))
             .collect()
     }
 
-    pub fn token_to_charcode_vector(token: &str) -> TokenVector {
+    pub fn token_to_charcode_vector(token: &TokenRef) -> TokenVector {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn tokens_to_charcode_vectors(tokens: &Vec<&str>) -> Vec<TokenVector> {
+    pub fn tokens_to_charcode_vectors(tokens: &Vec<&TokenRef>) -> Vec<TokenVector> {
         tokens
             .iter()
             .map(|token| Tokenizer::token_to_charcode_vector(token))
