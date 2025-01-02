@@ -139,6 +139,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
         // TODO: Keep track of highest scores, for context
         // TODO: Filter out token range states less than a minimum score threshold
+        // TODO: Determine whether to explicitly parse out symbols which may also be stop words, based on percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed as a symbol)
 
         // for token_range_state in &token_range_states {
         //     println!(
