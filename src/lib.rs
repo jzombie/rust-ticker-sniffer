@@ -7,7 +7,7 @@ pub use models::{
 pub mod types;
 mod utils;
 pub use types::{
-    AlternateCompanyName, CompanyName, CompanySymbolList, CompanyTokenSourceType, TickerSymbol,
+    AlternateCompanyName, CompanyName, CompanySymbolList, TickerSymbol, TokenId,
     TokenizerVectorToken,
 };
 

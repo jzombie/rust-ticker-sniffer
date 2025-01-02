@@ -1,11 +1,11 @@
-use crate::types::TokenizerVectorToken;
+use crate::types::{TokenId, TokenizerVectorToken};
 use crate::Tokenizer;
 use std::collections::HashMap;
 
 pub struct TokenMapper {
-    token_map: HashMap<TokenizerVectorToken, usize>,
-    reverse_token_map: HashMap<usize, TokenizerVectorToken>,
-    next_id: usize,
+    token_map: HashMap<TokenizerVectorToken, TokenId>,
+    reverse_token_map: HashMap<TokenId, TokenizerVectorToken>,
+    next_id: TokenId,
 }
 
 impl TokenMapper {
@@ -20,7 +20,7 @@ impl TokenMapper {
 
     /// Adds a token (as a string) to the map if it doesn't exist,
     /// and returns its unique ID
-    pub fn upsert_token(&mut self, token: &str) -> usize {
+    pub fn upsert_token(&mut self, token: &str) -> TokenId {
         let token_vector = Tokenizer::token_to_charcode_vector(token);
 
         if let Some(&id) = self.token_map.get(&token_vector) {
@@ -35,7 +35,7 @@ impl TokenMapper {
     }
 
     /// Gets the ID for a token (as a string), or None if the token is not present
-    pub fn get_token_id(&self, token: &str) -> Option<usize> {
+    pub fn get_token_id(&self, token: &str) -> Option<TokenId> {
         let token_vector = Tokenizer::token_to_charcode_vector(token);
 
         self.token_map.get(&token_vector).copied()
@@ -55,15 +55,16 @@ impl TokenMapper {
             .collect()
     }
 
-    pub fn get_token_by_id(&self, id: usize) -> Option<String> {
+    pub fn get_token_by_id(&self, token_id: TokenId) -> Option<String> {
         self.reverse_token_map
-            .get(&id)
+            .get(&token_id)
             .map(|token_vector| Tokenizer::charcode_vector_to_token(token_vector))
     }
 
-    pub fn get_tokens_by_ids(&self, ids: &[usize]) -> Vec<Option<String>> {
-        ids.iter()
-            .map(|&id| self.get_token_by_id(id)) // Call the wrapped `get_token_by_id`
+    pub fn get_tokens_by_ids(&self, token_ids: &[TokenId]) -> Vec<Option<String>> {
+        token_ids
+            .iter()
+            .map(|&token_id| self.get_token_by_id(token_id))
             .collect()
     }
 

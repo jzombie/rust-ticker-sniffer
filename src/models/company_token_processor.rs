@@ -1,26 +1,28 @@
-use crate::types::CompanySymbolList;
-use crate::types::TickerSymbol;
+use crate::types::{CompanySymbolList, TickerSymbol, TokenId};
 use crate::TokenMapper;
 use crate::Tokenizer;
 use std::collections::HashMap;
+
+type QueryTokenIndex = usize;
+type CompanySequenceIndex = usize;
+type CompanySequenceTokenIndex = usize;
 
 pub struct CompanyTokenProcessor<'a> {
     company_symbol_list: &'a CompanySymbolList,
     token_mapper: TokenMapper,
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
-    // TODO: Use TokenId instead of usize
-    company_token_sequences: HashMap<TickerSymbol, Vec<Vec<usize>>>,
-    company_reverse_token_map: HashMap<usize, Vec<TickerSymbol>>,
+    company_token_sequences: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
+    company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
 #[derive(Debug, Clone)]
 struct TokenParityState {
     ticker_symbol: TickerSymbol,
-    query_token_idx: usize,
-    query_token_id: usize,
-    company_sequence_idx: usize,
-    company_sequence_token_idx: usize,
+    query_token_idx: QueryTokenIndex,
+    query_token_id: TokenId,
+    company_sequence_idx: CompanySequenceIndex,
+    company_sequence_token_idx: CompanySequenceTokenIndex,
 }
 
 #[derive(Debug, Clone)]
@@ -29,10 +31,10 @@ struct TokenRangeState {
     // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
-    query_token_indices: Vec<usize>,
-    query_token_ids: Vec<usize>,
-    company_sequence_idx: usize,
-    company_sequence_token_indices: Vec<usize>,
+    query_token_indices: Vec<QueryTokenIndex>,
+    query_token_ids: Vec<TokenId>,
+    company_sequence_idx: CompanySequenceIndex,
+    company_sequence_token_indices: Vec<CompanySequenceTokenIndex>,
     company_sequence_max_length: usize,
     company_token_coverage: f32,
     range_score: Option<f32>,
@@ -42,7 +44,7 @@ struct TokenRangeState {
 impl TokenRangeState {
     fn new(
         ticker_symbol: TickerSymbol,
-        company_sequence_idx: usize,
+        company_sequence_idx: CompanySequenceIndex,
         company_sequence_max_length: usize,
     ) -> Self {
         TokenRangeState {
@@ -60,9 +62,9 @@ impl TokenRangeState {
 
     fn add_partial_state(
         &mut self,
-        query_token_idx: usize,
-        query_token_id: usize,
-        company_sequence_token_idx: usize,
+        query_token_idx: QueryTokenIndex,
+        query_token_id: TokenId,
+        company_sequence_token_idx: CompanySequenceTokenIndex,
     ) {
         self.query_token_indices.push(query_token_idx);
         self.query_token_ids.push(query_token_id);
@@ -167,7 +169,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn get_company_token_sequence_max_length(
         &self,
         ticker_symbol: &TickerSymbol,
-        company_sequence_idx: usize,
+        company_sequence_idx: CompanySequenceIndex,
     ) -> Option<usize> {
         self.company_token_sequences
             .get(ticker_symbol)
@@ -248,7 +250,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     }
 
     /// Helper method for per-company token ingestion
-    fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<usize> {
+    fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<TokenId> {
         let company_name_tokens = self.text_doc_tokenizer.tokenize(&company_name);
         let mut company_name_token_ids = Vec::new();
         for token in company_name_tokens {
@@ -260,7 +262,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     }
 
     // TODO: Use proper error type
-    fn get_filtered_query_token_ids(&self, text: &str) -> Result<Vec<usize>, String> {
+    fn get_filtered_query_token_ids(&self, text: &str) -> Result<Vec<TokenId>, String> {
         // Tokenize the input text
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
@@ -289,10 +291,12 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     fn get_potential_token_sequences(
         &self,
-        query_token_ids: &[usize],
-    ) -> HashMap<TickerSymbol, Vec<(usize, Vec<usize>)>> {
-        let mut potential_token_id_sequences: HashMap<TickerSymbol, Vec<(usize, Vec<usize>)>> =
-            HashMap::new();
+        query_token_ids: &[TokenId],
+    ) -> HashMap<TickerSymbol, Vec<(CompanySequenceIndex, Vec<TokenId>)>> {
+        let mut potential_token_id_sequences: HashMap<
+            TickerSymbol,
+            Vec<(CompanySequenceIndex, Vec<TokenId>)>,
+        > = HashMap::new();
 
         for query_token_id in query_token_ids {
             if let Some(possible_ticker_symbols) =
@@ -302,7 +306,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     if let Some(company_name_variations_token_ids_list) =
                         self.company_token_sequences.get(ticker_symbol)
                     {
-                        for (company_token_sequence_idx, company_name_variations_token_ids) in
+                        for (company_sequence_idx, company_name_variations_token_ids) in
                             company_name_variations_token_ids_list.iter().enumerate()
                         {
                             if company_name_variations_token_ids.is_empty() {
@@ -317,7 +321,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                                     .entry(ticker_symbol.clone())
                                     .or_insert_with(Vec::new) // Create an empty Vec if the key doesn't exist
                                     .retain(|(existing_idx, existing_vec)| {
-                                        *existing_idx != company_token_sequence_idx
+                                        *existing_idx != company_sequence_idx
                                             || *existing_vec != *company_name_variations_token_ids
                                     }); // Remove duplicates
 
@@ -326,7 +330,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                                     .unwrap()
                                     .iter()
                                     .any(|(existing_idx, existing_vec)| {
-                                        *existing_idx == company_token_sequence_idx
+                                        *existing_idx == company_sequence_idx
                                             && *existing_vec == *company_name_variations_token_ids
                                     })
                                 {
@@ -334,7 +338,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                                         .get_mut(&ticker_symbol.to_string())
                                         .unwrap()
                                         .push((
-                                            company_token_sequence_idx,
+                                            company_sequence_idx,
                                             company_name_variations_token_ids.clone(),
                                         ));
                                 }
@@ -350,8 +354,11 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     fn collect_token_parity_states(
         &self,
-        query_token_ids: &[usize],
-        potential_token_id_sequences: &HashMap<TickerSymbol, Vec<(usize, Vec<usize>)>>,
+        query_token_ids: &[TokenId],
+        potential_token_id_sequences: &HashMap<
+            TickerSymbol,
+            Vec<(CompanySequenceIndex, Vec<TokenId>)>,
+        >,
     ) -> Vec<TokenParityState> {
         let mut token_parity_states = Vec::new();
 
@@ -399,7 +406,10 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     fn collect_token_range_states(
         &self,
-        potential_token_id_sequences: &HashMap<TickerSymbol, Vec<(usize, Vec<usize>)>>,
+        potential_token_id_sequences: &HashMap<
+            TickerSymbol,
+            Vec<(CompanySequenceIndex, Vec<TokenId>)>,
+        >,
         token_parity_states: &[TokenParityState],
     ) -> Vec<TokenRangeState> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
@@ -497,7 +507,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     /// Determines the highest scores which map to each filtered token index.
     fn assign_token_range_scores(
         &self,
-        query_token_ids: &[usize],
+        query_token_ids: &[TokenId],
         token_range_states: &mut [TokenRangeState],
     ) {
         for (query_token_idx, _query_token_id) in query_token_ids.iter().enumerate() {
@@ -543,7 +553,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     fn collect_top_range_states(
         &self,
-        query_token_ids: &[usize],
+        query_token_ids: &[TokenId],
         token_range_states: &[TokenRangeState],
     ) -> Vec<TokenRangeState> {
         let mut top_range_states_map: Vec<Vec<&TokenRangeState>> =
