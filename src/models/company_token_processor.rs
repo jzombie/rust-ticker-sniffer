@@ -183,7 +183,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .get(ticker_symbol)
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
-
+    #[allow(dead_code)]
     /// For debugging purposes
     fn display_company_tokens(&self, ticker_symbol: &TickerSymbol) {
         if let Some(company_token_sequences) = self.company_token_sequences.get(ticker_symbol) {
