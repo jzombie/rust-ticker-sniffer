@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use crate::types::{CompanySymbolList, CompanyTokenSourceType, TokenizerVectorToken};
+use crate::types::{CompanySymbolList, CompanyTokenSourceType, TokenVector};
 use crate::Tokenizer;
 
 type CompanyTokenIndexBySourceType = usize;
 
 type CompanyTokenizedEntry = (
-    TokenizerVectorToken,
+    TokenVector,
     CompanyTokenSourceType,
     CompanyTokenIndexBySourceType,
 );
@@ -37,7 +37,7 @@ pub struct CompanyTokenProcessor<'a> {
     // TODO: Using a flat buffer would be more performant, but something would
     // need to handle the offsets accordingly
     pub token_length_bins: Vec<CompanyTokenBin>,
-    pub company_name_token_frequency_map: HashMap<TokenizerVectorToken, usize>,
+    pub company_name_token_frequency_map: HashMap<TokenVector, usize>,
     pub company_name_token_tf_idf_scores: HashMap<CompanyIndex, Vec<f32>>,
 }
 
@@ -149,7 +149,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let total_documents = self.tokenized_entries.len() as f32;
 
         for (company_index, company_tokens) in self.tokenized_entries.iter().enumerate() {
-            let mut token_tf_map: HashMap<TokenizerVectorToken, f32> = HashMap::new();
+            let mut token_tf_map: HashMap<TokenVector, f32> = HashMap::new();
             let mut token_count = 0;
 
             // Calculate TF
@@ -181,8 +181,8 @@ impl<'a> CompanyTokenProcessor<'a> {
     // TODO: Implement
     // pub fn compute_tf_idf_scores_for_query_token_vectors(
     //     &self,
-    //     query_token_vectors: &[TokenizerVectorToken],
-    // ) -> HashMap<TokenizerVectorToken, f32> {
+    //     query_token_vectors: &[TokenVector],
+    // ) -> HashMap<TokenVector, f32> {
     //     let total_documents = self.tokenized_entries.len() as f32;
 
     //     // Map to store the IDF scores for each token in the input
@@ -209,12 +209,12 @@ impl<'a> CompanyTokenProcessor<'a> {
     pub fn get_company_name_token_vectors(
         &self,
         company_index: usize,
-    ) -> Option<Vec<TokenizerVectorToken>> {
+    ) -> Option<Vec<TokenVector>> {
         // Retrieve the tokenized entries for the given company index
         let tokenized_entries = self.tokenized_entries.get(company_index)?;
 
         // Filter tokens that are of the `CompanyName` source type and map them to strings
-        let company_name_tokens_vectors: Vec<TokenizerVectorToken> = tokenized_entries
+        let company_name_tokens_vectors: Vec<TokenVector> = tokenized_entries
             .iter()
             .filter_map(|(token_vector, token_source_type, _)| {
                 if *token_source_type == CompanyTokenSourceType::CompanyName {

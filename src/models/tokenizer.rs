@@ -1,5 +1,5 @@
 use crate::constants::STOP_WORDS;
-use crate::types::TokenizerVectorToken;
+use crate::types::{Token, TokenVector};
 use std::char;
 use std::collections::HashSet;
 
@@ -31,7 +31,7 @@ impl Tokenizer {
     }
 
     /// Tokenizer function to split the text into individual tokens.
-    pub fn tokenize(&self, text: &str) -> Vec<String> {
+    pub fn tokenize(&self, text: &str) -> Vec<Token> {
         // Helper function to calculate uppercase ratio
         // fn uppercase_ratio(word: &str) -> f32 {
         //     let total_chars = word.chars().count() as f32;
@@ -122,32 +122,32 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenizerVectorToken> {
+    pub fn tokenize_to_charcode_vectors(&self, text: &str) -> Vec<TokenVector> {
         self.tokenize(text)
             .iter() // Use the existing `tokenize` function to get tokens
             .map(|token| Tokenizer::token_to_charcode_vector(&token))
             .collect()
     }
 
-    pub fn token_to_charcode_vector(token: &str) -> TokenizerVectorToken {
+    pub fn token_to_charcode_vector(token: &str) -> TokenVector {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn tokens_to_charcode_vectors(tokens: &Vec<&str>) -> Vec<TokenizerVectorToken> {
+    pub fn tokens_to_charcode_vectors(tokens: &Vec<&str>) -> Vec<TokenVector> {
         tokens
             .iter()
             .map(|token| Tokenizer::token_to_charcode_vector(token))
             .collect()
     }
 
-    pub fn charcode_vector_to_token(charcodes: &TokenizerVectorToken) -> String {
+    pub fn charcode_vector_to_token(charcodes: &TokenVector) -> Token {
         charcodes
             .iter()
             .map(|&code| char::from_u32(code).unwrap_or('\u{FFFD}')) // Convert code to char, using '�' as a fallback
             .collect()
     }
 
-    pub fn charcode_vectors_to_tokens(charcode_vectors: &Vec<TokenizerVectorToken>) -> Vec<String> {
+    pub fn charcode_vectors_to_tokens(charcode_vectors: &Vec<TokenVector>) -> Vec<Token> {
         charcode_vectors
             .iter()
             .map(|charcodes| Tokenizer::charcode_vector_to_token(charcodes))

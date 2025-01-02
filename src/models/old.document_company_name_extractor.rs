@@ -1,4 +1,4 @@
-use crate::types::{CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenizerVectorToken};
+use crate::types::{CompanySymbolList, CompanyTokenSourceType, TickerSymbol, TokenVector};
 use crate::utils::{index_difference_similarity, softmax};
 use crate::DocumentCompanyNameExtractorConfig;
 use crate::{CompanyTokenProcessor, Error, Tokenizer};
@@ -33,11 +33,11 @@ type QueryTokenIndex = usize;
 struct QueryVectorIntermediateSimilarityState {
     token_window_index: TokenWindowIndex,
     query_token_index: QueryTokenIndex,
-    query_token_vector: TokenizerVectorToken,
+    query_token_vector: TokenVector,
     company_index: usize, // TODO: Add more specific type
     company_token_source_type: CompanyTokenSourceType,
     company_token_index_by_source_type: usize, // TODO: Add more specific type
-    company_token_vector: TokenizerVectorToken,
+    company_token_vector: TokenVector,
     company_name_similarity_at_index: f32,
 }
 
@@ -48,10 +48,10 @@ struct TickerSymbolRangeReport {
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     query_token_indices: Vec<QueryTokenIndex>,
-    query_token_vectors: Vec<TokenizerVectorToken>,
+    query_token_vectors: Vec<TokenVector>,
     company_name_token_frequencies: Vec<usize>,
     company_name_token_frequencies_softmax: Vec<f64>,
-    company_name_token_vectors: Vec<TokenizerVectorToken>,
+    company_name_token_vectors: Vec<TokenVector>,
     company_name_token_tf_idf_scores: Vec<f32>,
     company_name_char_coverage: f32,
     company_name_token_coverage: f32,
@@ -63,7 +63,7 @@ pub struct DocumentCompanyNameExtractor<'a> {
     company_token_processor: &'a CompanyTokenProcessor<'a>,
     user_config: &'a DocumentCompanyNameExtractorConfig,
     is_extracting: bool,
-    tokenized_query_token_vectors: Vec<TokenizerVectorToken>,
+    tokenized_query_token_vectors: Vec<TokenVector>,
     company_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     results: Vec<TickerSymbol>,
 }

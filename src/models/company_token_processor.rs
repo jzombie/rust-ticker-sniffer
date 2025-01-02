@@ -1,4 +1,4 @@
-use crate::types::{CompanySymbolList, TickerSymbol, TokenId};
+use crate::types::{CompanySymbolList, TickerSymbol, Token, TokenId};
 use crate::TokenMapper;
 use crate::Tokenizer;
 use std::collections::HashMap;
@@ -102,8 +102,15 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     // TODO: Use Result type for output
     pub fn process_text_doc(&mut self, text: &str) {
+        // Tokenize the input text
+        let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
+
+        // TODO: Remove
+        // Debugging output
+        println!("{:?}", text_doc_tokens);
+
         // TODO: Don't use unwrap
-        let query_token_ids = self.get_filtered_query_token_ids(text).unwrap();
+        let query_token_ids = self.get_filtered_query_token_ids(&text_doc_tokens).unwrap();
 
         // Identify token ID sequences which start with the first token of a company token sequence
         let potential_token_id_sequences = self.get_potential_token_sequences(&query_token_ids);
@@ -262,14 +269,10 @@ impl<'a> CompanyTokenProcessor<'a> {
     }
 
     // TODO: Use proper error type
-    fn get_filtered_query_token_ids(&self, text: &str) -> Result<Vec<TokenId>, String> {
-        // Tokenize the input text
-        let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
-
-        // TODO: Remove
-        // Debugging output
-        println!("{:?}", text_doc_tokens);
-
+    fn get_filtered_query_token_ids(
+        &self,
+        text_doc_tokens: &Vec<Token>,
+    ) -> Result<Vec<TokenId>, Token> {
         if text_doc_tokens.is_empty() {
             // Return an error if no tokens are found
             return Err("No tokens found in the text document.".to_string());
@@ -512,7 +515,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     ) {
         for (query_token_idx, _query_token_id) in query_token_ids.iter().enumerate() {
             // Initialize a map to store scores for this token
-            let mut token_scores: HashMap<String, f32> = HashMap::new();
+            let mut token_scores: HashMap<Token, f32> = HashMap::new();
 
             // Iterate over all token range states
             for token_range_state in &mut *token_range_states {

@@ -1,10 +1,10 @@
-use crate::types::{TokenId, TokenizerVectorToken};
+use crate::types::{TokenId, TokenVector};
 use crate::Tokenizer;
 use std::collections::HashMap;
 
 pub struct TokenMapper {
-    token_map: HashMap<TokenizerVectorToken, TokenId>,
-    reverse_token_map: HashMap<TokenId, TokenizerVectorToken>,
+    token_map: HashMap<TokenVector, TokenId>,
+    reverse_token_map: HashMap<TokenId, TokenVector>,
     next_id: TokenId,
 }
 
@@ -48,7 +48,7 @@ impl TokenMapper {
             .collect()
     }
 
-    pub fn get_filtered_token_ids<'a>(&'a self, tokens: Vec<&'a str>) -> Vec<usize> {
+    pub fn get_filtered_token_ids<'a>(&'a self, tokens: Vec<&'a str>) -> Vec<TokenId> {
         tokens
             .into_iter()
             .filter_map(|token| self.get_token_id(token))
@@ -69,7 +69,7 @@ impl TokenMapper {
     }
 
     /// Gets the total number of unique tokens
-    pub fn token_count(&self) -> usize {
+    pub fn get_token_count(&self) -> usize {
         self.token_map.len()
     }
 }
