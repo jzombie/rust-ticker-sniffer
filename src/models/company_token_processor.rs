@@ -137,6 +137,14 @@ impl<'a> CompanyTokenProcessor<'a> {
             println!("{:?}", state);
         }
 
+        // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
+        // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
+        // token IDs to text doc tokens, determine whether to include these in the results
+        println!(
+            "query_text_doc_token_ids: {:?}, query_ticker_symbol_token_ids: {:?}",
+            query_text_doc_token_ids, query_ticker_symbol_token_ids
+        );
+
         // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
         // TODO: Keep track of highest scores, for context
         // TODO: Filter out token range states less than a minimum score threshold

@@ -91,6 +91,8 @@ fn main() {
     Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
         "#;
 
+    let query = "A Google search and Apple Hospitality REIT";
+
     // let query = "First Trust Dow 30 Equal Weight ETF";
     // Note: This is a subset of the previous, filtered to the lines which were are causing EDOW to not be represented in the result
     // let query = r#"
