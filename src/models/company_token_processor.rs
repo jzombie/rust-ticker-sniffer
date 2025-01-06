@@ -1,4 +1,5 @@
 use crate::types::{CompanySymbolList, TickerSymbol, Token, TokenId};
+use crate::utils::dedup_vector;
 use crate::TokenMapper;
 use crate::Tokenizer;
 use std::collections::HashMap;
@@ -12,6 +13,7 @@ pub struct CompanyTokenProcessor<'a> {
     token_mapper: TokenMapper,
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
+    // TODO: Compute these during compile time, not runtime
     company_token_sequences: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
     company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
@@ -28,6 +30,8 @@ struct TokenParityState {
 #[derive(Debug, Clone)]
 struct TokenRangeState {
     ticker_symbol: TickerSymbol,
+    ticker_symbol_token_id: TokenId,
+    is_matched_on_ticker_symbol: Option<bool>,
     // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
     // TODO: Track vector_similarity_state_indices?
     // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
@@ -44,11 +48,14 @@ struct TokenRangeState {
 impl TokenRangeState {
     fn new(
         ticker_symbol: TickerSymbol,
+        ticker_symbol_token_id: TokenId,
         company_sequence_idx: CompanySequenceIndex,
         company_sequence_max_length: usize,
     ) -> Self {
         TokenRangeState {
             ticker_symbol,
+            ticker_symbol_token_id,
+            is_matched_on_ticker_symbol: None,
             query_token_indices: vec![],
             query_text_doc_token_ids: vec![],
             company_sequence_idx,
@@ -74,6 +81,12 @@ impl TokenRangeState {
 
     fn finalize(&mut self) {
         self.update_coverage();
+
+        self.is_matched_on_ticker_symbol = Some(
+            self.query_text_doc_token_ids.len() == 1
+                && self.query_text_doc_token_ids[0] == self.ticker_symbol_token_id,
+        );
+
         self.is_finalized = true;
     }
 
@@ -137,12 +150,14 @@ impl<'a> CompanyTokenProcessor<'a> {
             println!("{:?}", state);
         }
 
+        let unique_query_ticker_symbol_token_ids = dedup_vector(&query_text_doc_token_ids);
+
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
         // token IDs to text doc tokens, determine whether to include these in the results
         println!(
-            "query_text_doc_token_ids: {:?}, query_ticker_symbol_token_ids: {:?}",
-            query_text_doc_token_ids, query_ticker_symbol_token_ids
+            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}",
+            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids)
         );
 
         // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
@@ -181,6 +196,39 @@ impl<'a> CompanyTokenProcessor<'a> {
         // println!("Query token IDs: {:?}", query_text_doc_token_ids);
         // println!("Possible matches: {:?}", potential_token_id_sequences);
         // println!("Scores: {:?}", scores);
+    }
+
+    fn get_ticker_symbol_token_id(&self, ticker_symbol: &TickerSymbol) -> Result<TokenId, String> {
+        match self.company_token_sequences.get(ticker_symbol) {
+            Some(sequences) => {
+                if let Some(sequence) = sequences.first() {
+                    if sequence.len() > 1 {
+                        // Return an error if the first sequence has more than one token ID
+                        return Err(format!(
+                            "Error: First token ID sequence for ticker '{}' has more than one element.",
+                            ticker_symbol
+                        ));
+                    }
+                    // Return the first token ID if available
+                    sequence.first().cloned().ok_or_else(|| {
+                        format!(
+                            "Error: First sequence for ticker '{}' is empty.",
+                            ticker_symbol
+                        )
+                    })
+                } else {
+                    // Return an error if no sequences exist for the ticker
+                    Err(format!(
+                        "Error: No sequences found for ticker '{}'.",
+                        ticker_symbol
+                    ))
+                }
+            }
+            None => Err(format!(
+                "Error: Ticker '{}' not found in company token sequences.",
+                ticker_symbol
+            )),
+        }
     }
 
     fn get_company_token_sequence_max_length(
@@ -443,6 +491,9 @@ impl<'a> CompanyTokenProcessor<'a> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
         for (ticker_symbol, _) in potential_token_id_sequences {
+            // TODO: Don't use unwrap here
+            let ticker_symbol_token_id = self.get_ticker_symbol_token_id(ticker_symbol).unwrap();
+
             // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
             let mut last_company_sequence_token_idx = usize::MAX - 1;
@@ -485,6 +536,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                     token_range_state = Some(TokenRangeState::new(
                         ticker_symbol.to_string(),
+                        ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
                         self.get_company_token_sequence_max_length(
                             ticker_symbol,
