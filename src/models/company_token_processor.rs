@@ -152,18 +152,20 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         let unique_query_ticker_symbol_token_ids = dedup_vector(&query_text_doc_token_ids);
 
+        // TODO: Determine whether to explicitly parse out symbols which may also be stop words, based on percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed as a symbol)
+        let ratio_exact_matches = self.calc_exact_ticker_symbol_match_ratio(&top_range_states);
+
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
         // token IDs to text doc tokens, determine whether to include these in the results
         println!(
-            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}",
-            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids)
+            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}, ratio_exact_matches: {}",
+            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), ratio_exact_matches
         );
 
         // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
         // TODO: Keep track of highest scores, for context
         // TODO: Filter out token range states less than a minimum score threshold
-        // TODO: Determine whether to explicitly parse out symbols which may also be stop words, based on percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed as a symbol)
 
         // for token_range_state in &token_range_states {
         //     println!(
@@ -196,6 +198,34 @@ impl<'a> CompanyTokenProcessor<'a> {
         // println!("Query token IDs: {:?}", query_text_doc_token_ids);
         // println!("Possible matches: {:?}", potential_token_id_sequences);
         // println!("Scores: {:?}", scores);
+    }
+
+    fn calc_exact_ticker_symbol_match_ratio(
+        &self,
+        top_token_range_states: &[TokenRangeState],
+    ) -> f32 {
+        let (exact_matches, total) =
+            top_token_range_states
+                .iter()
+                .fold((0, 0), |(exact_matches, total), state| {
+                    (
+                        exact_matches
+                            + if state.is_matched_on_ticker_symbol == Some(true) {
+                                1
+                            } else {
+                                0
+                            },
+                        total + 1,
+                    )
+                });
+
+        let ratio_exact_matches = if total > 0 {
+            exact_matches as f32 / total as f32
+        } else {
+            0.0
+        };
+
+        ratio_exact_matches
     }
 
     fn get_ticker_symbol_token_id(&self, ticker_symbol: &TickerSymbol) -> Result<TokenId, String> {
