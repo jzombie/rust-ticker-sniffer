@@ -116,30 +116,37 @@ impl<'a> CompanyTokenProcessor<'a> {
     // TODO: Use Result type for output
     pub fn process_text_doc(&mut self, text: &str) {
         // Tokenize the input text
+        println!("Tokenizing...");
         let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(text);
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
         // TODO: Don't use unwrap
+        println!("Gathering filtered tokens...");
         let (query_text_doc_token_ids, query_ticker_symbol_token_ids) = self
             .get_filtered_query_token_ids(&ticker_symbol_tokens, &text_doc_tokens)
             .unwrap();
 
         // Identify token ID sequences which start with the first token of a company token sequence
+        println!("Identifying token ID sequences...");
         let potential_token_id_sequences =
             self.get_potential_token_sequences(&query_text_doc_token_ids);
 
         // Aggregate token parity states
+        println!("Collecting token parity states...");
         let token_parity_states = self
             .collect_token_parity_states(&query_text_doc_token_ids, &potential_token_id_sequences);
 
         // Determine range states
+        println!("Collecting token range states...");
         let mut token_range_states =
             self.collect_token_range_states(&potential_token_id_sequences, &token_parity_states);
 
         // Assign scores to the range states
+        println!("Assigning range scores...");
         self.assign_token_range_scores(&query_text_doc_token_ids, &mut token_range_states);
 
         // Collect top range states
+        println!("Collecting top range states...");
         let top_range_states =
             self.collect_top_range_states(&query_text_doc_token_ids, &token_range_states);
 
