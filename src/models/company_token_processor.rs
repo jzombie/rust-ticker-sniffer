@@ -157,38 +157,15 @@ impl<'a> CompanyTokenProcessor<'a> {
             println!("{:?}", state);
         }
 
-        let unique_query_ticker_symbol_token_ids = dedup_vector(&query_text_doc_token_ids);
-
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
         // as a symbol)
         let ratio_exact_matches = self.calc_exact_ticker_symbol_match_ratio(&top_range_states);
 
-        // TODO: Refactor
-        fn count_unique_ticker_symbols(range_states: &[TokenRangeState]) -> HashMap<String, usize> {
-            let mut symbol_to_query_token_indices: HashMap<String, HashSet<Vec<QueryTokenIndex>>> =
-                HashMap::new();
+        let top_range_state_counts =
+            self.count_token_range_ticker_symbol_frequencies(&top_range_states);
 
-            for state in range_states {
-                // Get the ticker_symbol and query_token_indices
-                let ticker_symbol = state.ticker_symbol.clone();
-                let query_token_indices = state.query_token_indices.clone();
-
-                // Insert query_token_indices into the HashSet for the ticker_symbol
-                symbol_to_query_token_indices
-                    .entry(ticker_symbol)
-                    .or_insert_with(HashSet::new)
-                    .insert(query_token_indices);
-            }
-
-            // Convert the HashSet sizes into the final result
-            symbol_to_query_token_indices
-                .into_iter()
-                .map(|(symbol, indices)| (symbol, indices.len()))
-                .collect()
-        }
-
-        let top_range_state_counts = count_unique_ticker_symbols(&top_range_states);
+        let unique_query_ticker_symbol_token_ids = dedup_vector(&query_text_doc_token_ids);
 
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
@@ -233,6 +210,35 @@ impl<'a> CompanyTokenProcessor<'a> {
         // println!("Query token IDs: {:?}", query_text_doc_token_ids);
         // println!("Possible matches: {:?}", potential_token_id_sequences);
         // println!("Scores: {:?}", scores);
+    }
+
+    /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
+    fn count_token_range_ticker_symbol_frequencies(
+        &self,
+        range_states: &[TokenRangeState],
+    ) -> HashMap<TickerSymbol, usize> {
+        let mut symbol_to_query_token_indices: HashMap<
+            TickerSymbol,
+            HashSet<Vec<QueryTokenIndex>>,
+        > = HashMap::new();
+
+        for state in range_states {
+            // Get the ticker_symbol and query_token_indices
+            let ticker_symbol = state.ticker_symbol.clone();
+            let query_token_indices = state.query_token_indices.clone();
+
+            // Insert query_token_indices into the HashSet for the ticker_symbol
+            symbol_to_query_token_indices
+                .entry(ticker_symbol)
+                .or_insert_with(HashSet::new)
+                .insert(query_token_indices);
+        }
+
+        // Convert the HashSet sizes into the final result
+        symbol_to_query_token_indices
+            .into_iter()
+            .map(|(symbol, indices)| (symbol, indices.len()))
+            .collect()
     }
 
     fn calc_exact_ticker_symbol_match_ratio(
