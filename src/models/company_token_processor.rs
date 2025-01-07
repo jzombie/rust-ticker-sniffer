@@ -8,7 +8,13 @@ type QueryTokenIndex = usize;
 type CompanySequenceIndex = usize;
 type CompanySequenceTokenIndex = usize;
 
+pub struct CompanyTokenProcessorConfig {
+    // TODO: Rename
+    pub threshold_ratio_exact_matches: f32,
+}
+
 pub struct CompanyTokenProcessor<'a> {
+    config: &'a CompanyTokenProcessorConfig,
     company_symbol_list: &'a CompanySymbolList,
     token_mapper: TokenMapper,
     ticker_symbol_tokenizer: Tokenizer,
@@ -98,8 +104,12 @@ impl TokenRangeState {
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
-    pub fn new(company_symbol_list: &'a CompanySymbolList) -> Self {
+    pub fn new(
+        config: &'a CompanyTokenProcessorConfig,
+        company_symbol_list: &'a CompanySymbolList,
+    ) -> Self {
         let mut instance = CompanyTokenProcessor {
+            config,
             company_symbol_list,
             token_mapper: TokenMapper::new(),
             ticker_symbol_tokenizer: Tokenizer::ticker_symbol_parser(),

@@ -2,8 +2,8 @@ use csv::Reader;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
-    extract_tickers_from_text_with_custom_config, CompanySymbolList,
-    DocumentCompanyNameExtractorConfig, Error as LibError, TickerSymbol,
+    extract_tickers_from_text_with_custom_config, CompanySymbolList, CompanyTokenProcessorConfig,
+    Error as LibError, TickerSymbol,
 };
 pub mod models;
 // pub use models::EvaluationResult;
@@ -87,7 +87,7 @@ pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
 // Helper function to run the test for each file in the directory
 pub fn run_test_for_file(
     test_file_path: &str,
-    company_name_extractor_config: DocumentCompanyNameExtractorConfig,
+    company_token_processor_config: &CompanyTokenProcessorConfig,
 ) -> Result<
     (
         // TODO: Use more specific types (especially for `f32` confidence score)
@@ -117,9 +117,9 @@ pub fn run_test_for_file(
 
     // Extract tickers from the filtered text
     let results_with_confidence = extract_tickers_from_text_with_custom_config(
+        &company_token_processor_config,
         &filtered_text,
         &symbols_map,
-        company_name_extractor_config,
     )?;
 
     // Get the expected tickers from the file

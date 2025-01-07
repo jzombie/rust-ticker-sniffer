@@ -4,7 +4,7 @@ use test_utils::constants::TEST_FILES_DIRECTORY;
 
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
-use ticker_sniffer::DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG;
+use ticker_sniffer::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 
 #[cfg(test)]
 mod tests {
@@ -26,7 +26,7 @@ mod tests {
             if file_path.is_file() {
                 let _ = run_test_for_file(
                     file_path.to_str().unwrap(),
-                    DEFAULT_COMPANY_NAME_EXTRACTOR_CONFIG,
+                    DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG,
                 );
             }
         }
