@@ -172,6 +172,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // as a symbol)
         let ratio_exact_matches = self.calc_exact_ticker_symbol_match_ratio(&top_range_states);
 
+        // Keep track of number of occurrences, per extracted symbol, for context stats
         let top_range_state_counts =
             self.count_token_range_ticker_symbol_frequencies(&top_range_states);
 
@@ -185,8 +186,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), top_range_state_counts, ratio_exact_matches
         );
 
-        // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
-        // TODO: Keep track of highest scores, for context
         // TODO: Filter out token range states less than a minimum score threshold
 
         // for token_range_state in &token_range_states {
