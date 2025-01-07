@@ -165,7 +165,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let top_range_state_counts =
             self.count_token_range_ticker_symbol_frequencies(&top_range_states);
 
-        let unique_query_ticker_symbol_token_ids = dedup_vector(&query_text_doc_token_ids);
+        let unique_query_ticker_symbol_token_ids = dedup_vector(&query_ticker_symbol_token_ids);
 
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol

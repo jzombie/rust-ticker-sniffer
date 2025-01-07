@@ -91,8 +91,10 @@ fn main() {
     Zacks’ free Fund Newsletter will brief you on top news and analysis, as well as top-performing ETFs, each week.
         "#;
 
-    let query =
-        "A Google search and Apple Hospitality REIT, and then there is the REIT symbol and AAPL";
+    // let query =
+    //     "A Google search and Apple Hospitality REIT, and then there is the REIT symbol and AAPL, now I will say it again, Apple is a good company, and they team up with Google occasionally though Apple and Google are competitors";
+
+    let query = "NVDA, GOOG, GOOGL, A, AAPL and AMZN";
 
     // let query = "First Trust Dow 30 Equal Weight ETF";
     // Note: This is a subset of the previous, filtered to the lines which were are causing EDOW to not be represented in the result
