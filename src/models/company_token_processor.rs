@@ -2,7 +2,7 @@ use crate::types::{CompanySymbolList, TickerSymbol, Token, TokenId};
 use crate::utils::dedup_vector;
 use crate::TokenMapper;
 use crate::Tokenizer;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 type QueryTokenIndex = usize;
 type CompanySequenceIndex = usize;
@@ -159,15 +159,43 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         let unique_query_ticker_symbol_token_ids = dedup_vector(&query_text_doc_token_ids);
 
-        // TODO: Determine whether to explicitly parse out symbols which may also be stop words, based on percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed as a symbol)
+        // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
+        // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
+        // as a symbol)
         let ratio_exact_matches = self.calc_exact_ticker_symbol_match_ratio(&top_range_states);
+
+        // TODO: Refactor
+        fn count_unique_ticker_symbols(range_states: &[TokenRangeState]) -> HashMap<String, usize> {
+            let mut symbol_to_query_token_indices: HashMap<String, HashSet<Vec<QueryTokenIndex>>> =
+                HashMap::new();
+
+            for state in range_states {
+                // Get the ticker_symbol and query_token_indices
+                let ticker_symbol = state.ticker_symbol.clone();
+                let query_token_indices = state.query_token_indices.clone();
+
+                // Insert query_token_indices into the HashSet for the ticker_symbol
+                symbol_to_query_token_indices
+                    .entry(ticker_symbol)
+                    .or_insert_with(HashSet::new)
+                    .insert(query_token_indices);
+            }
+
+            // Convert the HashSet sizes into the final result
+            symbol_to_query_token_indices
+                .into_iter()
+                .map(|(symbol, indices)| (symbol, indices.len()))
+                .collect()
+        }
+
+        let top_range_state_counts = count_unique_ticker_symbols(&top_range_states);
 
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
         // token IDs to text doc tokens, determine whether to include these in the results
         println!(
-            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}, ratio_exact_matches: {}",
-            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), ratio_exact_matches
+            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}, top_range_state_counts: {:?}, ratio_exact_matches: {}",
+            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), top_range_state_counts, ratio_exact_matches
         );
 
         // TODO: Keep track of number of occurrences, per extracted symbol, for context stats
