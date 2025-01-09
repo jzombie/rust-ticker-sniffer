@@ -1,5 +1,6 @@
 use crate::types::{CompanySymbolList, TickerSymbol, Token, TokenId};
 use crate::utils::dedup_vector;
+use crate::Error;
 use crate::TokenMapper;
 use crate::Tokenizer;
 use std::collections::{HashMap, HashSet};
@@ -124,17 +125,15 @@ impl<'a> CompanyTokenProcessor<'a> {
     }
 
     // TODO: Use Result type for output
-    pub fn process_text_doc(&mut self, text: &str) {
+    pub fn process_text_doc(&mut self, text: &str) -> Result<Vec<TokenId>, Error> {
         // Tokenize the input text
         println!("Tokenizing...");
         let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(text);
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
-        // TODO: Don't use unwrap
         println!("Gathering filtered tokens...");
-        let (query_text_doc_token_ids, query_ticker_symbol_token_ids) = self
-            .get_filtered_query_token_ids(&ticker_symbol_tokens, &text_doc_tokens)
-            .unwrap();
+        let (query_text_doc_token_ids, query_ticker_symbol_token_ids) =
+            self.get_filtered_query_token_ids(&ticker_symbol_tokens, &text_doc_tokens)?;
 
         // Identify token ID sequences which start with the first token of a company token sequence
         println!("Identifying token ID sequences...");
@@ -182,11 +181,25 @@ impl<'a> CompanyTokenProcessor<'a> {
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
         // token IDs to text doc tokens, determine whether to include these in the results
         println!(
-            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}, top_range_state_counts: {:?}, ratio_exact_matches: {}",
-            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), top_range_state_counts, ratio_exact_matches
+            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}, top_range_state_counts: {:?}, ratio_exact_matches: {}, match_threshold: {}",
+            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), top_range_state_counts, ratio_exact_matches, self.config.threshold_ratio_exact_matches
         );
 
-        // TODO: Filter out token range states less than a minimum score threshold
+        // TODO: Filter out token range states less than a minimum score threshold (is this still necessary?)
+
+        let mut response_tokens: Vec<TokenId> = Vec::new();
+
+        for (ticker_symbol, occurrence_count) in top_range_state_counts {
+            let ticker_symbol_token_id =
+                self.token_mapper
+                    .get_token_id(&ticker_symbol)
+                    .expect(&format!(
+                        "Could not obtain token ID for symbol: {ticker_symbol}"
+                    ));
+            response_tokens.push(ticker_symbol_token_id);
+        }
+
+        Ok(response_tokens)
 
         // for token_range_state in &token_range_states {
         //     println!(
@@ -406,18 +419,16 @@ impl<'a> CompanyTokenProcessor<'a> {
         company_name_token_ids
     }
 
-    // TODO: Use proper error type
     fn get_filtered_query_token_ids(
         &self,
         ticker_symbol_tokens: &Vec<Token>,
         text_doc_tokens: &Vec<Token>,
-    ) -> Result<(Vec<TokenId>, Vec<TokenId>), Token> {
-        // TODO: Remove
-        println!("text_doc_tokens: {:?}", text_doc_tokens);
-
+    ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
         if text_doc_tokens.is_empty() {
             // Return an error if no tokens are found
-            return Err("No tokens found in the text document.".to_string());
+            return Err(Error::TokenFilterError(
+                "No tokens found in the text document.".to_string(),
+            ));
         }
 
         // Get the filtered token IDs (IDs present in the TokenMapper)
@@ -428,17 +439,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         let query_ticker_symbol_token_ids = self
             .token_mapper
             .get_filtered_token_ids(ticker_symbol_tokens.iter().map(|s| s.as_str()).collect());
-
-        // if query_token_ids.is_empty() {
-        //     // Return an error if no token IDs are found
-        //     return Err("No token IDs found in the document.".to_string());
-        // }
-
-        // // TODO: Remove
-        // println!(
-        //     "query_text_doc_token_ids: {:?}, query_ticker_symbol_token_ids: {:?}",
-        //     query_text_doc_token_ids, query_ticker_symbol_token_ids
-        // );
 
         // Return the filtered token IDs wrapped in `Ok`
         Ok((query_text_doc_token_ids, query_ticker_symbol_token_ids))
@@ -480,6 +480,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                                             || *existing_vec != *company_name_variations_token_ids
                                     }); // Remove duplicates
 
+                                // TODO: Don't use unwrap
                                 if !potential_token_id_sequences
                                     .get(&ticker_symbol.clone())
                                     .unwrap()
@@ -726,6 +727,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                         // Initialize with the current range state if no state exists
                         top_range_states_map[query_token_idx].push(token_range_state);
                     } else {
+                        // TODO: Don't use unwrap
                         // Check the score of the existing states
                         let existing_score = top_range_states_map[query_token_idx][0]
                             .range_score
