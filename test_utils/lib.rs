@@ -3,7 +3,7 @@ use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
     extract_tickers_from_text_with_custom_config, CompanySymbolList, CompanyTokenProcessorConfig,
-    Error as LibError, TickerSymbol,
+    Error as LibError, TickerSymbol, TickerSymbolFrequencyMap,
 };
 pub mod models;
 // pub use models::EvaluationResult;
@@ -90,8 +90,7 @@ pub fn run_test_for_file(
     company_token_processor_config: &CompanyTokenProcessorConfig,
 ) -> Result<
     (
-        // TODO: Use more specific types (especially for `f32` confidence score)
-        Vec<(TickerSymbol, f32)>,
+        TickerSymbolFrequencyMap,
         Vec<TickerSymbol>,
         Vec<TickerSymbol>,
     ),
@@ -116,7 +115,7 @@ pub fn run_test_for_file(
         .join("\n");
 
     // Extract tickers from the filtered text
-    let results_with_confidence = extract_tickers_from_text_with_custom_config(
+    let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         &company_token_processor_config,
         &filtered_text,
         &symbols_map,
@@ -126,7 +125,7 @@ pub fn run_test_for_file(
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
 
     // Separate actual results into a vector of just tickers
-    let actual_tickers: Vec<TickerSymbol> = results_with_confidence
+    let actual_tickers: Vec<TickerSymbol> = results_ticker_symbol_frequency_map
         .iter()
         .map(|(symbol, _confidence)| symbol)
         .cloned()
@@ -177,5 +176,9 @@ pub fn run_test_for_file(
     }
 
     // Return the results along with the lists of unexpected and missing tickers
-    Ok((results_with_confidence, unexpected_tickers, missing_tickers))
+    Ok((
+        results_ticker_symbol_frequency_map,
+        unexpected_tickers,
+        missing_tickers,
+    ))
 }

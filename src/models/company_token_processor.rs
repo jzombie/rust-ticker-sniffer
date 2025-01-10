@@ -1,4 +1,4 @@
-use crate::types::{CompanySymbolList, TickerSymbol, Token, TokenId};
+use crate::types::{CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId};
 use crate::utils::dedup_vector;
 use crate::Error;
 use crate::TokenMapper;
@@ -124,7 +124,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         instance
     }
 
-    pub fn process_text_doc(&mut self, text: &str) -> Result<HashMap<TickerSymbol, usize>, Error> {
+    pub fn process_text_doc(&mut self, text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
         // Tokenize the input text
         println!("Tokenizing...");
         let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(text);
@@ -217,8 +217,8 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     fn combine_ticker_symbol_frequencies(
         &self,
-        ticker_symbol_frequency_hash_maps: &[HashMap<TickerSymbol, usize>],
-    ) -> HashMap<TickerSymbol, usize> {
+        ticker_symbol_frequency_hash_maps: &[TickerSymbolFrequencyMap],
+    ) -> TickerSymbolFrequencyMap {
         let mut combined_ticker_frequencies: HashMap<TickerSymbol, usize> = HashMap::new();
 
         for frequency_hash_map in ticker_symbol_frequency_hash_maps {
@@ -249,7 +249,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn count_token_range_ticker_symbol_frequencies(
         &self,
         range_states: &[TokenRangeState],
-    ) -> HashMap<TickerSymbol, usize> {
+    ) -> TickerSymbolFrequencyMap {
         // Step 1: Deduplicate query token indices for each ticker symbol
         let mut ticker_symbol_query_indices: HashMap<TickerSymbol, HashSet<Vec<QueryTokenIndex>>> =
             HashMap::new();

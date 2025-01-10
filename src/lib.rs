@@ -7,22 +7,22 @@ pub use models::{
 pub mod types;
 mod utils;
 pub use types::{
-    AlternateCompanyName, CompanyName, CompanySymbolList, TickerSymbol, Token, TokenId, TokenRef,
-    TokenVector,
+    AlternateCompanyName, CompanyName, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap,
+    Token, TokenId, TokenRef, TokenVector,
 };
 
 // TODO: Add dedicated type instead of f32
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolList,
-) -> Result<Vec<(TickerSymbol, f32)>, Error> {
-    let symbols_with_confidence = extract_tickers_from_text_with_custom_config(
+) -> Result<TickerSymbolFrequencyMap, Error> {
+    let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG,
         &text,
         &company_symbols_list,
     )?;
 
-    Ok(symbols_with_confidence)
+    Ok(results_ticker_symbol_frequency_map)
 }
 
 // TODO: Refactor accordingly
@@ -30,13 +30,11 @@ pub fn extract_tickers_from_text_with_custom_config(
     document_token_processor_config: &CompanyTokenProcessorConfig,
     text: &str,
     company_symbols_list: &CompanySymbolList,
-) -> Result<Vec<(TickerSymbol, f32)>, Error> {
+) -> Result<TickerSymbolFrequencyMap, Error> {
     let mut company_token_processor =
         CompanyTokenProcessor::new(document_token_processor_config, company_symbols_list);
-    company_token_processor.process_text_doc(text);
 
-    // TODO: Remove mock
-    let symbols_with_confidence = vec![];
+    let results_ticker_symbol_frequency_map = company_token_processor.process_text_doc(text)?;
 
-    Ok(symbols_with_confidence)
+    Ok(results_ticker_symbol_frequency_map)
 }

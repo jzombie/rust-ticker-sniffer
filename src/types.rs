@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // These types may be shared across multiple files for consistency and reusability.
 // Types that are only used within a single file are typically defined locally in those files.
 
@@ -30,3 +32,6 @@ pub type AlternateCompanyName = String;
 /// - `Option<CompanyName>`: The company's primary name (optional if not available).
 /// - `Vec<AlternateCompanyName>`: A list of alternate names or aliases for the company.
 pub type CompanySymbolList = Vec<(TickerSymbol, Option<CompanyName>, Vec<AlternateCompanyName>)>;
+
+// TODO: Document
+pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, usize>;
