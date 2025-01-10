@@ -124,7 +124,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         instance
     }
 
-    // TODO: Use Result type for output
     pub fn process_text_doc(&mut self, text: &str) -> Result<HashMap<TickerSymbol, usize>, Error> {
         // Tokenize the input text
         println!("Tokenizing...");
@@ -187,9 +186,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         let unique_text_doc_ticker_symbols: Vec<TickerSymbol> =
             text_doc_ticker_frequencies.keys().cloned().collect();
 
-        // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
-        // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
-        // token IDs to text doc tokens, determine whether to include these in the results
         println!(
             "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
             query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
@@ -197,19 +193,6 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // TODO: Filter out token range states less than a minimum score threshold (is this still necessary?)
 
-        // let mut response_tokens: Vec<TokenId> = Vec::new();
-
-        // for (ticker_symbol, text_doc_occurrence_count) in &text_doc_ticker_frequencies {
-        //     let ticker_symbol_token_id =
-        //         self.token_mapper
-        //             .get_token_id(&ticker_symbol)
-        //             .expect(&format!(
-        //                 "Could not obtain token ID for symbol: {ticker_symbol}"
-        //             ));
-        //     response_tokens.push(ticker_symbol_token_id);
-        // }
-
-        // TODO: Rename
         let query_tickers_not_in_text_doc: Vec<TickerSymbol> = unique_query_ticker_symbols
             .clone()
             .into_iter()
@@ -230,38 +213,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         );
 
         Ok(combined_ticker_frequencies)
-
-        // for token_range_state in &token_range_states {
-        //     println!(
-        //         "{:?}, Tokens: {:?}",
-        //         token_range_state,
-        //         self.token_mapper
-        //             .get_tokens_by_ids(&token_range_state.query_text_doc_token_ids)
-        //     );
-        // }
-
-        // for (query_token_idx, token_range_states) in &query_token_idx_top_ranges {
-        //     for token_range_state in token_range_states {
-        //         println!(
-        //             "query tok. idx: {:?}, {:?}",
-        //             query_token_idx, token_range_state
-        //         );
-        //     }
-        // }
-
-        // TODO: Remove
-        // self.display_company_tokens(&"GJO".to_string());
-
-        // Convert the scores HashMap into a sorted Vec
-        // let mut sorted_scores: Vec<(String, f32)> = scores.clone().into_iter().collect();
-        // sorted_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap()); // Sort descending by score
-
-        // TODO: Remove
-        // println!("Text doc tokens: {:?}", text_doc_tokens);
-        // println!("Filtered tokens: {:?}", query_tokens);
-        // println!("Query token IDs: {:?}", query_text_doc_token_ids);
-        // println!("Possible matches: {:?}", potential_token_id_sequences);
-        // println!("Scores: {:?}", scores);
     }
 
     fn combine_ticker_symbol_frequencies(
