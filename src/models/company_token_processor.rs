@@ -177,6 +177,16 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         let unique_query_ticker_symbol_token_ids = dedup_vector(&query_ticker_symbol_token_ids);
 
+        let unique_text_doc_ticker_symbols: Vec<TickerSymbol> =
+            top_range_state_counts.keys().cloned().collect();
+
+        let unique_query_ticker_symbols: Vec<TickerSymbol> = self
+            .token_mapper
+            .get_tokens_by_ids(&unique_query_ticker_symbol_token_ids)
+            .into_iter()
+            .filter_map(|option| option) // Keep only `Some` values
+            .collect(); // Collect into a Vec
+
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
         // token IDs to text doc tokens, determine whether to include these in the results
@@ -189,7 +199,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         let mut response_tokens: Vec<TokenId> = Vec::new();
 
-        for (ticker_symbol, occurrence_count) in top_range_state_counts {
+        for (ticker_symbol, text_doc_occurrence_count) in top_range_state_counts {
             let ticker_symbol_token_id =
                 self.token_mapper
                     .get_token_id(&ticker_symbol)
@@ -198,6 +208,19 @@ impl<'a> CompanyTokenProcessor<'a> {
                     ));
             response_tokens.push(ticker_symbol_token_id);
         }
+
+        // TODO: Rename
+        // Assuming `unique_text_doc_ticker_symbols` and `unique_query_ticker_symbols` are Vec<TickerSymbol>
+        let diff_query_tickers: Vec<TickerSymbol> = unique_query_ticker_symbols
+            .clone()
+            .into_iter()
+            .filter(|symbol| !unique_text_doc_ticker_symbols.contains(symbol))
+            .collect();
+
+        println!(
+            "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, diff_query_tickers: {:?}",
+            unique_text_doc_ticker_symbols, unique_query_ticker_symbols, diff_query_tickers
+        );
 
         Ok(response_tokens)
 
