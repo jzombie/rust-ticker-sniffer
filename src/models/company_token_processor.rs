@@ -161,10 +161,10 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // TODO: Remove
         // Debug: Print the top range states
-        println!("Top Range States for Each Query Token Index:");
-        for state in &top_range_states {
-            println!("{:?}", state);
-        }
+        // println!("Top Range States for Each Query Token Index:");
+        // for state in &top_range_states {
+        //     println!("{:?}", state);
+        // }
 
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
@@ -175,24 +175,24 @@ impl<'a> CompanyTokenProcessor<'a> {
         let top_range_state_counts =
             self.count_token_range_ticker_symbol_frequencies(&top_range_states);
 
-        let unique_query_ticker_symbol_token_ids = dedup_vector(&query_ticker_symbol_token_ids);
+        let query_ticker_symbols: Vec<TickerSymbol> = self
+            .token_mapper
+            .get_tokens_by_ids(&query_ticker_symbol_token_ids)
+            .into_iter()
+            .filter_map(|option| option)
+            .collect();
+
+        let unique_query_ticker_symbols = dedup_vector(&query_ticker_symbols);
 
         let unique_text_doc_ticker_symbols: Vec<TickerSymbol> =
             top_range_state_counts.keys().cloned().collect();
-
-        let unique_query_ticker_symbols: Vec<TickerSymbol> = self
-            .token_mapper
-            .get_tokens_by_ids(&unique_query_ticker_symbol_token_ids)
-            .into_iter()
-            .filter_map(|option| option) // Keep only `Some` values
-            .collect(); // Collect into a Vec
 
         // TODO: Keep track of same ticker symbol token IDs which are "consumed" by the text doc query
         // (as well as the number of occurrences), and taking into account the ratio of ticker symbol
         // token IDs to text doc tokens, determine whether to include these in the results
         println!(
-            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, unique_query_ticker_symbol_token_ids: {:?}, unique_query_ticker_symbol_tokens: {:?}, top_range_state_counts: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), unique_query_ticker_symbol_token_ids, self.token_mapper.get_tokens_by_ids(&unique_query_ticker_symbol_token_ids), top_range_state_counts, ratio_exact_matches, self.config.threshold_ratio_exact_matches
+            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, top_range_state_counts: {:?}, ratio_exact_matches: {}, match_threshold: {}",
+            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, top_range_state_counts, ratio_exact_matches, self.config.threshold_ratio_exact_matches
         );
 
         // TODO: Filter out token range states less than a minimum score threshold (is this still necessary?)
@@ -210,15 +210,15 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // TODO: Rename
-        let diff_query_tickers: Vec<TickerSymbol> = unique_query_ticker_symbols
+        let query_tickers_not_in_text_doc: Vec<TickerSymbol> = unique_query_ticker_symbols
             .clone()
             .into_iter()
             .filter(|symbol| !unique_text_doc_ticker_symbols.contains(symbol))
             .collect();
 
         println!(
-            "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, diff_query_tickers: {:?}",
-            unique_text_doc_ticker_symbols, unique_query_ticker_symbols, diff_query_tickers
+            "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}",
+            unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc
         );
 
         Ok(response_tokens)
@@ -256,33 +256,50 @@ impl<'a> CompanyTokenProcessor<'a> {
         // println!("Scores: {:?}", scores);
     }
 
+    fn count_ticker_symbol_frequencies(
+        &self,
+        ticker_symbols: &[TickerSymbol],
+    ) -> HashMap<TickerSymbol, usize> {
+        let mut frequencies: HashMap<TickerSymbol, usize> = HashMap::new();
+
+        for ticker_symbol in ticker_symbols {
+            *frequencies.entry(ticker_symbol.clone()).or_insert(0) += 1;
+        }
+
+        frequencies
+    }
+
     /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
     fn count_token_range_ticker_symbol_frequencies(
         &self,
         range_states: &[TokenRangeState],
     ) -> HashMap<TickerSymbol, usize> {
-        let mut symbol_to_query_token_indices: HashMap<
-            TickerSymbol,
-            HashSet<Vec<QueryTokenIndex>>,
-        > = HashMap::new();
+        // Step 1: Deduplicate query token indices for each ticker symbol
+        let mut ticker_symbol_query_indices: HashMap<TickerSymbol, HashSet<Vec<QueryTokenIndex>>> =
+            HashMap::new();
 
         for state in range_states {
-            // Get the ticker_symbol and query_token_indices
             let ticker_symbol = state.ticker_symbol.clone();
             let query_token_indices = state.query_token_indices.clone();
 
-            // Insert query_token_indices into the HashSet for the ticker_symbol
-            symbol_to_query_token_indices
+            ticker_symbol_query_indices
                 .entry(ticker_symbol)
                 .or_insert_with(HashSet::new)
                 .insert(query_token_indices);
         }
 
-        // Convert the HashSet sizes into the final result
-        symbol_to_query_token_indices
+        // Step 2: Flatten deduplicated indices into a list of ticker symbols
+        let ticker_symbols: Vec<TickerSymbol> = ticker_symbol_query_indices
             .into_iter()
-            .map(|(symbol, indices)| (symbol, indices.len()))
-            .collect()
+            .flat_map(|(ticker_symbol, query_index_sets)| {
+                query_index_sets
+                    .into_iter()
+                    .map(move |_| ticker_symbol.clone())
+            })
+            .collect();
+
+        // Step 3: Count frequencies using the wrapper
+        self.count_ticker_symbol_frequencies(&ticker_symbols)
     }
 
     fn calc_exact_ticker_symbol_match_ratio(
