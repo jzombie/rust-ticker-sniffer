@@ -210,7 +210,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         // TODO: Rename
-        // Assuming `unique_text_doc_ticker_symbols` and `unique_query_ticker_symbols` are Vec<TickerSymbol>
         let diff_query_tickers: Vec<TickerSymbol> = unique_query_ticker_symbols
             .clone()
             .into_iter()
