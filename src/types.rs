@@ -17,9 +17,6 @@ pub type TokenVector = Vec<u32>;
 /// tokens in a data structure such as a `HashMap` or `Vec`.
 pub type TokenId = usize;
 
-/// Represents a ticker symbol (e.g., stock ticker) as an owned `String`.
-pub type TickerSymbol = String;
-
 /// Represents the name of a company as an owned `String`.
 pub type CompanyName = String;
 
@@ -33,5 +30,12 @@ pub type AlternateCompanyName = String;
 /// - `Vec<AlternateCompanyName>`: A list of alternate names or aliases for the company.
 pub type CompanySymbolList = Vec<(TickerSymbol, Option<CompanyName>, Vec<AlternateCompanyName>)>;
 
-// TODO: Document
-pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, usize>;
+/// Represents a ticker symbol (e.g., stock ticker) as an owned `String`.
+pub type TickerSymbol = String;
+
+/// Represents the total number occurrences of a ticker symbol within a text document.
+pub type TickerSymbolFrequency = usize;
+
+/// Represents a map of ticker symbols to their frequency counts within a text document.
+/// The key is the `TickerSymbol`, and the value is the `TickerSymbolFrequency`.
+pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>;
