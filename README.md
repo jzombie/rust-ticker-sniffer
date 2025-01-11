@@ -10,20 +10,6 @@ cargo test --features csv-support  -- --nocapture
 cargo bench --features csv-support
 ```
 
-## Tuning Weights
-
-This process adjusts the weights used in the ticker extraction and matching algorithms to minimize errors. It employs gradient descent with momentum and regularization to optimize performance based on test cases.
-
-```bash
-cargo run --bin tune --features="csv-support rand-support libc-support"
-```
-
-## Training Bias Adjuster
-
-```bash
-cargo run --bin train_bias_adjuster --features="csv-support rand-support libc-support"
-```
-
 ## WASM Test Builds
 
 ```bash
@@ -39,5 +25,7 @@ RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="csv-sup
 ```
 
 ## ChatGPT-based Alternative Name Suggester
+
+This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/company_symbol_list.csv](data/company_symbol_list.csv).
 
 https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternative-name-suggester
