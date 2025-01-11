@@ -3,6 +3,7 @@ use crate::utils::dedup_vector;
 use crate::Error;
 use crate::TokenMapper;
 use crate::Tokenizer;
+use log::{debug, info, trace, warn};
 use std::collections::{HashMap, HashSet};
 
 type QueryTokenIndex = usize;
@@ -126,7 +127,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
     pub fn process_text_doc(&mut self, text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
         // Tokenize the input text
-        println!("Tokenizing...");
+        info!("Tokenizing...");
         let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(text);
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 

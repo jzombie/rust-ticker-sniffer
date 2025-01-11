@@ -35,7 +35,7 @@ docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
 Probably not going to use n-gram itself, but this is the latest prototype.
 
 ```bash
-RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="csv-support rand-support libc-support"
+RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="csv-support rand-support libc-support, env_logger"
 ```
 
 ## ChatGPT-based Alternative Name Suggester

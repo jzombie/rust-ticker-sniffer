@@ -6,9 +6,13 @@ use test_utils::constants::TEST_SYMBOLS_CSV_PATH;
 use test_utils::load_company_symbol_list_from_file;
 use ticker_sniffer::extract_tickers_from_text;
 
+use log::{debug, error, info, log_enabled, Level};
+
 use std::collections::HashMap;
 
 fn main() {
+    env_logger::init();
+
     let company_symbols_list = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
         .expect("Failed to load symbols from CSV");
 
