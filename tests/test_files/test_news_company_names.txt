@@ -22,10 +22,4 @@ EXPECTED: TPR
 EXPECTED: TPL
 EXPECTED: CPRI
 
-COMMENT: False positives below
-COMMENT: EXPECTED: WAFD
-COMMENT: EXPECTED: WAFDP
-COMMENT: EXPECTED: FSS
-COMMENT: EXPECTED: TTD
-
 COMMENT: Source: https://www.cnbc.com/2024/12/02/jim-cramer-lists-10-stocks-likely-to-perform-well-in-december.html
