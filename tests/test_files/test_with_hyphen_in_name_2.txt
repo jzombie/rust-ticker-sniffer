@@ -1,6 +1,6 @@
 
 J.P. Morgan Exchange-Traded Fund Trust - JPMorgan BetaBuilders Emerging Markets Equity ETF
 
-EXPECTED: BBSB
+EXPECTED: BBEM
 
 COMMENT: In the dataset there is a hyphen between "Exchange" and "Traded".

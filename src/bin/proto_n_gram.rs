@@ -191,7 +191,29 @@ fn main() {
 
     // let query = "Apple Hospitality REIT";
 
-    let query = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.";
+    // let query = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.";
+    // let query = "The DOW Jones Industrial";
+    // let query = "Agilent";
+    // let query = "NVDA";
+    // let query = "Google";
+    // let query = "J.P. Morgan Exchange-Traded Fund Trust - JPMorgan BetaBuilders Emerging Markets Equity ETF";
+    let query = r#"
+        Palantir
+    : Cramer praised the software company’s management and said the company’s third quarter, which sent shares surging 20%, was one of the best of the year. He also said he liked the company’s defense business, noting Palantir’s work for the Pentagon.
+
+    Axon
+    : Axon largely makes equipment for law enforcement, and Cramer suggested it is poised to do well as a GOP trifecta in Washington likely means police will receive more funding. The company also reported better-than-expected quarterly results, and it has new software that includes artificial intelligence, he added.
+
+    Tesla
+    : Tesla CEO Elon Musk is a close ally of President-elect Donald Trump, and Cramer said his loyalty will probably lead to rewards for the company and its automated vehicle business.
+
+    Texas Pacific Land
+    : A new addition to the S&P 500
+    , this landowner has a large chunk of acreage in the Permian Basin. While businesses related to oil are expected to succeed under Trump, Cramer warned that during his last term, oil stocks actually underperformed after excessive drilling.
+
+    Tapestry
+    : Known for several luxury retail brands including Coach, Kate Spade and Stuart Weitzman, Tapestry’s stock has climbed since the Federal Trade Commission blocked its acquisition of peer company Capri. Wall Street had begun to doubt the merger, with some saying Tapestry would pay too much for Capri. Cramer dubbed Tapestry a “rebounding apparel company.”
+    "#;
 
     let results = extract_tickers_from_text(&query, &company_symbols_list).unwrap();
 

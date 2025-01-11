@@ -1,6 +1,7 @@
-A company and GOOG company are interesting.
+A, GOOG, and NVDA are represented by their ticker symbols.
 
 EXPECTED: A
 EXPECTED: GOOG
+EXPECTED: NVDA
 
 COMMENT: "A" symbol should be recognized as a symbol, even though it's a stop word.

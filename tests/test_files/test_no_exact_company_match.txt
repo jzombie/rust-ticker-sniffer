@@ -1,5 +1,6 @@
 Google is not the name of the parent company.
 
+EXPECTED: GOOG
 EXPECTED: GOOGL
 
 COMMENT: The parent company name is not Google.
