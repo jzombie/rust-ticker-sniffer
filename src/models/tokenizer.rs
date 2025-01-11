@@ -8,9 +8,6 @@ pub struct Tokenizer {
     pre_processed_stop_words: Option<HashSet<String>>,
 }
 
-// TODO: Company name and alternate names may not match the predefined rules (some may
-// be lowercase due to branding, etc.). The tokenizer should include a configuration which
-// uses those [potentially special-case] names as a corpus of items to tokenize against.
 impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
@@ -29,16 +26,6 @@ impl Tokenizer {
 
     /// Tokenizer function to split the text into individual tokens.
     pub fn tokenize(&self, text: &str) -> Vec<Token> {
-        // Helper function to calculate uppercase ratio
-        // fn uppercase_ratio(word: &str) -> f32 {
-        //     let total_chars = word.chars().count() as f32;
-        //     if total_chars == 0.0 {
-        //         return 0.0;
-        //     }
-        //     let uppercase_chars = word.chars().filter(|c| c.is_uppercase()).count() as f32;
-        //     uppercase_chars / total_chars
-        // }
-
         let stop_words = self.pre_processed_stop_words.as_ref();
 
         // Preprocess and tokenize the text
