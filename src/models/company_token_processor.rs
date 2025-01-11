@@ -695,12 +695,11 @@ impl<'a> CompanyTokenProcessor<'a> {
                 }
             }
 
-            // TODO: Remov entirely?
             // Filter token_scores to retain only the highest scores
-            // if !token_scores.is_empty() {
-            //     let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
-            //     token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
-            // }
+            if !token_scores.is_empty() {
+                let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
+                token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
+            }
         }
     }
 
