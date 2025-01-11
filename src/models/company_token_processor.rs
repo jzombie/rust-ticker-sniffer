@@ -211,6 +211,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         frequencies
     }
 
+    // TODO: Extract to TokenRangeState
     /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
     fn count_token_range_ticker_symbol_frequencies(
         &self,
@@ -244,6 +245,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         self.count_ticker_symbol_frequencies(&ticker_symbols)
     }
 
+    // TODO: Extract to TokenRangeState
     fn calc_exact_ticker_symbol_match_ratio(
         &self,
         top_token_range_states: &[TokenRangeState],
@@ -490,6 +492,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         potential_token_id_sequences
     }
 
+    // TODO: Extract to TokenParityState
     fn collect_token_parity_states(
         &self,
         query_text_doc_token_ids: &[TokenId],
@@ -543,6 +546,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         token_parity_states
     }
 
+    // TODO: Extract to TokenRangeState
     /// The returned vector represents unique token range states.
     fn collect_token_range_states(
         &self,
@@ -648,6 +652,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         TokenRangeState::get_unique(&token_range_states)
     }
 
+    // TODO: Extract to TokenRangeState
     /// Determines the highest scores which map to each filtered token index.
     fn assign_token_range_scores(
         &self,
@@ -699,6 +704,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
     }
 
+    // TODO: Extract to TokenRangeState
     fn collect_top_range_states(
         &self,
         query_text_doc_token_ids: &[TokenId],
