@@ -39,3 +39,8 @@ pub type TickerSymbolFrequency = usize;
 /// Represents a map of ticker symbols to their frequency counts within a text document.
 /// The key is the `TickerSymbol`, and the value is the `TickerSymbolFrequency`.
 pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>;
+
+// TODO: Document
+pub type QueryTokenIndex = usize;
+pub type CompanySequenceIndex = usize;
+pub type CompanySequenceTokenIndex = usize;

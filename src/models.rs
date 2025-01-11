@@ -9,3 +9,6 @@ pub use tokenizer::Tokenizer;
 
 pub mod token_mapper;
 pub use token_mapper::TokenMapper;
+
+pub mod token_parity_state;
+pub use token_parity_state::TokenParityState;

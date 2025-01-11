@@ -1,14 +1,14 @@
-use crate::types::{CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId};
+use crate::types::{
+    CompanySequenceIndex, CompanySequenceTokenIndex, CompanySymbolList, QueryTokenIndex,
+    TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
+};
 use crate::utils::dedup_vector;
 use crate::Error;
 use crate::TokenMapper;
+use crate::TokenParityState;
 use crate::Tokenizer;
 use log::{debug, info, trace, warn};
 use std::collections::{HashMap, HashSet};
-
-type QueryTokenIndex = usize;
-type CompanySequenceIndex = usize;
-type CompanySequenceTokenIndex = usize;
 
 pub struct CompanyTokenProcessorConfig {
     // TODO: Rename
@@ -25,15 +25,6 @@ pub struct CompanyTokenProcessor<'a> {
     // TODO: Compute these during compile time, not runtime
     company_token_sequences: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
     company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
-}
-
-#[derive(Debug, Clone)]
-struct TokenParityState {
-    ticker_symbol: TickerSymbol,
-    query_token_idx: QueryTokenIndex,
-    query_token_id: TokenId,
-    company_sequence_idx: CompanySequenceIndex,
-    company_sequence_token_idx: CompanySequenceTokenIndex,
 }
 
 #[derive(Debug, Clone)]
