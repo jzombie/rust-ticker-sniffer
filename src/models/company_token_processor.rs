@@ -112,17 +112,16 @@ impl TokenRangeState {
 
         for state in token_range_states {
             // Create a tuple representing the unique key
-            let unique_key = (&state.ticker_symbol, &state.query_text_doc_token_ids);
+            let unique_key = (
+                &state.ticker_symbol,
+                &state.query_text_doc_token_ids,
+                &state.company_sequence_idx,
+            );
 
             // Check if this combination has been seen before
             if seen.insert(unique_key) {
                 unique_states.push(state.clone());
             }
-
-            // TODO: Remove
-            // if state.ticker_symbol == "DOW" {
-            //     // println!("{:?}", state);
-            // }
         }
 
         unique_states
@@ -156,7 +155,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
         info!("Gathering filtered tokens...");
-        let (query_text_doc_token_ids, query_ticker_symbol_token_ids) =
+        let (query_text_doc_token_ids, mut query_ticker_symbol_token_ids) =
             self.get_filtered_query_token_ids(&ticker_symbol_tokens, &text_doc_tokens)?;
 
         // Identify token ID sequences which start with the first token of a company token sequence
@@ -174,15 +173,20 @@ impl<'a> CompanyTokenProcessor<'a> {
         let mut token_range_states =
             self.collect_token_range_states(&potential_token_id_sequences, &token_parity_states);
 
-        println!("UNIQUE TOKEN RANGE STATES");
-        for unique_token_range_state in TokenRangeState::get_unique(&token_range_states) {
-            println!("{:?}", unique_token_range_state);
-        }
-        println!("----");
-
         // Assign scores to the range states
         info!("Assigning range scores...");
         self.assign_token_range_scores(&query_text_doc_token_ids, &mut token_range_states);
+
+        // println!("TOKEN RANGE STATES");
+        // for token_range_state in TokenRangeState::get_unique(&token_range_states) {
+        //     println!("{:?}", token_range_state);
+        // }
+        // println!("----");
+
+        // Discard token range states which do not meet minimum threshold
+        token_range_states.retain(|state| {
+            state.company_token_coverage >= self.config.threshold_min_company_token_coverage
+        });
 
         // Collect top range states
         info!("Collecting top range states...");
@@ -190,15 +194,20 @@ impl<'a> CompanyTokenProcessor<'a> {
             self.collect_top_range_states(&query_text_doc_token_ids, &token_range_states);
 
         // TODO: Remove
-        println!("Top Range States for Each Query Token Index:");
-        for state in &top_range_states {
-            println!("{:?}", state);
-        }
+        // println!("Top Range States for Each Query Token Index:");
+        // for state in &top_range_states {
+        //     println!("{:?}", state);
+        // }
 
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
         // as a symbol)
         let ratio_exact_matches = self.calc_exact_ticker_symbol_match_ratio(&top_range_states);
+
+        // Clear exact ticker symbol matches if ratio of exact matches is less than configured minimum
+        if ratio_exact_matches < self.config.threshold_ratio_exact_matches {
+            query_ticker_symbol_token_ids = vec![];
+        }
 
         // Keep track of number of occurrences, per extracted symbol, for context stats
         let text_doc_ticker_frequencies =
@@ -217,12 +226,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             text_doc_ticker_frequencies.keys().cloned().collect();
 
         // TODO: Remove
-        println!(
-            "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-            query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
-        );
-
-        // TODO: Filter out token range states less than a minimum score threshold (is this still necessary?)
+        // println!(
+        //     "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
+        //     query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
+        // );
 
         let query_tickers_not_in_text_doc: Vec<TickerSymbol> = unique_query_ticker_symbols
             .clone()
@@ -241,10 +248,10 @@ impl<'a> CompanyTokenProcessor<'a> {
         ]);
 
         // TODO: Remove
-        println!(
-            "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
-            unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
-        );
+        // println!(
+        //     "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
+        //     unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
+        // );
 
         Ok(combined_ticker_frequencies)
     }
@@ -410,20 +417,21 @@ impl<'a> CompanyTokenProcessor<'a> {
             .get(ticker_symbol)
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
-    #[allow(dead_code)]
-    /// For debugging purposes
-    fn display_company_tokens(&self, ticker_symbol: &TickerSymbol) {
-        if let Some(company_token_sequences) = self.company_token_sequences.get(ticker_symbol) {
-            for company_token_sequence in company_token_sequences {
-                println!(
-                    "{:?}",
-                    self.token_mapper.get_tokens_by_ids(company_token_sequence)
-                );
-            }
-        } else {
-            println!("No tokens found for ticker symbol: {}", ticker_symbol);
-        }
-    }
+
+    // #[allow(dead_code)]
+    // /// For debugging purposes
+    // fn display_company_tokens(&self, ticker_symbol: &TickerSymbol) {
+    //     if let Some(company_token_sequences) = self.company_token_sequences.get(ticker_symbol) {
+    //         for company_token_sequence in company_token_sequences {
+    //             println!(
+    //                 "{:?}",
+    //                 self.token_mapper.get_tokens_by_ids(company_token_sequence)
+    //             );
+    //         }
+    //     } else {
+    //         println!("No tokens found for ticker symbol: {}", ticker_symbol);
+    //     }
+    // }
 
     /// Ingests tokens from the company symbol list
     fn ingest_company_tokens(&mut self) {
@@ -770,6 +778,9 @@ impl<'a> CompanyTokenProcessor<'a> {
                             .map(|idx| idx as f32)
                             .unwrap_or(0.0);
 
+                    // TODO: Remove
+                    // println!("score: {:?}, state: {:?}", score, token_range_state);
+
                     token_range_state.range_score = Some(score);
 
                     // Update the score map for this ticker symbol
@@ -782,11 +793,12 @@ impl<'a> CompanyTokenProcessor<'a> {
                 }
             }
 
+            // TODO: Remov entirely?
             // Filter token_scores to retain only the highest scores
-            if !token_scores.is_empty() {
-                let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
-                token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
-            }
+            // if !token_scores.is_empty() {
+            //     let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
+            //     token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
+            // }
         }
     }
 
