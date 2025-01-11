@@ -3,7 +3,7 @@ pub mod models;
 pub use constants::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub use models::{
     CompanyTokenProcessor, CompanyTokenProcessorConfig, Error, TokenMapper, TokenParityState,
-    Tokenizer,
+    TokenRangeState, Tokenizer,
 };
 pub mod types;
 mod utils;
