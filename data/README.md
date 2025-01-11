@@ -4,6 +4,8 @@ This directory contains the `company_symbol_list.csv` file, which is used for ma
 
 ## `company_symbol_list.csv`
 
+Link: [company_symbol_list.csv](company_symbol_list.csv)
+
 ### Purpose
 This file provides a mapping of ticker symbols to their full company names and alternate names.
 
