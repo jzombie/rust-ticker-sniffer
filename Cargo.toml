@@ -10,8 +10,6 @@ license = "MIT"
 log = "0.4.24"
 env_logger = {version = "0.11.6", optional = true}
 csv = { version = "1.3.1", optional = true }
-rand = { version = "0.8.5", optional = true }
-libc = { version = "0.2.167", optional = true }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
@@ -21,22 +19,10 @@ name = "my_benchmark"
 harness = false
 
 [[bin]]
-name = "tune"
-path = "src/bin/tune.rs"
-required-features = ["csv-support", "rand-support", "libc-support"]
-
-[[bin]]
-name = "train_bias_adjuster"
-path = "src/bin/train_bias_adjuster.rs"
-required-features = ["csv-support", "rand-support", "libc-support"]
-
-[[bin]]
 name = "proto_n_gram"
 path = "src/bin/proto_n_gram.rs"
-required-features = ["csv-support", "rand-support", "libc-support", "env_logger"]
+required-features = ["csv-support", "env_logger"]
 
 [features]
 default = []
 csv-support = ["dep:csv"]
-rand-support = ["dep:rand"]
-libc-support = ["dep:libc"]
