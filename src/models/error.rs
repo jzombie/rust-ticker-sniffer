@@ -1,4 +1,4 @@
-// TODO: Wire in
+// TODO: Consider using structs instead of enum for specific Result error types
 
 use std::fmt;
 
@@ -26,6 +26,18 @@ impl fmt::Display for Error {
             // Error::IoError(err) => write!(f, "IO Error: {}", err),
             // Error::Other(msg) => write!(f, "Other Error: {}", msg),
         }
+    }
+}
+
+impl From<String> for Error {
+    fn from(msg: String) -> Error {
+        Error::ParserError(msg)
+    }
+}
+
+impl From<&str> for Error {
+    fn from(msg: &str) -> Error {
+        Error::ParserError(msg.to_string())
     }
 }
 

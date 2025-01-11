@@ -186,6 +186,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let unique_text_doc_ticker_symbols: Vec<TickerSymbol> =
             text_doc_ticker_frequencies.keys().cloned().collect();
 
+        // TODO: Remove
         println!(
             "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
             query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
@@ -199,20 +200,51 @@ impl<'a> CompanyTokenProcessor<'a> {
             .filter(|symbol| !unique_text_doc_ticker_symbols.contains(symbol))
             .collect();
 
-        let query_ticker_frequencies =
+        let mut query_ticker_frequencies =
             self.count_ticker_symbol_frequencies(&query_tickers_not_in_text_doc);
+
+        self.adjust_query_ticker_frequencies(&mut query_ticker_frequencies, &top_range_states)?;
 
         let combined_ticker_frequencies = self.combine_ticker_symbol_frequencies(&[
             text_doc_ticker_frequencies.clone(),
             query_ticker_frequencies.clone(),
         ]);
 
+        // TODO: Remove
         println!(
             "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
             unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
         );
 
         Ok(combined_ticker_frequencies)
+    }
+
+    /// Reduces query ticker frequency counts based on matches in top range states
+    fn adjust_query_ticker_frequencies(
+        &self,
+        query_ticker_frequencies: &mut HashMap<TickerSymbol, usize>,
+        top_range_states: &[TokenRangeState],
+    ) -> Result<(), Error> {
+        for range_state in top_range_states {
+            let range_text_doc_token_ids = &range_state.query_text_doc_token_ids;
+
+            for (query_ticker_symbol, query_ticker_symbol_frequency) in
+                query_ticker_frequencies.iter_mut()
+            {
+                let query_ticker_symbol_token_id =
+                    self.get_ticker_symbol_token_id(query_ticker_symbol)?;
+
+                if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
+                    *query_ticker_symbol_frequency =
+                        query_ticker_symbol_frequency.saturating_sub(1);
+                }
+            }
+        }
+
+        // Remove entries with zero frequencies
+        query_ticker_frequencies.retain(|_, &mut frequency| frequency > 0);
+
+        Ok(())
     }
 
     fn combine_ticker_symbol_frequencies(
