@@ -92,7 +92,7 @@ fn main() {
         "#;
 
     let query =
-        "A Google search and Apple Hospitality REIT, and then there is the REIT symbol and AAPL, now I will say it again, Apple is a good company, and they team up with Google occasionally though Apple and Google are competitors";
+        "A Google search and Apple Hospitality REIT, and then there is the REIT symbol and AAPL, now I will say it again, Apple is a good company, and they team up with Google occasionally though Apple and Google are competitors. A Google search confirms...";
 
     // let query = "NVDA, GOOG, GOOGL, A, AAPL and AMZN";
 
@@ -185,10 +185,14 @@ fn main() {
 
     // let query = "Apple Walmart Berkshire Hathaway Apple Wal-mart Berkshire Hathaway Dow Jones Industrial Average";
 
+    // let query = "Apple Hospitality REIT";
+
+    let query = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle reflects the ongoing shift in economic power from traditional brick-and-mortar retail to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks a significant milestone in the recognition of the e-commerce giant's influence and its role in the broader market.";
+
     let results = extract_tickers_from_text(&query, &company_symbols_list).unwrap();
 
     println!("Extracted Tickers:");
-    for (symbol, confidence) in results {
-        println!("{}: {:.2}", symbol, confidence);
+    for (ticker_symbol, frequency) in results {
+        println!("{}: {:.2}", ticker_symbol, frequency);
     }
 }
