@@ -21,8 +21,9 @@ harness = false
 [[bin]]
 name = "proto_n_gram"
 path = "src/bin/proto_n_gram.rs"
-required-features = ["csv-support", "env_logger"]
+required-features = ["csv-support", "logger-support"]
 
 [features]
 default = []
 csv-support = ["dep:csv"]
+logger-support = ["dep:env_logger"]
