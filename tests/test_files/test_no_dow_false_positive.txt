@@ -4,5 +4,4 @@ EXPECTED: AMZN
 EXPECTED: DIA
 EXPECTED: WBA
 
-COMMENT: Dataset contains `SPDR` as first word for DIA.
-COMMENT: The original test verified the above, but the new issue is that Dow is a false positive and shouldn't match on the DOW symbol.
+COMMENT: Should not consider DOW (Chemical Company) to be part of the result.
