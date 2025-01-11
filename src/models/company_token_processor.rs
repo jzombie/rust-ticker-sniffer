@@ -13,6 +13,7 @@ type CompanySequenceTokenIndex = usize;
 pub struct CompanyTokenProcessorConfig {
     // TODO: Rename
     pub threshold_ratio_exact_matches: f32,
+    pub threshold_min_company_token_coverage: f32,
 }
 
 pub struct CompanyTokenProcessor<'a> {
@@ -103,6 +104,29 @@ impl TokenRangeState {
         self.company_token_coverage =
             self.query_token_indices.len() as f32 / self.company_sequence_max_length as f32;
     }
+
+    fn get_unique(token_range_states: &[TokenRangeState]) -> Vec<TokenRangeState> {
+        // Use a HashSet to track unique combinations of ticker_symbol and query_text_doc_token_ids
+        let mut seen = HashSet::new();
+        let mut unique_states = Vec::new();
+
+        for state in token_range_states {
+            // Create a tuple representing the unique key
+            let unique_key = (&state.ticker_symbol, &state.query_text_doc_token_ids);
+
+            // Check if this combination has been seen before
+            if seen.insert(unique_key) {
+                unique_states.push(state.clone());
+            }
+
+            // TODO: Remove
+            // if state.ticker_symbol == "DOW" {
+            //     // println!("{:?}", state);
+            // }
+        }
+
+        unique_states
+    }
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -131,40 +155,45 @@ impl<'a> CompanyTokenProcessor<'a> {
         let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(text);
         let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
 
-        println!("Gathering filtered tokens...");
+        info!("Gathering filtered tokens...");
         let (query_text_doc_token_ids, query_ticker_symbol_token_ids) =
             self.get_filtered_query_token_ids(&ticker_symbol_tokens, &text_doc_tokens)?;
 
         // Identify token ID sequences which start with the first token of a company token sequence
-        println!("Identifying token ID sequences...");
+        info!("Identifying token ID sequences...");
         let potential_token_id_sequences =
             self.get_potential_token_sequences(&query_text_doc_token_ids);
 
         // Aggregate token parity states
-        println!("Collecting token parity states...");
+        info!("Collecting token parity states...");
         let token_parity_states = self
             .collect_token_parity_states(&query_text_doc_token_ids, &potential_token_id_sequences);
 
         // Determine range states
-        println!("Collecting token range states...");
+        info!("Collecting token range states...");
         let mut token_range_states =
             self.collect_token_range_states(&potential_token_id_sequences, &token_parity_states);
 
+        println!("UNIQUE TOKEN RANGE STATES");
+        for unique_token_range_state in TokenRangeState::get_unique(&token_range_states) {
+            println!("{:?}", unique_token_range_state);
+        }
+        println!("----");
+
         // Assign scores to the range states
-        println!("Assigning range scores...");
+        info!("Assigning range scores...");
         self.assign_token_range_scores(&query_text_doc_token_ids, &mut token_range_states);
 
         // Collect top range states
-        println!("Collecting top range states...");
+        info!("Collecting top range states...");
         let top_range_states =
             self.collect_top_range_states(&query_text_doc_token_ids, &token_range_states);
 
         // TODO: Remove
-        // Debug: Print the top range states
-        // println!("Top Range States for Each Query Token Index:");
-        // for state in &top_range_states {
-        //     println!("{:?}", state);
-        // }
+        println!("Top Range States for Each Query Token Index:");
+        for state in &top_range_states {
+            println!("{:?}", state);
+        }
 
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
@@ -223,7 +252,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     /// Reduces query ticker frequency counts based on matches in top range states
     fn adjust_query_ticker_frequencies(
         &self,
-        query_ticker_frequencies: &mut HashMap<TickerSymbol, usize>,
+        query_ticker_frequencies: &mut TickerSymbolFrequencyMap,
         top_range_states: &[TokenRangeState],
     ) -> Result<(), Error> {
         for range_state in top_range_states {
@@ -609,6 +638,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         token_parity_states
     }
 
+    /// The returned vector represents unique token range states.
     fn collect_token_range_states(
         &self,
         potential_token_id_sequences: &HashMap<
@@ -710,7 +740,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        token_range_states
+        TokenRangeState::get_unique(&token_range_states)
     }
 
     /// Determines the highest scores which map to each filtered token index.
