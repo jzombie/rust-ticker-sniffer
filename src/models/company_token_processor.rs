@@ -5,7 +5,7 @@ use crate::types::{
 use crate::utils::dedup_vector;
 use crate::{Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
 
-use log::{debug, info, trace, warn};
+use log::info;
 use std::collections::{HashMap, HashSet};
 
 pub struct CompanyTokenProcessorConfig {
@@ -21,6 +21,10 @@ pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     // TODO: Compute these during compile time, not runtime
+    ticker_symbol_map: HashMap<TickerSymbol, TokenId>,
+    reverse_ticker_symbol_map: HashMap<TokenId, TickerSymbol>,
+    // TODO: Replace tickersymbol with a token ID representing the ticker
+    // symbol, and use the reverse ticker symbol map to map them back?
     company_token_sequences: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
     company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
@@ -36,6 +40,8 @@ impl<'a> CompanyTokenProcessor<'a> {
             token_mapper: TokenMapper::new(),
             ticker_symbol_tokenizer: Tokenizer::ticker_symbol_parser(),
             text_doc_tokenizer: Tokenizer::text_doc_parser(),
+            ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
+            reverse_ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
             company_token_sequences: HashMap::with_capacity(company_symbol_list.len()),
             company_reverse_token_map: HashMap::new(),
         };
@@ -92,9 +98,9 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // TODO: Remove
         // println!("Top Range States for Each Query Token Index:");
-        // for state in &top_range_states {
-        //     println!("{:?}", state);
-        // }
+        for state in &top_range_states {
+            println!("{:?}", state);
+        }
 
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
@@ -110,11 +116,17 @@ impl<'a> CompanyTokenProcessor<'a> {
         let text_doc_ticker_frequencies =
             self.count_token_range_ticker_symbol_frequencies(&top_range_states);
 
-        let query_ticker_symbols: Vec<TickerSymbol> = self
-            .token_mapper
-            .get_tokens_by_ids(&query_ticker_symbol_token_ids)
-            .into_iter()
-            .filter_map(|option| option)
+        // let query_ticker_symbols: Vec<TickerSymbol> = self
+        //     // .token_mapper
+        //     // .get_tokens_by_ids(&query_ticker_symbol_token_ids)
+        //     .into_iter()
+        //     .filter_map(|option| option)
+        //     .collect();
+
+        // TODO: Don't use unwrap
+        let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
+            .iter()
+            .map(|token_id| self.get_ticker_symbol_by_token_id(token_id).unwrap())
             .collect();
 
         let unique_query_ticker_symbols = dedup_vector(&query_ticker_symbols);
@@ -123,17 +135,22 @@ impl<'a> CompanyTokenProcessor<'a> {
             text_doc_ticker_frequencies.keys().cloned().collect();
 
         // TODO: Remove
-        // println!(
-        //     "query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-        //     query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
-        // );
+        println!(
+            "ticker_symbol_tokens: {:?}, query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
+            ticker_symbol_tokens, query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
+        );
 
-        let query_tickers_not_in_text_doc: Vec<TickerSymbol> = unique_query_ticker_symbols
+        let query_tickers_not_in_text_doc: Vec<&TickerSymbol> = unique_query_ticker_symbols
             .clone()
             .into_iter()
             .filter(|symbol| !unique_text_doc_ticker_symbols.contains(symbol))
             .collect();
 
+        let query_tickers_not_in_text_doc: Vec<TickerSymbol> = query_tickers_not_in_text_doc
+            .iter()
+            .cloned()
+            .cloned()
+            .collect();
         let mut query_ticker_frequencies =
             self.count_ticker_symbol_frequencies(&query_tickers_not_in_text_doc);
 
@@ -145,10 +162,10 @@ impl<'a> CompanyTokenProcessor<'a> {
         ]);
 
         // TODO: Remove
-        // println!(
-        //     "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
-        //     unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
-        // );
+        println!(
+            "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
+            unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
+        );
 
         Ok(combined_ticker_frequencies)
     }
@@ -165,8 +182,10 @@ impl<'a> CompanyTokenProcessor<'a> {
             for (query_ticker_symbol, query_ticker_symbol_frequency) in
                 query_ticker_frequencies.iter_mut()
             {
-                let query_ticker_symbol_token_id =
-                    self.get_ticker_symbol_token_id(query_ticker_symbol)?;
+                // TODO: Don't use unwrap
+                let query_ticker_symbol_token_id = self
+                    .get_ticker_symbol_token_id(query_ticker_symbol)
+                    .unwrap();
 
                 if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
                     *query_ticker_symbol_frequency =
@@ -250,6 +269,10 @@ impl<'a> CompanyTokenProcessor<'a> {
         &self,
         top_token_range_states: &[TokenRangeState],
     ) -> f32 {
+        if top_token_range_states.is_empty() {
+            return 1.0;
+        }
+
         let (exact_matches, total) =
             top_token_range_states
                 .iter()
@@ -274,37 +297,51 @@ impl<'a> CompanyTokenProcessor<'a> {
         ratio_exact_matches
     }
 
-    fn get_ticker_symbol_token_id(&self, ticker_symbol: &TickerSymbol) -> Result<TokenId, String> {
-        match self.company_token_sequences.get(ticker_symbol) {
-            Some(sequences) => {
-                if let Some(sequence) = sequences.first() {
-                    if sequence.len() > 1 {
-                        // Return an error if the first sequence has more than one token ID
-                        return Err(format!(
-                            "Error: First token ID sequence for ticker '{}' has more than one element.",
-                            ticker_symbol
-                        ));
-                    }
-                    // Return the first token ID if available
-                    sequence.first().cloned().ok_or_else(|| {
-                        format!(
-                            "Error: First sequence for ticker '{}' is empty.",
-                            ticker_symbol
-                        )
-                    })
-                } else {
-                    // Return an error if no sequences exist for the ticker
-                    Err(format!(
-                        "Error: No sequences found for ticker '{}'.",
-                        ticker_symbol
-                    ))
-                }
-            }
-            None => Err(format!(
-                "Error: Ticker '{}' not found in company token sequences.",
-                ticker_symbol
-            )),
+    // TODO: Use actual error type
+    fn get_ticker_symbol_by_token_id(&self, token_id: &TokenId) -> Result<&TickerSymbol, String> {
+        match self.reverse_ticker_symbol_map.get(token_id) {
+            Some(ticker_symbol) => Ok(ticker_symbol),
+            None => Err("Could not obtain token id".to_string()),
         }
+    }
+
+    // TODO: Use actual error type
+    fn get_ticker_symbol_token_id(&self, ticker_symbol: &TickerSymbol) -> Result<&TokenId, String> {
+        match self.ticker_symbol_map.get(ticker_symbol) {
+            Some(token_id) => Ok(token_id),
+            None => Err("Could not obtain token id".to_string()),
+        }
+
+        // match self.company_token_sequences.get(ticker_symbol) {
+        //     Some(sequences) => {
+        //         if let Some(sequence) = sequences.first() {
+        //             if sequence.len() > 1 {
+        //                 // Return an error if the first sequence has more than one token ID
+        //                 return Err(format!(
+        //                     "Error: First token ID sequence for ticker '{}' has more than one element.",
+        //                     ticker_symbol
+        //                 ));
+        //             }
+        //             // Return the first token ID if available
+        //             sequence.first().cloned().ok_or_else(|| {
+        //                 format!(
+        //                     "Error: First sequence for ticker '{}' is empty.",
+        //                     ticker_symbol
+        //                 )
+        //             })
+        //         } else {
+        //             // Return an error if no sequences exist for the ticker
+        //             Err(format!(
+        //                 "Error: No sequences found for ticker '{}'.",
+        //                 ticker_symbol
+        //             ))
+        //         }
+        //     }
+        //     None => Err(format!(
+        //         "Error: Ticker '{}' not found in company token sequences.",
+        //         ticker_symbol
+        //     )),
+        // }
     }
 
     fn get_company_token_sequence_max_length(
@@ -336,6 +373,8 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn ingest_company_tokens(&mut self) {
         self.company_token_sequences.clear();
         self.company_reverse_token_map.clear();
+        self.ticker_symbol_map.clear();
+        self.reverse_ticker_symbol_map.clear();
 
         for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
             // let company_name_key = company_name.clone().unwrap();
@@ -346,13 +385,21 @@ impl<'a> CompanyTokenProcessor<'a> {
             let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
             for ticker_symbol_token in ticker_symbol_tokens {
                 let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
-                all_company_name_token_ids.push(vec![ticker_symbol_token_id]);
 
-                // Populate reverse map
-                self.company_reverse_token_map
-                    .entry(ticker_symbol_token_id)
-                    .or_insert_with(Vec::new)
-                    .push(ticker_symbol.clone());
+                self.ticker_symbol_map
+                    .insert(ticker_symbol.clone(), ticker_symbol_token_id);
+
+                self.reverse_ticker_symbol_map
+                    .insert(ticker_symbol_token_id, ticker_symbol.clone());
+
+                // TODO: Remove
+                // all_company_name_token_ids.push(vec![ticker_symbol_token_id]);
+                //
+                // // Populate reverse map
+                // self.company_reverse_token_map
+                //     .entry(ticker_symbol_token_id)
+                //     .or_insert_with(Vec::new)
+                //     .push(ticker_symbol.clone());
             }
 
             if let Some(company_name) = company_name {
@@ -403,17 +450,21 @@ impl<'a> CompanyTokenProcessor<'a> {
         company_name_token_ids
     }
 
+    // TODO: Don't return Result type; no error will be thrown
     fn get_filtered_query_token_ids(
         &self,
         ticker_symbol_tokens: &Vec<Token>,
         text_doc_tokens: &Vec<Token>,
     ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
-        if text_doc_tokens.is_empty() {
-            // Return an error if no tokens are found
-            return Err(Error::TokenFilterError(
-                "No tokens found in the text document.".to_string(),
-            ));
-        }
+        // TODO: Remove
+        // if text_doc_tokens.is_empty() {
+        //     // Return an error if no tokens are found
+        //     // return Err(Error::TokenFilterError(
+        //     //     "No tokens found in the text document.".to_string(),
+        //     // ));
+
+        //     return Ok((vec![], vec![]));
+        // }
 
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self
@@ -604,7 +655,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                     token_range_state = Some(TokenRangeState::new(
                         ticker_symbol.to_string(),
-                        ticker_symbol_token_id,
+                        *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
                         self.get_company_token_sequence_max_length(
                             ticker_symbol,
