@@ -17,8 +17,8 @@ pub struct CompanyTokenMapper {
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
-impl<'a> CompanyTokenMapper {
-    pub fn new(company_symbol_list: &'a CompanySymbolList) -> Self {
+impl CompanyTokenMapper {
+    pub fn new(company_symbol_list: &CompanySymbolList) -> Self {
         let token_mapper = TokenMapper::new();
 
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
@@ -47,7 +47,7 @@ impl<'a> CompanyTokenMapper {
     }
 
     /// Ingests tokens from the company symbol list
-    fn ingest_company_tokens(&mut self, company_symbol_list: &'a CompanySymbolList) {
+    fn ingest_company_tokens(&mut self, company_symbol_list: &CompanySymbolList) {
         self.clear();
 
         for (ticker_symbol, company_name, alt_company_names) in company_symbol_list {
