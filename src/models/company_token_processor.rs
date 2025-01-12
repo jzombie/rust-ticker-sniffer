@@ -1,7 +1,11 @@
 use crate::types::{
-    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
+    CompanySequenceIndex, CompanySymbolList, ReverseTickerSymbolMap, TickerSymbol,
+    TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
 };
-use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
+use crate::utils::{
+    count_ticker_symbol_frequencies, dedup_vector, get_ticker_symbol_by_token_id,
+    get_ticker_symbol_token_id,
+};
 use crate::{Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
 
 use log::info;
@@ -20,8 +24,8 @@ pub struct CompanyTokenProcessor<'a> {
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
     // TODO: Compute these during compile time, not runtime
-    ticker_symbol_map: HashMap<TickerSymbol, TokenId>,
-    reverse_ticker_symbol_map: HashMap<TokenId, TickerSymbol>,
+    ticker_symbol_map: TickerSymbolMap,
+    reverse_ticker_symbol_map: ReverseTickerSymbolMap,
     // TODO: Replace tickersymbol with a token ID representing the ticker
     // symbol, and use the reverse ticker symbol map to map them back?
     company_token_sequences: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
@@ -126,7 +130,9 @@ impl<'a> CompanyTokenProcessor<'a> {
         // TODO: Don't use unwrap
         let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
             .iter()
-            .map(|token_id| self.get_ticker_symbol_by_token_id(token_id).unwrap())
+            .map(|token_id| {
+                get_ticker_symbol_by_token_id(&self.reverse_ticker_symbol_map, token_id).unwrap()
+            })
             .collect();
 
         let unique_query_ticker_symbols = dedup_vector(&query_ticker_symbols);
@@ -183,9 +189,9 @@ impl<'a> CompanyTokenProcessor<'a> {
                 query_ticker_frequencies.iter_mut()
             {
                 // TODO: Don't use unwrap
-                let query_ticker_symbol_token_id = self
-                    .get_ticker_symbol_token_id(query_ticker_symbol)
-                    .unwrap();
+                let query_ticker_symbol_token_id =
+                    get_ticker_symbol_token_id(&self.ticker_symbol_map, query_ticker_symbol)
+                        .unwrap();
 
                 if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
                     *query_ticker_symbol_frequency =
@@ -215,22 +221,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         combined_ticker_frequencies
-    }
-
-    // TODO: Use actual error type
-    fn get_ticker_symbol_by_token_id(&self, token_id: &TokenId) -> Result<&TickerSymbol, String> {
-        match self.reverse_ticker_symbol_map.get(token_id) {
-            Some(ticker_symbol) => Ok(ticker_symbol),
-            None => Err("Could not obtain token id".to_string()),
-        }
-    }
-
-    // TODO: Use actual error type
-    fn get_ticker_symbol_token_id(&self, ticker_symbol: &TickerSymbol) -> Result<&TokenId, String> {
-        match self.ticker_symbol_map.get(ticker_symbol) {
-            Some(token_id) => Ok(token_id),
-            None => Err("Could not obtain token id".to_string()),
-        }
     }
 
     fn get_company_token_sequence_max_length(
@@ -427,7 +417,8 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         for (ticker_symbol, _) in potential_token_id_sequences {
             // TODO: Don't use unwrap here
-            let ticker_symbol_token_id = self.get_ticker_symbol_token_id(ticker_symbol).unwrap();
+            let ticker_symbol_token_id =
+                get_ticker_symbol_token_id(&self.ticker_symbol_map, ticker_symbol).unwrap();
 
             // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
