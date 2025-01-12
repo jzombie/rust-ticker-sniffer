@@ -45,3 +45,4 @@ pub type CompanySequenceIndex = usize;
 pub type CompanySequenceTokenIndex = usize;
 pub type TickerSymbolMap = HashMap<TickerSymbol, TokenId>;
 pub type ReverseTickerSymbolMap = HashMap<TokenId, TickerSymbol>;
+pub type CompanyTokenSequences = HashMap<TickerSymbol, Vec<Vec<TokenId>>>; // TODO: Rename to CompanyTokenSequenceMap
