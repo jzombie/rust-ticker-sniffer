@@ -80,7 +80,10 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Assign scores to the range states
         info!("Assigning range scores...");
-        self.assign_token_range_scores(&query_text_doc_token_ids, &mut token_range_states);
+        TokenRangeState::assign_token_range_scores(
+            &query_text_doc_token_ids,
+            &mut token_range_states,
+        );
 
         // println!("TOKEN RANGE STATES");
         // for token_range_state in TokenRangeState::get_unique(&token_range_states) {
@@ -515,56 +518,5 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         TokenRangeState::get_unique(&token_range_states)
-    }
-
-    // TODO: Extract to TokenRangeState
-    /// Determines the highest scores which map to each filtered token index.
-    fn assign_token_range_scores(
-        &self,
-        query_text_doc_token_ids: &[TokenId],
-        token_range_states: &mut [TokenRangeState],
-    ) {
-        for (query_token_idx, _query_token_id) in query_text_doc_token_ids.iter().enumerate() {
-            // Initialize a map to store scores for this token
-            let mut token_scores: HashMap<Token, f32> = HashMap::new();
-
-            // Iterate over all token range states
-            for token_range_state in &mut *token_range_states {
-                // Check if the current filtered token ID is part of the filtered token IDs in the range state
-                if token_range_state
-                    .query_token_indices
-                    .contains(&query_token_idx)
-                {
-                    let score = token_range_state.company_token_coverage
-                        // Increase score by continuity
-                        // TODO: Weight this accordingly
-                        + token_range_state
-                            .query_token_indices
-                            .iter()
-                            .position(|&x| x == query_token_idx)
-                            .map(|idx| idx as f32)
-                            .unwrap_or(0.0);
-
-                    // TODO: Remove
-                    // println!("score: {:?}, state: {:?}", score, token_range_state);
-
-                    token_range_state.range_score = Some(score);
-
-                    // Update the score map for this ticker symbol
-                    token_scores
-                        .entry(token_range_state.ticker_symbol.clone())
-                        .and_modify(|existing_score| {
-                            *existing_score = (*existing_score).max(score);
-                        })
-                        .or_insert(score);
-                }
-            }
-
-            // Filter token_scores to retain only the highest scores
-            if !token_scores.is_empty() {
-                let max_score = token_scores.values().cloned().fold(f32::MIN, f32::max); // Find the maximum score
-                token_scores.retain(|_, &mut score| score == max_score); // Retain entries with the highest score
-            }
-        }
     }
 }
