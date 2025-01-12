@@ -43,8 +43,3 @@ pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>
 pub type QueryTokenIndex = usize;
 pub type CompanySequenceIndex = usize;
 pub type CompanySequenceTokenIndex = usize;
-
-// TODO: Move to CompanyTokenMapper
-pub type TickerSymbolMap = HashMap<TickerSymbol, TokenId>;
-pub type ReverseTickerSymbolMap = HashMap<TokenId, TickerSymbol>;
-pub type CompanyTokenSequencesMap = HashMap<TickerSymbol, Vec<Vec<TokenId>>>;

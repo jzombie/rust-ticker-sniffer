@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::{
-    CompanySequenceIndex, CompanySymbolList, CompanyTokenSequencesMap, ReverseTickerSymbolMap,
-    TickerSymbol, TickerSymbolMap, TokenId,
-};
+use crate::types::{CompanySequenceIndex, CompanySymbolList, TickerSymbol, TokenId};
 
 use crate::{TokenMapper, Tokenizer};
 
@@ -13,11 +10,11 @@ pub struct CompanyTokenMapper<'a> {
     pub company_symbol_list: &'a CompanySymbolList,
     pub ticker_symbol_tokenizer: Tokenizer,
     pub text_doc_tokenizer: Tokenizer,
-    pub ticker_symbol_map: TickerSymbolMap,
-    pub reverse_ticker_symbol_map: ReverseTickerSymbolMap,
+    pub ticker_symbol_map: HashMap<TickerSymbol, TokenId>,
+    pub reverse_ticker_symbol_map: HashMap<TokenId, TickerSymbol>,
     // TODO: Replace tickersymbol with a token ID representing the ticker
     // symbol, and use the reverse ticker symbol map to map them back?
-    pub company_token_sequences_map: CompanyTokenSequencesMap,
+    pub company_token_sequences_map: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
