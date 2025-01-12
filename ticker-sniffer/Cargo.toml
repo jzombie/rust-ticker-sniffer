@@ -1,5 +1,5 @@
 [package]
-name = "ticker_sniffer"
+name = "ticker-sniffer"
 version = "0.1.0"
 authors = ["Jeremy Harris <jeremy.harris@zenosmosis.com>"]
 edition = "2021"
