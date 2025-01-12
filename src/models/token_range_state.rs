@@ -120,6 +120,48 @@ impl TokenRangeState {
         count_ticker_symbol_frequencies(&ticker_symbols)
     }
 
+    pub fn collect_top_range_states(
+        query_text_doc_token_ids: &[TokenId],
+        token_range_states: &[TokenRangeState],
+    ) -> Vec<TokenRangeState> {
+        let mut top_range_states_map: Vec<Vec<&TokenRangeState>> =
+            vec![Vec::new(); query_text_doc_token_ids.len()];
+
+        for token_range_state in token_range_states {
+            for &query_token_idx in &token_range_state.query_token_indices {
+                if let Some(range_score) = token_range_state.range_score {
+                    if top_range_states_map[query_token_idx].is_empty() {
+                        // Initialize with the current range state if no state exists
+                        top_range_states_map[query_token_idx].push(token_range_state);
+                    } else {
+                        // TODO: Don't use unwrap
+                        // Check the score of the existing states
+                        let existing_score = top_range_states_map[query_token_idx][0]
+                            .range_score
+                            .unwrap();
+
+                        if range_score > existing_score {
+                            // Replace with a new top scorer
+                            top_range_states_map[query_token_idx].clear();
+                            top_range_states_map[query_token_idx].push(token_range_state);
+                        } else if (range_score - existing_score).abs() < f32::EPSILON {
+                            // Add to the top scorers in case of a tie
+                            top_range_states_map[query_token_idx].push(token_range_state);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Collect only the valid range states
+        let top_range_states: Vec<&TokenRangeState> = top_range_states_map
+            .into_iter()
+            .flat_map(|states| states) // Flatten the vector of vectors
+            .collect();
+
+        top_range_states.into_iter().cloned().collect()
+    }
+
     // TODO: Make this non-public if possible
     pub fn finalize(&mut self) {
         self.update_coverage();
