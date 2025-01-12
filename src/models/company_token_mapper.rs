@@ -8,7 +8,7 @@ use crate::types::{
 use crate::{TokenMapper, Tokenizer};
 
 // TODO: Precompute during compile time, not run time
-pub struct TickerSymbolMapper<'a> {
+pub struct CompanyTokenMapper<'a> {
     pub token_mapper: TokenMapper,
     pub company_symbol_list: &'a CompanySymbolList,
     pub ticker_symbol_tokenizer: Tokenizer,
@@ -21,14 +21,14 @@ pub struct TickerSymbolMapper<'a> {
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
-impl<'a> TickerSymbolMapper<'a> {
+impl<'a> CompanyTokenMapper<'a> {
     pub fn new(company_symbol_list: &'a CompanySymbolList) -> Self {
         let token_mapper = TokenMapper::new();
 
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
         let text_doc_tokenizer = Tokenizer::text_doc_parser();
 
-        let mut instance = TickerSymbolMapper {
+        let mut instance = CompanyTokenMapper {
             token_mapper,
             company_symbol_list,
             ticker_symbol_tokenizer,

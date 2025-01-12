@@ -5,7 +5,7 @@ use crate::types::{
     TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::count_ticker_symbol_frequencies;
-use crate::{TickerSymbolMapper, TokenParityState};
+use crate::{CompanyTokenMapper, TokenParityState};
 
 #[derive(Debug, Clone)]
 pub struct TokenRangeState {
@@ -214,7 +214,7 @@ impl TokenRangeState {
 
     /// The returned vector represents unique token range states.
     pub fn collect_token_range_states(
-        ticker_symbol_mapper: &TickerSymbolMapper,
+        company_token_mapper: &CompanyTokenMapper,
         potential_token_id_sequences: &HashMap<
             TickerSymbol,
             Vec<(CompanySequenceIndex, Vec<TokenId>)>,
@@ -225,7 +225,7 @@ impl TokenRangeState {
 
         for (ticker_symbol, _) in potential_token_id_sequences {
             // TODO: Don't use unwrap here
-            let ticker_symbol_token_id = ticker_symbol_mapper
+            let ticker_symbol_token_id = company_token_mapper
                 .get_ticker_symbol_token_id(&ticker_symbol)
                 .unwrap();
 
@@ -273,7 +273,7 @@ impl TokenRangeState {
                         ticker_symbol.to_string(),
                         *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
-                        ticker_symbol_mapper
+                        company_token_mapper
                             .get_company_token_sequence_max_length(
                                 ticker_symbol,
                                 token_parity_state.company_sequence_idx,

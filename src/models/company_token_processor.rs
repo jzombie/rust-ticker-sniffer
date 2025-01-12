@@ -2,7 +2,7 @@ use crate::types::{
     CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
-use crate::{Error, TickerSymbolMapper, TokenParityState, TokenRangeState, Tokenizer};
+use crate::{CompanyTokenMapper, Error, TokenParityState, TokenRangeState};
 
 use log::info;
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ pub struct CompanyTokenProcessorConfig {
 
 pub struct CompanyTokenProcessor<'a> {
     config: &'a CompanyTokenProcessorConfig,
-    ticker_symbol_mapper: TickerSymbolMapper<'a>,
+    company_token_mapper: CompanyTokenMapper<'a>,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -23,11 +23,11 @@ impl<'a> CompanyTokenProcessor<'a> {
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
     ) -> Self {
-        let ticker_symbol_mapper = TickerSymbolMapper::new(&company_symbol_list);
+        let company_token_mapper = CompanyTokenMapper::new(&company_symbol_list);
 
         CompanyTokenProcessor {
             config,
-            ticker_symbol_mapper,
+            company_token_mapper,
         }
     }
 
@@ -35,10 +35,10 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Tokenize the input text
         info!("Tokenizing...");
         let ticker_symbol_tokens = self
-            .ticker_symbol_mapper
+            .company_token_mapper
             .ticker_symbol_tokenizer
             .tokenize(text);
-        let text_doc_tokens = self.ticker_symbol_mapper.text_doc_tokenizer.tokenize(text);
+        let text_doc_tokens = self.company_token_mapper.text_doc_tokenizer.tokenize(text);
 
         info!("Gathering filtered tokens...");
         let (query_text_doc_token_ids, mut query_ticker_symbol_token_ids) =
@@ -59,7 +59,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Determine range states
         info!("Collecting token range states...");
         let mut token_range_states = TokenRangeState::collect_token_range_states(
-            &self.ticker_symbol_mapper,
+            &self.company_token_mapper,
             &potential_token_id_sequences,
             &token_parity_states,
         );
@@ -114,7 +114,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
             .iter()
             .map(|token_id| {
-                self.ticker_symbol_mapper
+                self.company_token_mapper
                     .get_ticker_symbol_by_token_id(token_id)
                     .unwrap()
             })
@@ -128,7 +128,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // TODO: Remove
         println!(
             "ticker_symbol_tokens: {:?}, query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-            ticker_symbol_tokens, query_text_doc_token_ids, self.ticker_symbol_mapper.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
+            ticker_symbol_tokens, query_text_doc_token_ids, self.company_token_mapper.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
         );
 
         let query_tickers_not_in_text_doc: Vec<&TickerSymbol> = unique_query_ticker_symbols
@@ -175,7 +175,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             {
                 // TODO: Don't use unwrap
                 let query_ticker_symbol_token_id = self
-                    .ticker_symbol_mapper
+                    .company_token_mapper
                     .get_ticker_symbol_token_id(query_ticker_symbol)
                     .unwrap();
 
@@ -233,12 +233,12 @@ impl<'a> CompanyTokenProcessor<'a> {
     ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self
-            .ticker_symbol_mapper
+            .company_token_mapper
             .token_mapper
             .get_filtered_token_ids(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
         let query_ticker_symbol_token_ids = self
-            .ticker_symbol_mapper
+            .company_token_mapper
             .token_mapper
             .get_filtered_token_ids(ticker_symbol_tokens.iter().map(|s| s.as_str()).collect());
 
@@ -256,13 +256,13 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         for query_token_id in query_text_doc_token_ids {
             if let Some(possible_ticker_symbols) = self
-                .ticker_symbol_mapper
+                .company_token_mapper
                 .company_reverse_token_map
                 .get(query_token_id)
             {
                 for ticker_symbol in possible_ticker_symbols {
                     if let Some(company_name_variations_token_ids_list) = self
-                        .ticker_symbol_mapper
+                        .company_token_mapper
                         .company_token_sequences_map
                         .get(ticker_symbol)
                     {
