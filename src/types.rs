@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-// These types may be shared across multiple files for consistency and reusability.
-// Types that are only used within a single file are typically defined locally in those files.
+// Types listed here are either shared across multiple files and/or exposed via the library.
 
 /// Represents a token as an owned `String`. Tokens are the basic units used for processing text.
 pub type Token = String;

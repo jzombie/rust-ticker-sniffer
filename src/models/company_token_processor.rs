@@ -1,12 +1,11 @@
 use crate::types::{
-    CompanySequenceIndex, CompanySymbolList, QueryTokenIndex, TickerSymbol,
-    TickerSymbolFrequencyMap, Token, TokenId,
+    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
 use crate::{Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
 
 use log::info;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub struct CompanyTokenProcessorConfig {
     // TODO: Rename
