@@ -311,37 +311,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             Some(token_id) => Ok(token_id),
             None => Err("Could not obtain token id".to_string()),
         }
-
-        // match self.company_token_sequences.get(ticker_symbol) {
-        //     Some(sequences) => {
-        //         if let Some(sequence) = sequences.first() {
-        //             if sequence.len() > 1 {
-        //                 // Return an error if the first sequence has more than one token ID
-        //                 return Err(format!(
-        //                     "Error: First token ID sequence for ticker '{}' has more than one element.",
-        //                     ticker_symbol
-        //                 ));
-        //             }
-        //             // Return the first token ID if available
-        //             sequence.first().cloned().ok_or_else(|| {
-        //                 format!(
-        //                     "Error: First sequence for ticker '{}' is empty.",
-        //                     ticker_symbol
-        //                 )
-        //             })
-        //         } else {
-        //             // Return an error if no sequences exist for the ticker
-        //             Err(format!(
-        //                 "Error: No sequences found for ticker '{}'.",
-        //                 ticker_symbol
-        //             ))
-        //         }
-        //     }
-        //     None => Err(format!(
-        //         "Error: Ticker '{}' not found in company token sequences.",
-        //         ticker_symbol
-        //     )),
-        // }
     }
 
     fn get_company_token_sequence_max_length(
@@ -391,15 +360,6 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                 self.reverse_ticker_symbol_map
                     .insert(ticker_symbol_token_id, ticker_symbol.clone());
-
-                // TODO: Remove
-                // all_company_name_token_ids.push(vec![ticker_symbol_token_id]);
-                //
-                // // Populate reverse map
-                // self.company_reverse_token_map
-                //     .entry(ticker_symbol_token_id)
-                //     .or_insert_with(Vec::new)
-                //     .push(ticker_symbol.clone());
             }
 
             if let Some(company_name) = company_name {
@@ -456,16 +416,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         ticker_symbol_tokens: &Vec<Token>,
         text_doc_tokens: &Vec<Token>,
     ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
-        // TODO: Remove
-        // if text_doc_tokens.is_empty() {
-        //     // Return an error if no tokens are found
-        //     // return Err(Error::TokenFilterError(
-        //     //     "No tokens found in the text document.".to_string(),
-        //     // ));
-
-        //     return Ok((vec![], vec![]));
-        // }
-
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self
             .token_mapper
@@ -475,7 +425,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             .token_mapper
             .get_filtered_token_ids(ticker_symbol_tokens.iter().map(|s| s.as_str()).collect());
 
-        // Return the filtered token IDs wrapped in `Ok`
         Ok((query_text_doc_token_ids, query_ticker_symbol_token_ids))
     }
 
