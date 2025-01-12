@@ -1,6 +1,7 @@
+mod config;
+pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 mod constants;
 pub mod models;
-pub use constants::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub use models::{
     CompanyTokenProcessor, CompanyTokenProcessorConfig, Error, TokenMapper, TokenParityState,
     TokenRangeState, Tokenizer,
