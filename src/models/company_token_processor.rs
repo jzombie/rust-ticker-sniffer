@@ -6,7 +6,7 @@ use crate::utils::{
     count_ticker_symbol_frequencies, dedup_vector, get_ticker_symbol_by_token_id,
     get_ticker_symbol_token_id,
 };
-use crate::{Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
+use crate::{Error, TickerSymbolMapper, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
 
 use log::info;
 use std::collections::HashMap;
@@ -23,13 +23,7 @@ pub struct CompanyTokenProcessor<'a> {
     token_mapper: TokenMapper,
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
-    // TODO: Compute these during compile time, not runtime
-    ticker_symbol_map: TickerSymbolMap,
-    reverse_ticker_symbol_map: ReverseTickerSymbolMap,
-    // TODO: Replace tickersymbol with a token ID representing the ticker
-    // symbol, and use the reverse ticker symbol map to map them back?
-    company_token_sequences: CompanyTokenSequencesMap,
-    company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
+    ticker_symbol_mapper: TickerSymbolMapper,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -43,10 +37,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             token_mapper: TokenMapper::new(),
             ticker_symbol_tokenizer: Tokenizer::ticker_symbol_parser(),
             text_doc_tokenizer: Tokenizer::text_doc_parser(),
-            ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
-            reverse_ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
-            company_token_sequences: HashMap::with_capacity(company_symbol_list.len()),
-            company_reverse_token_map: HashMap::new(),
+            ticker_symbol_mapper: TickerSymbolMapper::new(&company_symbol_list),
         };
 
         instance.ingest_company_tokens();
@@ -79,8 +70,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Determine range states
         info!("Collecting token range states...");
         let mut token_range_states = TokenRangeState::collect_token_range_states(
-            &self.company_token_sequences,
-            &self.ticker_symbol_map,
+            &self.ticker_symbol_mapper.company_token_sequences,
+            &self.ticker_symbol_mapper.ticker_symbol_map,
             &potential_token_id_sequences,
             &token_parity_states,
         );
@@ -135,7 +126,11 @@ impl<'a> CompanyTokenProcessor<'a> {
         let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
             .iter()
             .map(|token_id| {
-                get_ticker_symbol_by_token_id(&self.reverse_ticker_symbol_map, token_id).unwrap()
+                get_ticker_symbol_by_token_id(
+                    &self.ticker_symbol_mapper.reverse_ticker_symbol_map,
+                    token_id,
+                )
+                .unwrap()
             })
             .collect();
 
@@ -193,9 +188,11 @@ impl<'a> CompanyTokenProcessor<'a> {
                 query_ticker_frequencies.iter_mut()
             {
                 // TODO: Don't use unwrap
-                let query_ticker_symbol_token_id =
-                    get_ticker_symbol_token_id(&self.ticker_symbol_map, query_ticker_symbol)
-                        .unwrap();
+                let query_ticker_symbol_token_id = get_ticker_symbol_token_id(
+                    &self.ticker_symbol_mapper.ticker_symbol_map,
+                    query_ticker_symbol,
+                )
+                .unwrap();
 
                 if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
                     *query_ticker_symbol_frequency =
@@ -243,12 +240,10 @@ impl<'a> CompanyTokenProcessor<'a> {
     //     }
     // }
 
+    // TODO: Move to TickerSymbolMapper
     /// Ingests tokens from the company symbol list
     fn ingest_company_tokens(&mut self) {
-        self.company_token_sequences.clear();
-        self.company_reverse_token_map.clear();
-        self.ticker_symbol_map.clear();
-        self.reverse_ticker_symbol_map.clear();
+        self.ticker_symbol_mapper.clear();
 
         for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
             // let company_name_key = company_name.clone().unwrap();
@@ -260,10 +255,12 @@ impl<'a> CompanyTokenProcessor<'a> {
             for ticker_symbol_token in ticker_symbol_tokens {
                 let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
 
-                self.ticker_symbol_map
+                self.ticker_symbol_mapper
+                    .ticker_symbol_map
                     .insert(ticker_symbol.clone(), ticker_symbol_token_id);
 
-                self.reverse_ticker_symbol_map
+                self.ticker_symbol_mapper
+                    .reverse_ticker_symbol_map
                     .insert(ticker_symbol_token_id, ticker_symbol.clone());
             }
 
@@ -273,7 +270,8 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                 // Populate reverse map
                 for token_id in company_name_token_ids {
-                    self.company_reverse_token_map
+                    self.ticker_symbol_mapper
+                        .company_reverse_token_map
                         .entry(token_id.clone())
                         .or_insert_with(Vec::new)
                         .push(ticker_symbol.clone());
@@ -288,7 +286,8 @@ impl<'a> CompanyTokenProcessor<'a> {
 
                 // Populate reverse map
                 for token_id in alt_company_name_token_ids {
-                    self.company_reverse_token_map
+                    self.ticker_symbol_mapper
+                        .company_reverse_token_map
                         .entry(token_id)
                         .or_insert_with(Vec::new)
                         .push(ticker_symbol.clone());
@@ -296,7 +295,8 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
 
             // Insert the collected token IDs into the map
-            self.company_token_sequences
+            self.ticker_symbol_mapper
+                .company_token_sequences
                 .entry(ticker_symbol.clone())
                 .or_insert_with(Vec::new)
                 .extend(all_company_name_token_ids);
@@ -343,12 +343,16 @@ impl<'a> CompanyTokenProcessor<'a> {
         > = HashMap::new();
 
         for query_token_id in query_text_doc_token_ids {
-            if let Some(possible_ticker_symbols) =
-                self.company_reverse_token_map.get(query_token_id)
+            if let Some(possible_ticker_symbols) = self
+                .ticker_symbol_mapper
+                .company_reverse_token_map
+                .get(query_token_id)
             {
                 for ticker_symbol in possible_ticker_symbols {
-                    if let Some(company_name_variations_token_ids_list) =
-                        self.company_token_sequences.get(ticker_symbol)
+                    if let Some(company_name_variations_token_ids_list) = self
+                        .ticker_symbol_mapper
+                        .company_token_sequences
+                        .get(ticker_symbol)
                     {
                         for (company_sequence_idx, company_name_variations_token_ids) in
                             company_name_variations_token_ids_list.iter().enumerate()
