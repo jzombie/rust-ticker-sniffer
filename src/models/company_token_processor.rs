@@ -2,7 +2,7 @@ use crate::types::{
     CompanySequenceIndex, CompanySymbolList, QueryTokenIndex, TickerSymbol,
     TickerSymbolFrequencyMap, Token, TokenId,
 };
-use crate::utils::dedup_vector;
+use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
 use crate::{Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
 
 use log::info;
@@ -105,7 +105,8 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
         // as a symbol)
-        let ratio_exact_matches = self.calc_exact_ticker_symbol_match_ratio(&top_range_states);
+        let ratio_exact_matches =
+            TokenRangeState::calc_exact_ticker_symbol_match_ratio(&top_range_states);
 
         // Clear exact ticker symbol matches if ratio of exact matches is less than configured minimum
         if ratio_exact_matches < self.config.threshold_ratio_exact_matches {
@@ -114,7 +115,7 @@ impl<'a> CompanyTokenProcessor<'a> {
 
         // Keep track of number of occurrences, per extracted symbol, for context stats
         let text_doc_ticker_frequencies =
-            self.count_token_range_ticker_symbol_frequencies(&top_range_states);
+            TokenRangeState::count_token_range_ticker_symbol_frequencies(&top_range_states);
 
         // TODO: Don't use unwrap
         let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
@@ -145,7 +146,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .cloned()
             .collect();
         let mut query_ticker_frequencies =
-            self.count_ticker_symbol_frequencies(&query_tickers_not_in_text_doc);
+            count_ticker_symbol_frequencies(&query_tickers_not_in_text_doc);
 
         self.adjust_query_ticker_frequencies(&mut query_ticker_frequencies, &top_range_states)?;
 
@@ -208,86 +209,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         }
 
         combined_ticker_frequencies
-    }
-
-    fn count_ticker_symbol_frequencies(
-        &self,
-        ticker_symbols: &[TickerSymbol],
-    ) -> HashMap<TickerSymbol, usize> {
-        let mut frequencies: HashMap<TickerSymbol, usize> = HashMap::new();
-
-        for ticker_symbol in ticker_symbols {
-            *frequencies.entry(ticker_symbol.clone()).or_insert(0) += 1;
-        }
-
-        frequencies
-    }
-
-    // TODO: Extract to TokenRangeState
-    /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
-    fn count_token_range_ticker_symbol_frequencies(
-        &self,
-        range_states: &[TokenRangeState],
-    ) -> TickerSymbolFrequencyMap {
-        // Step 1: Deduplicate query token indices for each ticker symbol
-        let mut ticker_symbol_query_indices: HashMap<TickerSymbol, HashSet<Vec<QueryTokenIndex>>> =
-            HashMap::new();
-
-        for state in range_states {
-            let ticker_symbol = state.ticker_symbol.clone();
-            let query_token_indices = state.query_token_indices.clone();
-
-            ticker_symbol_query_indices
-                .entry(ticker_symbol)
-                .or_insert_with(HashSet::new)
-                .insert(query_token_indices);
-        }
-
-        // Step 2: Flatten deduplicated indices into a list of ticker symbols
-        let ticker_symbols: Vec<TickerSymbol> = ticker_symbol_query_indices
-            .into_iter()
-            .flat_map(|(ticker_symbol, query_index_sets)| {
-                query_index_sets
-                    .into_iter()
-                    .map(move |_| ticker_symbol.clone())
-            })
-            .collect();
-
-        // Step 3: Count frequencies using the wrapper
-        self.count_ticker_symbol_frequencies(&ticker_symbols)
-    }
-
-    // TODO: Extract to TokenRangeState
-    fn calc_exact_ticker_symbol_match_ratio(
-        &self,
-        top_token_range_states: &[TokenRangeState],
-    ) -> f32 {
-        if top_token_range_states.is_empty() {
-            return 1.0;
-        }
-
-        let (exact_matches, total) =
-            top_token_range_states
-                .iter()
-                .fold((0, 0), |(exact_matches, total), state| {
-                    (
-                        exact_matches
-                            + if state.is_matched_on_ticker_symbol == Some(true) {
-                                1
-                            } else {
-                                0
-                            },
-                        total + 1,
-                    )
-                });
-
-        let ratio_exact_matches = if total > 0 {
-            exact_matches as f32 / total as f32
-        } else {
-            0.0
-        };
-
-        ratio_exact_matches
     }
 
     // TODO: Use actual error type

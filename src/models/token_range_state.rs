@@ -1,8 +1,10 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::types::{
-    CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol, TokenId,
+    CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
+    TickerSymbolFrequencyMap, TokenId,
 };
+use crate::utils::count_ticker_symbol_frequencies;
 
 #[derive(Debug, Clone)]
 pub struct TokenRangeState {
@@ -57,6 +59,68 @@ impl TokenRangeState {
             .push(company_sequence_token_idx);
     }
 
+    pub fn calc_exact_ticker_symbol_match_ratio(top_token_range_states: &[TokenRangeState]) -> f32 {
+        if top_token_range_states.is_empty() {
+            return 1.0;
+        }
+
+        let (exact_matches, total) =
+            top_token_range_states
+                .iter()
+                .fold((0, 0), |(exact_matches, total), state| {
+                    (
+                        exact_matches
+                            + if state.is_matched_on_ticker_symbol == Some(true) {
+                                1
+                            } else {
+                                0
+                            },
+                        total + 1,
+                    )
+                });
+
+        let ratio_exact_matches = if total > 0 {
+            exact_matches as f32 / total as f32
+        } else {
+            0.0
+        };
+
+        ratio_exact_matches
+    }
+
+    /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
+    pub fn count_token_range_ticker_symbol_frequencies(
+        range_states: &[TokenRangeState],
+    ) -> TickerSymbolFrequencyMap {
+        // Step 1: Deduplicate query token indices for each ticker symbol
+        let mut ticker_symbol_query_indices: HashMap<TickerSymbol, HashSet<Vec<QueryTokenIndex>>> =
+            HashMap::new();
+
+        for state in range_states {
+            let ticker_symbol = state.ticker_symbol.clone();
+            let query_token_indices = state.query_token_indices.clone();
+
+            ticker_symbol_query_indices
+                .entry(ticker_symbol)
+                .or_insert_with(HashSet::new)
+                .insert(query_token_indices);
+        }
+
+        // Step 2: Flatten deduplicated indices into a list of ticker symbols
+        let ticker_symbols: Vec<TickerSymbol> = ticker_symbol_query_indices
+            .into_iter()
+            .flat_map(|(ticker_symbol, query_index_sets)| {
+                query_index_sets
+                    .into_iter()
+                    .map(move |_| ticker_symbol.clone())
+            })
+            .collect();
+
+        // Step 3: Count frequencies using the wrapper
+        count_ticker_symbol_frequencies(&ticker_symbols)
+    }
+
+    // TODO: Make this non-public if possible
     pub fn finalize(&mut self) {
         self.update_coverage();
 
