@@ -2,7 +2,7 @@ use crate::types::{
     CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
-use crate::{Error, TickerSymbolMapper, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
+use crate::{Error, TickerSymbolMapper, TokenParityState, TokenRangeState, Tokenizer};
 
 use log::info;
 use std::collections::HashMap;
@@ -15,9 +15,6 @@ pub struct CompanyTokenProcessorConfig {
 
 pub struct CompanyTokenProcessor<'a> {
     config: &'a CompanyTokenProcessorConfig,
-    token_mapper: TokenMapper,
-    ticker_symbol_tokenizer: Tokenizer,
-    text_doc_tokenizer: Tokenizer,
     ticker_symbol_mapper: TickerSymbolMapper<'a>,
 }
 
@@ -26,35 +23,22 @@ impl<'a> CompanyTokenProcessor<'a> {
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
     ) -> Self {
-        let mut token_mapper = TokenMapper::new();
-        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
-        let text_doc_tokenizer = Tokenizer::text_doc_parser();
+        let ticker_symbol_mapper = TickerSymbolMapper::new(&company_symbol_list);
 
-        let mut ticker_symbol_mapper = TickerSymbolMapper::new(&company_symbol_list);
-
-        ticker_symbol_mapper.ingest_company_tokens(
-            &company_symbol_list,
-            &ticker_symbol_tokenizer,
-            &text_doc_tokenizer,
-            &mut token_mapper,
-        );
-
-        let instance = CompanyTokenProcessor {
+        CompanyTokenProcessor {
             config,
-            token_mapper,
-            ticker_symbol_tokenizer,
-            text_doc_tokenizer,
             ticker_symbol_mapper,
-        };
-
-        instance
+        }
     }
 
     pub fn process_text_doc(&mut self, text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
         // Tokenize the input text
         info!("Tokenizing...");
-        let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(text);
-        let text_doc_tokens = self.text_doc_tokenizer.tokenize(text);
+        let ticker_symbol_tokens = self
+            .ticker_symbol_mapper
+            .ticker_symbol_tokenizer
+            .tokenize(text);
+        let text_doc_tokens = self.ticker_symbol_mapper.text_doc_tokenizer.tokenize(text);
 
         info!("Gathering filtered tokens...");
         let (query_text_doc_token_ids, mut query_ticker_symbol_token_ids) =
@@ -144,7 +128,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // TODO: Remove
         println!(
             "ticker_symbol_tokens: {:?}, query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-            ticker_symbol_tokens, query_text_doc_token_ids, self.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
+            ticker_symbol_tokens, query_text_doc_token_ids, self.ticker_symbol_mapper.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
         );
 
         let query_tickers_not_in_text_doc: Vec<&TickerSymbol> = unique_query_ticker_symbols
@@ -249,10 +233,12 @@ impl<'a> CompanyTokenProcessor<'a> {
     ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self
+            .ticker_symbol_mapper
             .token_mapper
             .get_filtered_token_ids(text_doc_tokens.iter().map(|s| s.as_str()).collect());
 
         let query_ticker_symbol_token_ids = self
+            .ticker_symbol_mapper
             .token_mapper
             .get_filtered_token_ids(ticker_symbol_tokens.iter().map(|s| s.as_str()).collect());
 

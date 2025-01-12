@@ -9,7 +9,10 @@ use crate::{TokenMapper, Tokenizer};
 
 // TODO: Precompute during compile time, not run time
 pub struct TickerSymbolMapper<'a> {
+    pub token_mapper: TokenMapper,
     pub company_symbol_list: &'a CompanySymbolList,
+    pub ticker_symbol_tokenizer: Tokenizer,
+    pub text_doc_tokenizer: Tokenizer,
     pub ticker_symbol_map: TickerSymbolMap,
     pub reverse_ticker_symbol_map: ReverseTickerSymbolMap,
     // TODO: Replace tickersymbol with a token ID representing the ticker
@@ -20,13 +23,25 @@ pub struct TickerSymbolMapper<'a> {
 
 impl<'a> TickerSymbolMapper<'a> {
     pub fn new(company_symbol_list: &'a CompanySymbolList) -> Self {
-        TickerSymbolMapper {
+        let token_mapper = TokenMapper::new();
+
+        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
+        let text_doc_tokenizer = Tokenizer::text_doc_parser();
+
+        let mut instance = TickerSymbolMapper {
+            token_mapper,
             company_symbol_list,
+            ticker_symbol_tokenizer,
+            text_doc_tokenizer,
             ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
             reverse_ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
             company_token_sequences_map: HashMap::with_capacity(company_symbol_list.len()),
             company_reverse_token_map: HashMap::new(),
-        }
+        };
+
+        instance.ingest_company_tokens();
+
+        instance
     }
 
     fn clear(&mut self) {
@@ -37,24 +52,18 @@ impl<'a> TickerSymbolMapper<'a> {
     }
 
     /// Ingests tokens from the company symbol list
-    pub fn ingest_company_tokens(
-        &mut self,
-        company_symbol_list: &'a CompanySymbolList,
-        ticker_symbol_tokenizer: &Tokenizer,
-        text_doc_tokenizer: &Tokenizer,
-        token_mapper: &mut TokenMapper,
-    ) {
+    pub fn ingest_company_tokens(&mut self) {
         self.clear();
 
-        for (ticker_symbol, company_name, alt_company_names) in company_symbol_list {
+        for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
             // let company_name_key = company_name.clone().unwrap();
 
             let mut all_company_name_token_ids = Vec::new();
 
             // Tokenize the ticker symbol and upsert token IDs
-            let ticker_symbol_tokens = ticker_symbol_tokenizer.tokenize(&ticker_symbol);
+            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
             for ticker_symbol_token in ticker_symbol_tokens {
-                let ticker_symbol_token_id = token_mapper.upsert_token(&ticker_symbol_token);
+                let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
 
                 self.ticker_symbol_map
                     .insert(ticker_symbol.clone(), ticker_symbol_token_id);
@@ -64,11 +73,7 @@ impl<'a> TickerSymbolMapper<'a> {
             }
 
             if let Some(company_name) = company_name {
-                let company_name_token_ids = self.process_company_name_tokens(
-                    &company_name,
-                    &text_doc_tokenizer,
-                    token_mapper,
-                );
+                let company_name_token_ids = self.process_company_name_tokens(&company_name);
                 all_company_name_token_ids.push(company_name_token_ids.clone());
 
                 // Populate reverse map
@@ -82,11 +87,8 @@ impl<'a> TickerSymbolMapper<'a> {
 
             // Process alternate company names
             for alt_company_name in alt_company_names {
-                let alt_company_name_token_ids = self.process_company_name_tokens(
-                    &alt_company_name,
-                    &text_doc_tokenizer,
-                    token_mapper,
-                );
+                let alt_company_name_token_ids =
+                    self.process_company_name_tokens(&alt_company_name);
                 all_company_name_token_ids.push(alt_company_name_token_ids.clone());
 
                 // Populate reverse map
@@ -107,16 +109,11 @@ impl<'a> TickerSymbolMapper<'a> {
     }
 
     /// Helper method for per-company token ingestion
-    fn process_company_name_tokens(
-        &mut self,
-        company_name: &str,
-        text_doc_tokenizer: &Tokenizer,
-        token_mapper: &mut TokenMapper,
-    ) -> Vec<TokenId> {
-        let company_name_tokens = text_doc_tokenizer.tokenize(&company_name);
+    fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<TokenId> {
+        let company_name_tokens = self.text_doc_tokenizer.tokenize(&company_name);
         let mut company_name_token_ids = Vec::new();
         for token in company_name_tokens {
-            let token_id = token_mapper.upsert_token(&token);
+            let token_id = self.token_mapper.upsert_token(&token);
             company_name_token_ids.push(token_id);
         }
 
