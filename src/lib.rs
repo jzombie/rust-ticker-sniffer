@@ -13,7 +13,6 @@ pub use types::{
     Token, TokenId, TokenRef, TokenVector,
 };
 
-// TODO: Add dedicated type instead of f32
 pub fn extract_tickers_from_text(
     text: &str,
     company_symbols_list: &CompanySymbolList,
@@ -27,7 +26,6 @@ pub fn extract_tickers_from_text(
     Ok(results_ticker_symbol_frequency_map)
 }
 
-// TODO: Refactor accordingly
 pub fn extract_tickers_from_text_with_custom_config(
     document_token_processor_config: &CompanyTokenProcessorConfig,
     text: &str,
