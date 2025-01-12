@@ -15,7 +15,7 @@ pub struct CompanyTokenProcessorConfig {
 
 pub struct CompanyTokenProcessor<'a> {
     config: &'a CompanyTokenProcessorConfig,
-    company_token_mapper: CompanyTokenMapper<'a>,
+    company_token_mapper: CompanyTokenMapper,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {

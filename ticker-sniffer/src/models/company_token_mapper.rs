@@ -5,9 +5,8 @@ use crate::types::{CompanySequenceIndex, CompanySymbolList, TickerSymbol, TokenI
 use crate::{TokenMapper, Tokenizer};
 
 // TODO: Precompute during compile time, not run time
-pub struct CompanyTokenMapper<'a> {
+pub struct CompanyTokenMapper {
     pub token_mapper: TokenMapper,
-    pub company_symbol_list: &'a CompanySymbolList,
     pub ticker_symbol_tokenizer: Tokenizer,
     pub text_doc_tokenizer: Tokenizer,
     pub ticker_symbol_map: HashMap<TickerSymbol, TokenId>,
@@ -18,7 +17,7 @@ pub struct CompanyTokenMapper<'a> {
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
-impl<'a> CompanyTokenMapper<'a> {
+impl<'a> CompanyTokenMapper {
     pub fn new(company_symbol_list: &'a CompanySymbolList) -> Self {
         let token_mapper = TokenMapper::new();
 
@@ -27,7 +26,6 @@ impl<'a> CompanyTokenMapper<'a> {
 
         let mut instance = CompanyTokenMapper {
             token_mapper,
-            company_symbol_list,
             ticker_symbol_tokenizer,
             text_doc_tokenizer,
             ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
@@ -36,7 +34,7 @@ impl<'a> CompanyTokenMapper<'a> {
             company_reverse_token_map: HashMap::new(),
         };
 
-        instance.ingest_company_tokens();
+        instance.ingest_company_tokens(&company_symbol_list);
 
         instance
     }
@@ -49,10 +47,10 @@ impl<'a> CompanyTokenMapper<'a> {
     }
 
     /// Ingests tokens from the company symbol list
-    pub fn ingest_company_tokens(&mut self) {
+    fn ingest_company_tokens(&mut self, company_symbol_list: &'a CompanySymbolList) {
         self.clear();
 
-        for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
+        for (ticker_symbol, company_name, alt_company_names) in company_symbol_list {
             // let company_name_key = company_name.clone().unwrap();
 
             let mut all_company_name_token_ids = Vec::new();
