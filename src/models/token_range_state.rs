@@ -217,7 +217,7 @@ impl TokenRangeState {
 
     /// The returned vector represents unique token range states.
     pub fn collect_token_range_states(
-        company_token_sequences: &CompanyTokenSequencesMap,
+        company_token_sequences_map: &CompanyTokenSequencesMap,
         ticker_symbol_map: &TickerSymbolMap,
         potential_token_id_sequences: &HashMap<
             TickerSymbol,
@@ -277,7 +277,7 @@ impl TokenRangeState {
                         *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
                         get_company_token_sequence_max_length(
-                            company_token_sequences,
+                            company_token_sequences_map,
                             ticker_symbol,
                             token_parity_state.company_sequence_idx,
                         )
