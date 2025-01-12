@@ -1,8 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::types::{
-    CompanySequenceIndex, CompanySequenceTokenIndex, CompanyTokenSequencesMap, QueryTokenIndex,
-    TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
+    CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
+    TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::{count_ticker_symbol_frequencies, get_company_token_sequence_max_length};
 use crate::{TickerSymbolMapper, TokenParityState};

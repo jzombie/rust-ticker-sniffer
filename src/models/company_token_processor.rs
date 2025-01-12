@@ -1,6 +1,5 @@
 use crate::types::{
-    CompanySequenceIndex, CompanySymbolList, CompanyTokenSequencesMap, ReverseTickerSymbolMap,
-    TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
+    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
 use crate::{Error, TickerSymbolMapper, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
