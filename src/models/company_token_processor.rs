@@ -2,10 +2,7 @@ use crate::types::{
     CompanySequenceIndex, CompanySymbolList, CompanyTokenSequencesMap, ReverseTickerSymbolMap,
     TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
 };
-use crate::utils::{
-    count_ticker_symbol_frequencies, dedup_vector, get_ticker_symbol_by_token_id,
-    get_ticker_symbol_token_id,
-};
+use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
 use crate::{Error, TickerSymbolMapper, TokenMapper, TokenParityState, TokenRangeState, Tokenizer};
 
 use log::info;
@@ -79,8 +76,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Determine range states
         info!("Collecting token range states...");
         let mut token_range_states = TokenRangeState::collect_token_range_states(
-            &self.ticker_symbol_mapper.company_token_sequences_map,
-            &self.ticker_symbol_mapper.ticker_symbol_map,
+            &self.ticker_symbol_mapper,
             &potential_token_id_sequences,
             &token_parity_states,
         );
@@ -135,11 +131,9 @@ impl<'a> CompanyTokenProcessor<'a> {
         let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
             .iter()
             .map(|token_id| {
-                get_ticker_symbol_by_token_id(
-                    &self.ticker_symbol_mapper.reverse_ticker_symbol_map,
-                    token_id,
-                )
-                .unwrap()
+                self.ticker_symbol_mapper
+                    .get_ticker_symbol_by_token_id(token_id)
+                    .unwrap()
             })
             .collect();
 
@@ -197,11 +191,10 @@ impl<'a> CompanyTokenProcessor<'a> {
                 query_ticker_frequencies.iter_mut()
             {
                 // TODO: Don't use unwrap
-                let query_ticker_symbol_token_id = get_ticker_symbol_token_id(
-                    &self.ticker_symbol_mapper.ticker_symbol_map,
-                    query_ticker_symbol,
-                )
-                .unwrap();
+                let query_ticker_symbol_token_id = self
+                    .ticker_symbol_mapper
+                    .get_ticker_symbol_token_id(query_ticker_symbol)
+                    .unwrap();
 
                 if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
                     *query_ticker_symbol_frequency =

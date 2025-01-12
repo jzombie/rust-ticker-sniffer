@@ -122,4 +122,26 @@ impl<'a> TickerSymbolMapper<'a> {
 
         company_name_token_ids
     }
+
+    // TODO: Use actual error type (or return option type)
+    pub fn get_ticker_symbol_by_token_id(
+        &self,
+        token_id: &TokenId,
+    ) -> Result<&TickerSymbol, String> {
+        match self.reverse_ticker_symbol_map.get(token_id) {
+            Some(ticker_symbol) => Ok(ticker_symbol),
+            None => Err("Could not obtain token id".to_string()),
+        }
+    }
+
+    // TODO: Use actual error type (or return option type)
+    pub fn get_ticker_symbol_token_id(
+        &self,
+        ticker_symbol: &TickerSymbol,
+    ) -> Result<&TokenId, String> {
+        match self.ticker_symbol_map.get(ticker_symbol) {
+            Some(token_id) => Ok(token_id),
+            None => Err("Could not obtain token id".to_string()),
+        }
+    }
 }

@@ -4,11 +4,8 @@ use crate::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, CompanyTokenSequencesMap, QueryTokenIndex,
     TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
 };
-use crate::utils::{
-    count_ticker_symbol_frequencies, get_company_token_sequence_max_length,
-    get_ticker_symbol_token_id,
-};
-use crate::TokenParityState;
+use crate::utils::{count_ticker_symbol_frequencies, get_company_token_sequence_max_length};
+use crate::{TickerSymbolMapper, TokenParityState};
 
 #[derive(Debug, Clone)]
 pub struct TokenRangeState {
@@ -217,8 +214,7 @@ impl TokenRangeState {
 
     /// The returned vector represents unique token range states.
     pub fn collect_token_range_states(
-        company_token_sequences_map: &CompanyTokenSequencesMap,
-        ticker_symbol_map: &TickerSymbolMap,
+        ticker_symbol_mapper: &TickerSymbolMapper,
         potential_token_id_sequences: &HashMap<
             TickerSymbol,
             Vec<(CompanySequenceIndex, Vec<TokenId>)>,
@@ -229,8 +225,9 @@ impl TokenRangeState {
 
         for (ticker_symbol, _) in potential_token_id_sequences {
             // TODO: Don't use unwrap here
-            let ticker_symbol_token_id =
-                get_ticker_symbol_token_id(&ticker_symbol_map, ticker_symbol).unwrap();
+            let ticker_symbol_token_id = ticker_symbol_mapper
+                .get_ticker_symbol_token_id(&ticker_symbol)
+                .unwrap();
 
             // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
@@ -277,7 +274,7 @@ impl TokenRangeState {
                         *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
                         get_company_token_sequence_max_length(
-                            company_token_sequences_map,
+                            &ticker_symbol_mapper.company_token_sequences_map,
                             ticker_symbol,
                             token_parity_state.company_sequence_idx,
                         )
