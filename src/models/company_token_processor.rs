@@ -19,11 +19,10 @@ pub struct CompanyTokenProcessorConfig {
 
 pub struct CompanyTokenProcessor<'a> {
     config: &'a CompanyTokenProcessorConfig,
-    company_symbol_list: &'a CompanySymbolList,
     token_mapper: TokenMapper,
     ticker_symbol_tokenizer: Tokenizer,
     text_doc_tokenizer: Tokenizer,
-    ticker_symbol_mapper: TickerSymbolMapper,
+    ticker_symbol_mapper: TickerSymbolMapper<'a>,
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
@@ -31,16 +30,26 @@ impl<'a> CompanyTokenProcessor<'a> {
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
     ) -> Self {
-        let mut instance = CompanyTokenProcessor {
-            config,
-            company_symbol_list,
-            token_mapper: TokenMapper::new(),
-            ticker_symbol_tokenizer: Tokenizer::ticker_symbol_parser(),
-            text_doc_tokenizer: Tokenizer::text_doc_parser(),
-            ticker_symbol_mapper: TickerSymbolMapper::new(&company_symbol_list),
-        };
+        let mut token_mapper = TokenMapper::new();
+        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
+        let text_doc_tokenizer = Tokenizer::text_doc_parser();
 
-        instance.ingest_company_tokens();
+        let mut ticker_symbol_mapper = TickerSymbolMapper::new(&company_symbol_list);
+
+        ticker_symbol_mapper.ingest_company_tokens(
+            &company_symbol_list,
+            &ticker_symbol_tokenizer,
+            &text_doc_tokenizer,
+            &mut token_mapper,
+        );
+
+        let instance = CompanyTokenProcessor {
+            config,
+            token_mapper,
+            ticker_symbol_tokenizer,
+            text_doc_tokenizer,
+            ticker_symbol_mapper,
+        };
 
         instance
     }
@@ -239,81 +248,6 @@ impl<'a> CompanyTokenProcessor<'a> {
     //         println!("No tokens found for ticker symbol: {}", ticker_symbol);
     //     }
     // }
-
-    // TODO: Move to TickerSymbolMapper
-    /// Ingests tokens from the company symbol list
-    fn ingest_company_tokens(&mut self) {
-        self.ticker_symbol_mapper.clear();
-
-        for (ticker_symbol, company_name, alt_company_names) in self.company_symbol_list {
-            // let company_name_key = company_name.clone().unwrap();
-
-            let mut all_company_name_token_ids = Vec::new();
-
-            // Tokenize the ticker symbol and upsert token IDs
-            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
-            for ticker_symbol_token in ticker_symbol_tokens {
-                let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
-
-                self.ticker_symbol_mapper
-                    .ticker_symbol_map
-                    .insert(ticker_symbol.clone(), ticker_symbol_token_id);
-
-                self.ticker_symbol_mapper
-                    .reverse_ticker_symbol_map
-                    .insert(ticker_symbol_token_id, ticker_symbol.clone());
-            }
-
-            if let Some(company_name) = company_name {
-                let company_name_token_ids = self.process_company_name_tokens(&company_name);
-                all_company_name_token_ids.push(company_name_token_ids.clone());
-
-                // Populate reverse map
-                for token_id in company_name_token_ids {
-                    self.ticker_symbol_mapper
-                        .company_reverse_token_map
-                        .entry(token_id.clone())
-                        .or_insert_with(Vec::new)
-                        .push(ticker_symbol.clone());
-                }
-            }
-
-            // Process alternate company names
-            for alt_company_name in alt_company_names {
-                let alt_company_name_token_ids =
-                    self.process_company_name_tokens(&alt_company_name);
-                all_company_name_token_ids.push(alt_company_name_token_ids.clone());
-
-                // Populate reverse map
-                for token_id in alt_company_name_token_ids {
-                    self.ticker_symbol_mapper
-                        .company_reverse_token_map
-                        .entry(token_id)
-                        .or_insert_with(Vec::new)
-                        .push(ticker_symbol.clone());
-                }
-            }
-
-            // Insert the collected token IDs into the map
-            self.ticker_symbol_mapper
-                .company_token_sequences
-                .entry(ticker_symbol.clone())
-                .or_insert_with(Vec::new)
-                .extend(all_company_name_token_ids);
-        }
-    }
-
-    /// Helper method for per-company token ingestion
-    fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<TokenId> {
-        let company_name_tokens = self.text_doc_tokenizer.tokenize(&company_name);
-        let mut company_name_token_ids = Vec::new();
-        for token in company_name_tokens {
-            let token_id = self.token_mapper.upsert_token(&token);
-            company_name_token_ids.push(token_id);
-        }
-
-        company_name_token_ids
-    }
 
     // TODO: Don't return Result type; no error will be thrown
     fn get_filtered_query_token_ids(
