@@ -79,7 +79,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Determine range states
         info!("Collecting token range states...");
         let mut token_range_states = TokenRangeState::collect_token_range_states(
-            &self.ticker_symbol_mapper.company_token_sequences,
+            &self.ticker_symbol_mapper.company_token_sequences_map,
             &self.ticker_symbol_mapper.ticker_symbol_map,
             &potential_token_id_sequences,
             &token_parity_states,
@@ -285,7 +285,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                 for ticker_symbol in possible_ticker_symbols {
                     if let Some(company_name_variations_token_ids_list) = self
                         .ticker_symbol_mapper
-                        .company_token_sequences
+                        .company_token_sequences_map
                         .get(ticker_symbol)
                     {
                         for (company_sequence_idx, company_name_variations_token_ids) in

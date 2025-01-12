@@ -14,7 +14,7 @@ pub struct TickerSymbolMapper<'a> {
     pub reverse_ticker_symbol_map: ReverseTickerSymbolMap,
     // TODO: Replace tickersymbol with a token ID representing the ticker
     // symbol, and use the reverse ticker symbol map to map them back?
-    pub company_token_sequences: CompanyTokenSequencesMap,
+    pub company_token_sequences_map: CompanyTokenSequencesMap,
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
@@ -24,13 +24,13 @@ impl<'a> TickerSymbolMapper<'a> {
             company_symbol_list,
             ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
             reverse_ticker_symbol_map: HashMap::with_capacity(company_symbol_list.len()),
-            company_token_sequences: HashMap::with_capacity(company_symbol_list.len()),
+            company_token_sequences_map: HashMap::with_capacity(company_symbol_list.len()),
             company_reverse_token_map: HashMap::new(),
         }
     }
 
     fn clear(&mut self) {
-        self.company_token_sequences.clear();
+        self.company_token_sequences_map.clear();
         self.company_reverse_token_map.clear();
         self.ticker_symbol_map.clear();
         self.reverse_ticker_symbol_map.clear();
@@ -99,7 +99,7 @@ impl<'a> TickerSymbolMapper<'a> {
             }
 
             // Insert the collected token IDs into the map
-            self.company_token_sequences
+            self.company_token_sequences_map
                 .entry(ticker_symbol.clone())
                 .or_insert_with(Vec::new)
                 .extend(all_company_name_token_ids);
