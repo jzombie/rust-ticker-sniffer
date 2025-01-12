@@ -1,4 +1,5 @@
 [workspace]
 members = [
-    "ticker-sniffer"
+    "ticker-sniffer", 
+    "ticker-sniffer-build-utils"
 ]
