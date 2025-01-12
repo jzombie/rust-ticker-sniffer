@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::types::{
-    CompanySequenceIndex, CompanySequenceTokenIndex, CompanyTokenSequences, QueryTokenIndex,
+    CompanySequenceIndex, CompanySequenceTokenIndex, CompanyTokenSequencesMap, QueryTokenIndex,
     TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
 };
 use crate::utils::{
@@ -217,7 +217,7 @@ impl TokenRangeState {
 
     /// The returned vector represents unique token range states.
     pub fn collect_token_range_states(
-        company_token_sequences: &CompanyTokenSequences,
+        company_token_sequences: &CompanyTokenSequencesMap,
         ticker_symbol_map: &TickerSymbolMap,
         potential_token_id_sequences: &HashMap<
             TickerSymbol,

@@ -1,7 +1,7 @@
-use crate::types::{CompanySequenceIndex, CompanyTokenSequences, TickerSymbol};
+use crate::types::{CompanySequenceIndex, CompanyTokenSequencesMap, TickerSymbol};
 
 pub fn get_company_token_sequence_max_length(
-    company_token_sequences: &CompanyTokenSequences,
+    company_token_sequences: &CompanyTokenSequencesMap,
     ticker_symbol: &TickerSymbol,
     company_sequence_idx: CompanySequenceIndex,
 ) -> Option<usize> {

@@ -1,5 +1,5 @@
 use crate::types::{
-    CompanySequenceIndex, CompanySymbolList, CompanyTokenSequences, ReverseTickerSymbolMap,
+    CompanySequenceIndex, CompanySymbolList, CompanyTokenSequencesMap, ReverseTickerSymbolMap,
     TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolMap, Token, TokenId,
 };
 use crate::utils::{
@@ -28,7 +28,7 @@ pub struct CompanyTokenProcessor<'a> {
     reverse_ticker_symbol_map: ReverseTickerSymbolMap,
     // TODO: Replace tickersymbol with a token ID representing the ticker
     // symbol, and use the reverse ticker symbol map to map them back?
-    company_token_sequences: CompanyTokenSequences,
+    company_token_sequences: CompanyTokenSequencesMap,
     company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
 }
 
