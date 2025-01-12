@@ -116,13 +116,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         let text_doc_ticker_frequencies =
             self.count_token_range_ticker_symbol_frequencies(&top_range_states);
 
-        // let query_ticker_symbols: Vec<TickerSymbol> = self
-        //     // .token_mapper
-        //     // .get_tokens_by_ids(&query_ticker_symbol_token_ids)
-        //     .into_iter()
-        //     .filter_map(|option| option)
-        //     .collect();
-
         // TODO: Don't use unwrap
         let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
             .iter()
@@ -323,6 +316,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 
+    // TODO: Keep? If so, use logger method
     // #[allow(dead_code)]
     // /// For debugging purposes
     // fn display_company_tokens(&self, ticker_symbol: &TickerSymbol) {
