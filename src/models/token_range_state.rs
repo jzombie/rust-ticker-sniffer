@@ -4,7 +4,7 @@ use crate::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
     TickerSymbolFrequencyMap, Token, TokenId,
 };
-use crate::utils::{count_ticker_symbol_frequencies, get_company_token_sequence_max_length};
+use crate::utils::count_ticker_symbol_frequencies;
 use crate::{TickerSymbolMapper, TokenParityState};
 
 #[derive(Debug, Clone)]
@@ -273,13 +273,13 @@ impl TokenRangeState {
                         ticker_symbol.to_string(),
                         *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
-                        get_company_token_sequence_max_length(
-                            &ticker_symbol_mapper.company_token_sequences_map,
-                            ticker_symbol,
-                            token_parity_state.company_sequence_idx,
-                        )
-                        // TODO: Replace with ?
-                        .unwrap(),
+                        ticker_symbol_mapper
+                            .get_company_token_sequence_max_length(
+                                ticker_symbol,
+                                token_parity_state.company_sequence_idx,
+                            )
+                            // TODO: Replace with ?
+                            .unwrap(),
                     ));
                 }
 

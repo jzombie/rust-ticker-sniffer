@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::types::{
-    CompanySymbolList, CompanyTokenSequencesMap, ReverseTickerSymbolMap, TickerSymbol,
-    TickerSymbolMap, TokenId,
+    CompanySequenceIndex, CompanySymbolList, CompanyTokenSequencesMap, ReverseTickerSymbolMap,
+    TickerSymbol, TickerSymbolMap, TokenId,
 };
 
 use crate::{TokenMapper, Tokenizer};
@@ -143,5 +143,15 @@ impl<'a> TickerSymbolMapper<'a> {
             Some(token_id) => Ok(token_id),
             None => Err("Could not obtain token id".to_string()),
         }
+    }
+
+    pub fn get_company_token_sequence_max_length(
+        &self,
+        ticker_symbol: &TickerSymbol,
+        company_sequence_idx: CompanySequenceIndex,
+    ) -> Option<usize> {
+        self.company_token_sequences_map
+            .get(ticker_symbol)
+            .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 }
