@@ -5,7 +5,6 @@ use ticker_sniffer::{
     extract_tickers_from_text_with_custom_config, CompanySymbolList, CompanyTokenProcessorConfig,
     Error as LibError, TickerSymbol, TickerSymbolFrequencyMap,
 };
-pub mod models;
 // pub use models::EvaluationResult;
 pub mod constants;
 use constants::TEST_SYMBOLS_CSV_PATH;
@@ -97,7 +96,7 @@ pub fn run_test_for_file(
     LibError,
 > {
     // Load symbols from a test CSV file
-    let symbols_map = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
+    let company_symbols_list = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
         .expect("Failed to load symbols from CSV");
 
     // Read the content of the text file
@@ -118,7 +117,7 @@ pub fn run_test_for_file(
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         &company_token_processor_config,
         &filtered_text,
-        &symbols_map,
+        &company_symbols_list,
     )?;
 
     // Get the expected tickers from the file

@@ -198,22 +198,32 @@ fn main() {
     // let query = "Google";
     // let query = "J.P. Morgan Exchange-Traded Fund Trust - JPMorgan BetaBuilders Emerging Markets Equity ETF";
     let query = r#"
-        Palantir
-    : Cramer praised the software company’s management and said the company’s third quarter, which sent shares surging 20%, was one of the best of the year. He also said he liked the company’s defense business, noting Palantir’s work for the Pentagon.
+    Intel
+    on Thursday announced the appointment of two new directors with significant semiconductor manufacturing experience as the company ramps up the search process for ousted CEO Pat Gelsinger’s replacement.
 
-    Axon
-    : Axon largely makes equipment for law enforcement, and Cramer suggested it is poised to do well as a GOP trifecta in Washington likely means police will receive more funding. The company also reported better-than-expected quarterly results, and it has new software that includes artificial intelligence, he added.
+    Former ASML
+    CEO Eric Meurice and Microchip Technology
+    interim CEO Steve Sanghi will join Intel’s board effective immediately, the company said. Their appointments mean that Intel’s board once again has directors with semiconductor experience, fixing a vacuum left by the departure of Cadence Design Systems Chairman Lip-Bu Tan in August.
 
-    Tesla
-    : Tesla CEO Elon Musk is a close ally of President-elect Donald Trump, and Cramer said his loyalty will probably lead to rewards for the company and its automated vehicle business.
+    Intel declined to comment on what committees the two new directors would join and the nature of the search process. 
 
-    Texas Pacific Land
-    : A new addition to the S&P 500
-    , this landowner has a large chunk of acreage in the Permian Basin. While businesses related to oil are expected to succeed under Trump, Cramer warned that during his last term, oil stocks actually underperformed after excessive drilling.
+    Intel’s search for new directors predated Gelsinger’s firing, according to people familiar with the matter. The company’s board had been interviewing semiconductor executives for several weeks, said the people, who requested anonymity to discuss confidential information freely.
 
-    Tapestry
-    : Known for several luxury retail brands including Coach, Kate Spade and Stuart Weitzman, Tapestry’s stock has climbed since the Federal Trade Commission blocked its acquisition of peer company Capri. Wall Street had begun to doubt the merger, with some saying Tapestry would pay too much for Capri. Cramer dubbed Tapestry a “rebounding apparel company.”
+    Meurice ran ASML, which manufactures some of the most advanced chipmaking machines, for eight years. ASML’s share price quintupled during his tenure, Intel said.
+
+    Sanghi rejoined Microchip as interim CEO in November, after serving as CEO from 1991 to 2016. Sanghi was previously an executive at Intel.
+
+    “Eric and Steve are highly respected leaders in the semiconductor industry whose deep technical expertise, executive experience and operational rigor make them great additions to the Intel board,” interim Executive Chairman Frank Yeary said.
+
+    Sanghi and Meurice join Intel’s board at a critical juncture. The company ousted Gelsinger over the weekend and has since been assembling a short list of replacements with the help of an executive search firm. Intel’s market cap sits firmly below $100 billion, and the company is still in the middle of an intense cost-cutting drive.
+
+    Intel CFO David Zinsner and product chief MJ Holthaus currently serve as interim co-CEOs.
     "#;
+
+    let query = "Eric";
+
+    let query = "A";
+    let query = "BRK-B";
 
     let results = extract_tickers_from_text(&query, &company_symbols_list).unwrap();
 
