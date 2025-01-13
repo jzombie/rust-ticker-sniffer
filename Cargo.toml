@@ -3,3 +3,4 @@ members = [
     "ticker-sniffer", 
     "ticker-sniffer-build-utils"
 ]
+default-members = ["ticker-sniffer"]
