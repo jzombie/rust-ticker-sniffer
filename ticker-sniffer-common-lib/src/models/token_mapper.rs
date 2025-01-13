@@ -1,6 +1,7 @@
 use crate::types::{TokenId, TokenRef, TokenVector};
 use crate::Tokenizer;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Maps "global" tokens without including function specific to token types.
 pub struct TokenMapper {

@@ -63,7 +63,7 @@ where
 fn serialize_to_rust_literal<T: Serialize>(value: &T) -> String {
     if let Ok(serialized) = serde_json::to_value(value) {
         match serialized {
-            serde_json::Value::String(s) => format!("{:?}", s),
+            serde_json::Value::String(s) => format!("\"{}\".to_string()", s), // Convert &str to String
             serde_json::Value::Number(n) => n.to_string(),
             serde_json::Value::Bool(b) => b.to_string(),
             serde_json::Value::Array(arr) => {

@@ -4,7 +4,7 @@ use crate::utils::count_ticker_symbol_frequencies;
 use crate::{CompanyTokenMapper, TokenParityState};
 use ticker_sniffer_common_lib::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
-    TickerSymbolFrequencyMap, Token, TokenId,
+    TickerSymbolFrequencyMap, TickerSymbolTokenId, Token, TokenId,
 };
 
 #[derive(Debug, Clone)]
@@ -216,18 +216,22 @@ impl TokenRangeState {
     pub fn collect_token_range_states(
         company_token_mapper: &CompanyTokenMapper,
         potential_token_id_sequences: &HashMap<
-            TickerSymbol,
+            TickerSymbolTokenId,
             Vec<(CompanySequenceIndex, Vec<TokenId>)>,
         >,
         token_parity_states: &[TokenParityState],
     ) -> Vec<TokenRangeState> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
-        for (ticker_symbol, _) in potential_token_id_sequences {
+        for (ticker_symbol_token_id, _) in potential_token_id_sequences {
+            // TODO: This is the token not the symbol!
             // TODO: Don't use unwrap here
-            let ticker_symbol_token_id = company_token_mapper
-                .get_ticker_symbol_token_id(&ticker_symbol)
+            let ticker_symbol = company_token_mapper
+                .get_ticker_symbol_by_token_id(&ticker_symbol_token_id)
                 .unwrap();
+
+            // TODO: Remove
+            // println!("ticker symbol: {}", ticker_symbol);
 
             // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
@@ -243,7 +247,7 @@ impl TokenRangeState {
             let mut token_range_state: Option<TokenRangeState> = None;
 
             for token_parity_state in token_parity_states {
-                if token_parity_state.ticker_symbol != *ticker_symbol {
+                if token_parity_state.ticker_symbol_token_id != *ticker_symbol_token_id {
                     last_company_sequence_idx = usize::MAX - 1;
                     last_company_sequence_token_idx = usize::MAX - 1;
                     last_query_token_idx = usize::MAX - 1;
@@ -275,7 +279,7 @@ impl TokenRangeState {
                         token_parity_state.company_sequence_idx,
                         company_token_mapper
                             .get_company_token_sequence_max_length(
-                                ticker_symbol,
+                                &ticker_symbol_token_id,
                                 token_parity_state.company_sequence_idx,
                             )
                             // TODO: Replace with ?
