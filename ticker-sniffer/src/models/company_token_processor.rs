@@ -45,13 +45,15 @@ impl<'a> CompanyTokenProcessor<'a> {
     pub fn from_prebuilt(config: &'a CompanyTokenProcessorConfig) -> Self {
         let company_token_mapper =
             CompanyTokenMapper::from_prebuilt(CompanyTokenMapperPrebuiltProps {
-                ticker_symbol_map: *COMPANY_TOKEN_MAPPER__TICKER_SYMBOL_MAP,
-                reverse_ticker_symbol_map: *COMPANY_TOKEN_MAPPER__REVERSE_TICKER_SYMBOL_MAP,
-                company_token_sequences_map: *COMPANY_TOKEN_MAPPER__COMPANY_TOKEN_SEQUENCES_MAP,
-                company_reverse_token_map: *COMPANY_TOKEN_MAPPER__COMPANY_REVERSE_TOKEN_MAP,
+                // TODO: Don't clone, but okay for now
+                ticker_symbol_map: COMPANY_TOKEN_MAPPER__TICKER_SYMBOL_MAP.clone(),
+                reverse_ticker_symbol_map: COMPANY_TOKEN_MAPPER__REVERSE_TICKER_SYMBOL_MAP.clone(),
+                company_token_sequences_map: COMPANY_TOKEN_MAPPER__COMPANY_TOKEN_SEQUENCES_MAP
+                    .clone(),
+                company_reverse_token_map: COMPANY_TOKEN_MAPPER__COMPANY_REVERSE_TOKEN_MAP.clone(),
 
-                token_map: *TOKEN_MAPPER__TOKEN_MAP,
-                reverse_token_map: *TOKEN_MAPPER__REVERSE_TOKEN_MAP,
+                token_map: TOKEN_MAPPER__TOKEN_MAP.clone(),
+                reverse_token_map: TOKEN_MAPPER__REVERSE_TOKEN_MAP.clone(),
             });
 
         CompanyTokenProcessor {

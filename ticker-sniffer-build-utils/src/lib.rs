@@ -18,10 +18,14 @@ pub struct Temp {
     pub c: Vec<i32>,
 }
 
+const COMPANY_SYMBOL_FILE_PATH: &str = "../data/company_symbol_list.csv";
+
 pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {
     // Load the company symbols list from a CSV file
-    let company_symbols_list =
-        load_company_symbol_list_from_file("../data/company_symbol_list.csv")?;
+    let company_symbols_list = load_company_symbol_list_from_file(&COMPANY_SYMBOL_FILE_PATH)?;
+
+    // Tell Cargo to fully recompile if this asset changes
+    println!("cargo:rerun-if-changed={}", COMPANY_SYMBOL_FILE_PATH);
 
     let company_token_mapper = CompanyTokenMapper::new(&company_symbols_list);
 
