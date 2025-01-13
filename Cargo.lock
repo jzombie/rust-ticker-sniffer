@@ -534,11 +534,9 @@ dependencies = [
 name = "ticker-sniffer"
 version = "0.1.0"
 dependencies = [
- "bincode",
  "criterion",
  "env_logger",
  "log",
- "serde",
  "ticker-sniffer-build-utils",
  "ticker-sniffer-common-lib",
 ]
