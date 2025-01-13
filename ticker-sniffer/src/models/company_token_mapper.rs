@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::types::{CompanySequenceIndex, CompanySymbolList, TickerSymbol, TokenId};
+use crate::types::{
+    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolTokenId, TokenId,
+};
 
 use crate::{TokenMapper, Tokenizer};
 
@@ -9,12 +11,10 @@ pub struct CompanyTokenMapper {
     pub token_mapper: TokenMapper,
     pub ticker_symbol_tokenizer: Tokenizer,
     pub text_doc_tokenizer: Tokenizer,
-    pub ticker_symbol_map: HashMap<TickerSymbol, TokenId>,
+    pub ticker_symbol_map: HashMap<TickerSymbol, TickerSymbolTokenId>,
     pub reverse_ticker_symbol_map: HashMap<TokenId, TickerSymbol>,
-    // TODO: Replace tickersymbol with a token ID representing the ticker
-    // symbol, and use the reverse ticker symbol map to map them back?
-    pub company_token_sequences_map: HashMap<TickerSymbol, Vec<Vec<TokenId>>>,
-    pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbol>>,
+    pub company_token_sequences_map: HashMap<TickerSymbolTokenId, Vec<Vec<TokenId>>>,
+    pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbolTokenId>>,
 }
 
 impl CompanyTokenMapper {
@@ -67,6 +67,14 @@ impl CompanyTokenMapper {
                     .insert(ticker_symbol_token_id, ticker_symbol.clone());
             }
 
+            // TODO: Don't use unwrap
+            // FIXME: This should use get_ticker_symbol_token_id instead but it's problematic here
+            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
+            let ticker_symbol_token_id = self
+                .token_mapper
+                .get_token_id(&ticker_symbol_tokens[0])
+                .unwrap();
+
             if let Some(company_name) = company_name {
                 let company_name_token_ids = self.process_company_name_tokens(&company_name);
                 all_company_name_token_ids.push(company_name_token_ids.clone());
@@ -76,7 +84,7 @@ impl CompanyTokenMapper {
                     self.company_reverse_token_map
                         .entry(token_id.clone())
                         .or_insert_with(Vec::new)
-                        .push(ticker_symbol.clone());
+                        .push(ticker_symbol_token_id);
                 }
             }
 
@@ -91,15 +99,21 @@ impl CompanyTokenMapper {
                     self.company_reverse_token_map
                         .entry(token_id)
                         .or_insert_with(Vec::new)
-                        .push(ticker_symbol.clone());
+                        .push(ticker_symbol_token_id);
                 }
             }
 
             // Insert the collected token IDs into the map
             self.company_token_sequences_map
-                .entry(ticker_symbol.clone())
+                .entry(ticker_symbol_token_id)
                 .or_insert_with(Vec::new)
                 .extend(all_company_name_token_ids);
+
+            // TODO: Remove
+            // println!(
+            //     "sequences map length: {}",
+            //     self.company_reverse_token_map.len()
+            // );
         }
     }
 
@@ -120,9 +134,12 @@ impl CompanyTokenMapper {
         &self,
         token_id: &TokenId,
     ) -> Result<&TickerSymbol, String> {
+        // TODO: Remove
+        // println!("{:?}", self.reverse_ticker_symbol_map);
+
         match self.reverse_ticker_symbol_map.get(token_id) {
             Some(ticker_symbol) => Ok(ticker_symbol),
-            None => Err("Could not obtain token id".to_string()),
+            None => Err(format!("Could not ticker from token token id: {}", token_id).to_string()),
         }
     }
 
@@ -139,11 +156,11 @@ impl CompanyTokenMapper {
 
     pub fn get_company_token_sequence_max_length(
         &self,
-        ticker_symbol: &TickerSymbol,
+        ticker_symbol_token_id: &TickerSymbolTokenId,
         company_sequence_idx: CompanySequenceIndex,
     ) -> Option<usize> {
         self.company_token_sequences_map
-            .get(ticker_symbol)
+            .get(&ticker_symbol_token_id)
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 }
