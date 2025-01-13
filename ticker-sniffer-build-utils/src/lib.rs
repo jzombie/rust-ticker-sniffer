@@ -4,19 +4,12 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
+use ticker_sniffer_common_lib::constants::CODE_AUTOGEN_PREFIX;
+use ticker_sniffer_common_lib::models::CompanyTokenMapper;
+use ticker_sniffer_common_lib::types::CompanySymbolList;
 
 mod utils;
 use utils::generate_hashmap_code;
-
-// use bincode;
-
-type TickerSymbol = String;
-type CompanyName = String;
-type AlternateCompanyName = String;
-
-// CompanySymbolList is a type alias for a vector of tuples,
-// and all components already implement Serialize and Deserialize
-type CompanySymbolList = Vec<(TickerSymbol, Option<CompanyName>, Vec<AlternateCompanyName>)>;
 
 #[derive(Debug, Serialize)]
 pub struct Temp {
@@ -30,35 +23,54 @@ pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {
     let company_symbols_list =
         load_company_symbol_list_from_file("../data/company_symbol_list.csv")?;
 
-    // Serialize the vector into binary format
-    // let encoded: Vec<u8> = bincode::serialize(&company_symbols_list)?;
+    let company_token_mapper = CompanyTokenMapper::new(&company_symbols_list);
 
-    // let generated_code = format!(
-    //     r#"
-    //     /// Auto-generated data from build.rs
-    //     pub const COMPANY_SYMBOLS: &[CustomData] = &{:?};
-    //             "#,
-    //     company_symbols_list
-    // );
+    let ticker_symbol_map = company_token_mapper.ticker_symbol_map;
+    serialize_hashmap_to_file(
+        &ticker_symbol_map,
+        "COMPANY_TOKEN_MAPPER__TICKER_SYMBOL_MAP",
+    )?;
 
-    // let mut my_map = HashMap::new();
-    // my_map.insert("AAPL", 1);
-    // my_map.insert("MSFT", 2);
+    let reverse_ticker_symbol_map = company_token_mapper.reverse_ticker_symbol_map;
+    serialize_hashmap_to_file(
+        &reverse_ticker_symbol_map,
+        "COMPANY_TOKEN_MAPPER__REVERSE_TICKER_SYMBOL_MAP",
+    )?;
 
-    let mut inner_map = HashMap::new();
-    inner_map.insert("CEO", vec![vec![vec![1, 2, 3]]]);
-    inner_map.insert("Founded", vec![vec![vec![4, 5, 6]]]);
+    let company_token_sequences_map = company_token_mapper.company_token_sequences_map;
+    serialize_hashmap_to_file(
+        &company_token_sequences_map,
+        "COMPANY_TOKEN_MAPPER__COMPANY_TOKEN_SEQUENCES_MAP",
+    )?;
 
-    let mut my_map = HashMap::new();
-    my_map.insert("AAPL", inner_map);
+    // TODO: This should use token IDs instead of tokens
+    let company_reverse_token_map = company_token_mapper.company_reverse_token_map;
+    serialize_hashmap_to_file(
+        &company_reverse_token_map,
+        "COMPANY_TOKEN_MAPPER__COMPANY_REVERSE_TOKEN_MAP",
+    )?;
 
-    let generated_code = generate_hashmap_code("ticker_map", &my_map);
+    let token_map = company_token_mapper.token_mapper.token_map;
+    serialize_hashmap_to_file(&token_map, "TOKEN_MAPPER__TOKEN_MAP")?;
 
-    // Write the serialized data to a binary file
-    let mut file = File::create("src/__dummy_generated__.bin")?;
-    file.write_all(&generated_code.as_bytes())?;
+    let reverse_token_map = company_token_mapper.token_mapper.reverse_token_map;
+    serialize_hashmap_to_file(&reverse_token_map, "TOKEN_MAPPER__REVERSE_TOKEN_MAP")?;
 
     Ok(())
+}
+
+fn serialize_hashmap_to_file<K, V>(hashmap: &HashMap<K, V>, map_name: &str) -> std::io::Result<()>
+where
+    K: Serialize,
+    V: Serialize,
+{
+    let generated_code = generate_hashmap_code(map_name, hashmap);
+    let file_path = format!("src/{}{}.rs", CODE_AUTOGEN_PREFIX, map_name);
+
+    let mut file =
+        File::create(&file_path).expect(&format!("Could not create file at path: {}", file_path));
+
+    file.write_all(&generated_code.as_bytes())
 }
 
 /// Utility to load symbols from a CSV file for testing and benchmarking.

@@ -4,8 +4,8 @@ use std::collections::HashMap;
 
 /// Maps "global" tokens without including function specific to token types.
 pub struct TokenMapper {
-    token_map: HashMap<TokenVector, TokenId>,
-    reverse_token_map: HashMap<TokenId, TokenVector>,
+    pub token_map: HashMap<TokenVector, TokenId>,
+    pub reverse_token_map: HashMap<TokenId, TokenVector>,
     next_id: TokenId,
 }
 

@@ -1,2 +1,2 @@
 /target
-**.bin
+__AUTOGEN__*.rs

@@ -24,9 +24,7 @@ where
     // Declare the Lazy static variable using once_cell
     code.push_str(&format!(
         "pub static {}: Lazy<HashMap<{}, {}>> = Lazy::new(|| {{\n",
-        name.to_uppercase(),
-        key_type,
-        value_type
+        name, key_type, value_type
     ));
 
     // code.push_str(&format!(
