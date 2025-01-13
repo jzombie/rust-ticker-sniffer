@@ -102,4 +102,5 @@ fn sanitize_rust_type_name<T>() -> String {
         .replace("std::collections::hash::map::", "std::collections::")
         .replace("std::collections::hash_map::", "std::collections::")
         .replace("alloc::vec::", "")
+        .replace("alloc::string::", "")
 }

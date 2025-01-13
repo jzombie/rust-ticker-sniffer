@@ -4,6 +4,8 @@ use ticker_sniffer_common_lib::types::{
     CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
 };
 
+include!("../__AUTOGEN__COMPANY_TOKEN_MAPPER__COMPANY_REVERSE_TOKEN_MAP.rs");
+
 use log::info;
 use std::collections::HashMap;
 
