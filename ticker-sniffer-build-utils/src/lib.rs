@@ -46,8 +46,8 @@ pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {
     // my_map.insert("MSFT", 2);
 
     let mut inner_map = HashMap::new();
-    inner_map.insert("CEO", vec![vec![1, 2, 3]]);
-    inner_map.insert("Founded", vec![vec![4, 5, 6]]);
+    inner_map.insert("CEO", vec![vec![vec![1, 2, 3]]]);
+    inner_map.insert("Founded", vec![vec![vec![4, 5, 6]]]);
 
     let mut my_map = HashMap::new();
     my_map.insert("AAPL", inner_map);

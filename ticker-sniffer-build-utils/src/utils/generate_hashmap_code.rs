@@ -1,4 +1,3 @@
-// use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -61,6 +60,8 @@ where
 /// Serialize a value into Rust-compatible literal code.
 ///
 /// Supports strings, numbers, vectors, and nested `HashMap` structures.
+///
+/// This does *not* work with structs as `HashMap` values.
 fn serialize_to_rust_literal<T: Serialize>(value: &T) -> String {
     if let Ok(serialized) = serde_json::to_value(value) {
         match serialized {
