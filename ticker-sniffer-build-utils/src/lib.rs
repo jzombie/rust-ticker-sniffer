@@ -1,4 +1,5 @@
 use csv::Reader;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -16,6 +17,13 @@ type AlternateCompanyName = String;
 // CompanySymbolList is a type alias for a vector of tuples,
 // and all components already implement Serialize and Deserialize
 type CompanySymbolList = Vec<(TickerSymbol, Option<CompanyName>, Vec<AlternateCompanyName>)>;
+
+#[derive(Debug, Serialize)]
+pub struct Temp {
+    pub a: String,
+    pub b: i32,
+    pub c: Vec<i32>,
+}
 
 pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {
     // Load the company symbols list from a CSV file

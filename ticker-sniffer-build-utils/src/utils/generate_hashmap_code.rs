@@ -1,7 +1,10 @@
+// use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::collections::HashMap;
 
-/// Generate Rust code for a `LazyLock<HashMap<K, V>>`, including nested structures.
+/// Generate Rust code for a `Lazy<HashMap<K, V>>`, including nested structures.
+///
+/// Note: The consume of this will depend once_cell crate: https://docs.rs/once_cell/latest/once_cell/
 ///
 /// # Arguments
 /// - `name`: Name of the Rust variable to generate.
@@ -19,16 +22,25 @@ where
 
     let mut code = String::new();
 
-    // Declare the LazyLock static variable
+    // Declare the Lazy static variable using once_cell
     code.push_str(&format!(
-        "pub static {}: LazyLock<HashMap<{}, {}>> = LazyLock::new(|| {{\n",
+        "pub static {}: Lazy<HashMap<{}, {}>> = Lazy::new(|| {{\n",
         name.to_uppercase(),
         key_type,
         value_type
     ));
+
+    // code.push_str(&format!(
+    //     "    let mut map: HashMap<{}, {}> = HashMap::new();\n",
+    //     key_type, value_type
+    // ));
+
+    // Use `with_capacity` for optimal memory allocation
     code.push_str(&format!(
-        "    let mut map: HashMap<{}, {}> = HashMap::new();\n",
-        key_type, value_type
+        "    let mut map: HashMap<{}, {}> = HashMap::with_capacity({});\n",
+        key_type,
+        value_type,
+        map.len() // Using the length of the map for capacity
     ));
 
     // Add `insert` calls for each entry in the map
@@ -90,5 +102,5 @@ fn sanitize_rust_type_name<T>() -> String {
     full_name
         .replace("std::collections::hash::map::", "std::collections::")
         .replace("std::collections::hash_map::", "std::collections::")
-        .replace("alloc::vec::Vec", "Vec")
+        .replace("alloc::vec::", "")
 }
