@@ -26,6 +26,9 @@ COPY . .
 # Build the Rust project for the wasm32 target
 RUN cargo build --release --target wasm32-unknown-unknown --no-default-features
 
+# Display the size of the output WASM file
+RUN du -h target/wasm32-unknown-unknown/release/*.wasm || echo "No WASM file found"
+
 # Expose the target directory (where the WASM files are located)
 # VOLUME ["/workspace/target/wasm32-unknown-unknown/release"]
 
