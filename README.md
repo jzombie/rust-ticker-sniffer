@@ -24,7 +24,7 @@ cargo bench
 ## WASM Test Builds
 
 ```bash
-docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
+DOCKER_BUILDKIT=0 docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
 ```
 
 ## Prototype `n-gram` Bin
