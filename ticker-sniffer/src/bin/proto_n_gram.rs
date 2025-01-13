@@ -13,6 +13,7 @@ use std::collections::HashMap;
 fn main() {
     env_logger::init();
 
+    // TODO: Remove
     let company_symbols_list = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
         .expect("Failed to load symbols from CSV");
 

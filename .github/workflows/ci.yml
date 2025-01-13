@@ -29,7 +29,7 @@ jobs:
           rustup component add rustfmt
 
       - name: Run tests with filename capturing
-        run: cargo test --features csv-support -- --nocapture
+        run: cargo test -- --nocapture
 
       - name: Build WASM test builds
         run: docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .

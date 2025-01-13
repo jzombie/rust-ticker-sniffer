@@ -536,7 +536,6 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "criterion",
- "csv",
  "env_logger",
  "log",
  "serde",
@@ -548,7 +547,9 @@ name = "ticker-sniffer-build-utils"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "csv",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -12,13 +12,13 @@ pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>
 ## Test with Filename Capturing in Output
 
 ```bash
-cargo test --features csv-support  -- --nocapture
+cargo test -- --nocapture
 ```
 
 ## Benching
 
 ```bash
-cargo bench --features csv-support
+cargo bench
 ```
 
 ## WASM Test Builds
@@ -32,7 +32,7 @@ docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
 Probably not going to use n-gram itself, but this is the latest prototype.
 
 ```bash
-RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="csv-support logger-support"
+RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="logger-support"
 ```
 
 ## ChatGPT-based Alternative Name Suggester

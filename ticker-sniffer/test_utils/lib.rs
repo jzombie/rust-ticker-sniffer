@@ -1,4 +1,3 @@
-use csv::Reader;
 use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
@@ -7,48 +6,6 @@ use ticker_sniffer::{
 };
 // pub use models::EvaluationResult;
 pub mod constants;
-use constants::TEST_SYMBOLS_CSV_PATH;
-
-/// Utility to load symbols from a CSV file for testing and benchmarking.
-pub fn load_company_symbol_list_from_file(
-    file_path: &str,
-) -> Result<CompanySymbolList, Box<dyn Error>> {
-    let mut company_symbols_list = CompanySymbolList::new();
-    let mut reader = Reader::from_path(file_path)?;
-
-    // Use headers to extract columns
-    let headers = reader.headers()?.clone();
-
-    for record in reader.records() {
-        let record = record?;
-        // Extract values based on header names
-        let symbol = record.get(headers.iter().position(|h| h == "Symbol").unwrap());
-        let company_name = record.get(headers.iter().position(|h| h == "Company Name").unwrap());
-        let comma_separated_alternate_names =
-            record.get(headers.iter().position(|h| h == "Alternate Names").unwrap());
-
-        let alternate_names: Vec<String> = if let Some(names) = comma_separated_alternate_names {
-            names
-                .split(',')
-                .map(|name| name.trim().to_string()) // Trim whitespace and convert to String
-                .collect()
-        } else {
-            Vec::new() // Default to an empty vector if alternate names are missing
-        };
-
-        if let Some(symbol) = symbol {
-            company_symbols_list.push((
-                symbol.to_uppercase(),
-                company_name.map(|name| name.to_string()),
-                alternate_names,
-            ));
-        } else {
-            eprintln!("Skipping invalid row: {:?}", record);
-        }
-    }
-
-    Ok(company_symbols_list)
-}
 
 // Helper function to get the expected tickers from the text file
 pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
