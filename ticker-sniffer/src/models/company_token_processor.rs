@@ -1,8 +1,8 @@
-use crate::types::{
-    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
-};
 use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
 use crate::{CompanyTokenMapper, Error, TokenParityState, TokenRangeState};
+use ticker_sniffer_common_lib::types::{
+    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap, Token, TokenId,
+};
 
 use log::info;
 use std::collections::HashMap;

@@ -540,6 +540,7 @@ dependencies = [
  "log",
  "serde",
  "ticker-sniffer-build-utils",
+ "ticker-sniffer-common-lib",
 ]
 
 [[package]]
@@ -552,6 +553,10 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "ticker-sniffer-common-lib"
+version = "0.1.0"
 
 [[package]]
 name = "tinytemplate"

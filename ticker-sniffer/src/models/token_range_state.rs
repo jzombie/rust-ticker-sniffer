@@ -1,11 +1,11 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::types::{
+use crate::utils::count_ticker_symbol_frequencies;
+use crate::{CompanyTokenMapper, TokenParityState};
+use ticker_sniffer_common_lib::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
     TickerSymbolFrequencyMap, Token, TokenId,
 };
-use crate::utils::count_ticker_symbol_frequencies;
-use crate::{CompanyTokenMapper, TokenParityState};
 
 #[derive(Debug, Clone)]
 pub struct TokenRangeState {

@@ -1,5 +1,5 @@
-use crate::types::TickerSymbol;
 use std::collections::HashMap;
+use ticker_sniffer_common_lib::types::TickerSymbol;
 
 pub fn count_ticker_symbol_frequencies(
     ticker_symbols: &[TickerSymbol],

@@ -1,7 +1,7 @@
-use crate::types::{
+use std::collections::HashMap;
+use ticker_sniffer_common_lib::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol, TokenId,
 };
-use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct TokenParityState {
