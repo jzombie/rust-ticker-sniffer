@@ -27,31 +27,22 @@ where
         name, key_type, value_type
     ));
 
-    // code.push_str(&format!(
-    //     "    let mut map: HashMap<{}, {}> = HashMap::new();\n",
-    //     key_type, value_type
-    // ));
+    // Generate a single `HashMap::from` with all entries
+    let entries = map
+        .iter()
+        .map(|(key, value)| {
+            let key_literal = serialize_to_rust_literal(key);
+            let value_literal = serialize_to_rust_literal(value);
+            format!("({}, {})", key_literal, value_literal)
+        })
+        .collect::<Vec<_>>()
+        .join(", ");
 
-    // Use `with_capacity` for optimal memory allocation
-    code.push_str(&format!(
-        "    let mut map: HashMap<{}, {}> = HashMap::with_capacity({});\n",
-        key_type,
-        value_type,
-        map.len() // Using the length of the map for capacity
-    ));
-
-    // Add `insert` calls for each entry in the map
-    for (key, value) in map {
-        let key_literal = serialize_to_rust_literal(key);
-        let value_literal = serialize_to_rust_literal(value);
-        code.push_str(&format!(
-            "    map.insert({}, {});\n",
-            key_literal, value_literal
-        ));
-    }
+    // Use `HashMap::from` for optimal initialization
+    code.push_str(&format!("    HashMap::from([{}])\n", entries));
 
     // Finalize the block
-    code.push_str("    map\n});\n");
+    code.push_str("});\n");
     code
 }
 

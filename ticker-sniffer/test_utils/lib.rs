@@ -1,8 +1,7 @@
-use std::error::Error;
 use std::{fs, path::Path};
 use ticker_sniffer::{
-    extract_tickers_from_text_with_custom_config, CompanySymbolList, CompanyTokenProcessorConfig,
-    Error as LibError, TickerSymbol, TickerSymbolFrequencyMap,
+    extract_tickers_from_text_with_custom_config, CompanyTokenProcessorConfig, Error as LibError,
+    TickerSymbol, TickerSymbolFrequencyMap,
 };
 // pub use models::EvaluationResult;
 pub mod constants;
@@ -52,10 +51,6 @@ pub fn run_test_for_file(
     ),
     LibError,
 > {
-    // Load symbols from a test CSV file
-    let company_symbols_list = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
-        .expect("Failed to load symbols from CSV");
-
     // Read the content of the text file
     let raw_text = fs::read_to_string(test_file_path).expect("Failed to read test file");
 
@@ -74,7 +69,6 @@ pub fn run_test_for_file(
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         &company_token_processor_config,
         &filtered_text,
-        &company_symbols_list,
     )?;
 
     // Get the expected tickers from the file
