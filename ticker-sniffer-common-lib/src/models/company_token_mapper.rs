@@ -17,16 +17,6 @@ pub struct CompanyTokenMapper {
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbolTokenId>>,
 }
 
-pub struct CompanyTokenMapperPrebuiltProps {
-    pub ticker_symbol_map: HashMap<TickerSymbol, TickerSymbolTokenId>,
-    pub reverse_ticker_symbol_map: HashMap<TokenId, TickerSymbol>,
-    pub company_token_sequences_map: HashMap<TickerSymbolTokenId, Vec<Vec<TokenId>>>,
-    pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbolTokenId>>,
-
-    pub token_map: HashMap<TokenVector, TokenId>,
-    pub reverse_token_map: HashMap<TokenId, TokenVector>,
-}
-
 impl CompanyTokenMapper {
     pub fn new(company_symbol_list: &CompanySymbolList) -> Self {
         let token_mapper = TokenMapper::new();
@@ -47,23 +37,6 @@ impl CompanyTokenMapper {
         instance.ingest_company_tokens(&company_symbol_list);
 
         instance
-    }
-
-    pub fn from_prebuilt(prebuilt_props: CompanyTokenMapperPrebuiltProps) -> Self {
-        let token_mapper = TokenMapper::new();
-
-        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
-        let text_doc_tokenizer = Tokenizer::text_doc_parser();
-
-        CompanyTokenMapper {
-            token_mapper,
-            ticker_symbol_tokenizer,
-            text_doc_tokenizer,
-            ticker_symbol_map: prebuilt_props.ticker_symbol_map,
-            reverse_ticker_symbol_map: prebuilt_props.reverse_ticker_symbol_map,
-            company_token_sequences_map: prebuilt_props.company_token_sequences_map,
-            company_reverse_token_map: prebuilt_props.company_reverse_token_map,
-        }
     }
 
     fn clear(&mut self) {

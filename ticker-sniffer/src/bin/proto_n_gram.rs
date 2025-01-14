@@ -1,9 +1,6 @@
 #![allow(dead_code, unused_imports, unused_variables)]
 
 #[path = "../../test_utils/lib.rs"]
-mod test_utils;
-use test_utils::constants::TEST_SYMBOLS_CSV_PATH;
-use test_utils::load_company_symbol_list_from_file;
 use ticker_sniffer::extract_tickers_from_text;
 
 use log::{debug, error, info, log_enabled, Level};
@@ -12,10 +9,6 @@ use std::collections::HashMap;
 
 fn main() {
     env_logger::init();
-
-    // TODO: Remove
-    let company_symbols_list = load_company_symbol_list_from_file(TEST_SYMBOLS_CSV_PATH)
-        .expect("Failed to load symbols from CSV");
 
     // let mut matches = HashSet::new();
 
@@ -226,7 +219,7 @@ fn main() {
     let query = "A";
     let query = "BRK-B";
 
-    let results = extract_tickers_from_text(&query, &company_symbols_list).unwrap();
+    let results = extract_tickers_from_text(&query).unwrap();
 
     println!("Extracted Tickers:");
     for (ticker_symbol, frequency) in results {

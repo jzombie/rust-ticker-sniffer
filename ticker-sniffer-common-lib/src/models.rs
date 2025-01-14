@@ -8,4 +8,4 @@ pub mod token_mapper;
 pub use token_mapper::TokenMapper;
 
 pub mod company_token_mapper;
-pub use company_token_mapper::{CompanyTokenMapper, CompanyTokenMapperPrebuiltProps};
+pub use company_token_mapper::CompanyTokenMapper;

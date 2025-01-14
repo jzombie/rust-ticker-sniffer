@@ -4,6 +4,7 @@ use std::char;
 use std::collections::HashSet;
 
 pub struct Tokenizer {
+    as_verbatim: bool,
     min_uppercase_ratio: Option<f32>,
     pre_processed_stop_words: Option<HashSet<String>>,
 }
@@ -12,6 +13,7 @@ impl Tokenizer {
     /// Configuration specifically for ticker symbol parsing
     pub fn ticker_symbol_parser() -> Self {
         Self {
+            as_verbatim: false,
             min_uppercase_ratio: Some(0.9),
             pre_processed_stop_words: None,
         }
@@ -19,13 +21,30 @@ impl Tokenizer {
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
         Self {
+            as_verbatim: false,
             min_uppercase_ratio: None,
             pre_processed_stop_words: Some(Self::preprocess_stop_words()),
         }
     }
 
+    /// Configuration for minimal processing
+    pub fn verbatim_doc_parser() -> Self {
+        Self {
+            as_verbatim: true,
+            min_uppercase_ratio: None,
+            pre_processed_stop_words: None,
+        }
+    }
+
     /// Tokenizer function to split the text into individual tokens.
     pub fn tokenize(&self, text: &str) -> Vec<Token> {
+        if self.as_verbatim {
+            return text
+                .split_whitespace() // Split into words
+                .map(|word| word.to_string()) // Convert each word into a Token object
+                .collect();
+        }
+
         let stop_words = self.pre_processed_stop_words.as_ref();
 
         // Preprocess and tokenize the text

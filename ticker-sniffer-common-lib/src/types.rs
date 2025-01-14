@@ -8,6 +8,8 @@ pub type Token = String;
 /// Represents a borrowed view of a token as a `str`. This is used when ownership is not required.
 pub type TokenRef = str;
 
+// TODO: This might could be a u16 for this use case
+//
 /// A vector of token IDs, represented as `u32`. This type is used to store sequences of token IDs
 /// that map to specific tokens in a `TokenMapper`.
 pub type TokenVector = Vec<u32>;

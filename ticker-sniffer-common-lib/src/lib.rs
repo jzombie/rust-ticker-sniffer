@@ -1,6 +1,4 @@
 pub mod models;
-pub use models::{
-    CompanyTokenMapper, CompanyTokenMapperPrebuiltProps, Error, TokenMapper, Tokenizer,
-};
+pub use models::{CompanyTokenMapper, Error, TokenMapper, Tokenizer};
 pub mod constants;
 pub mod types;

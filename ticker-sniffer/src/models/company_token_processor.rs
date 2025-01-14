@@ -1,19 +1,9 @@
 use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
 use crate::{CompanyTokenMapper, Error, TokenParityState, TokenRangeState};
-use once_cell::sync::Lazy;
-use ticker_sniffer_common_lib::models::CompanyTokenMapperPrebuiltProps;
 use ticker_sniffer_common_lib::types::{
-    CompanySequenceIndex, TickerSymbol, TickerSymbolFrequencyMap, TickerSymbolTokenId, Token,
-    TokenId,
+    CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap,
+    TickerSymbolTokenId, Token, TokenId,
 };
-
-// Include inline auto-generated maps
-include!("../__AUTOGEN__COMPANY_TOKEN_MAPPER__COMPANY_REVERSE_TOKEN_MAP.rs");
-include!("../__AUTOGEN__COMPANY_TOKEN_MAPPER__COMPANY_TOKEN_SEQUENCES_MAP.rs");
-include!("../__AUTOGEN__COMPANY_TOKEN_MAPPER__REVERSE_TICKER_SYMBOL_MAP.rs");
-include!("../__AUTOGEN__COMPANY_TOKEN_MAPPER__TICKER_SYMBOL_MAP.rs");
-include!("../__AUTOGEN__TOKEN_MAPPER__REVERSE_TOKEN_MAP.rs");
-include!("../__AUTOGEN__TOKEN_MAPPER__TOKEN_MAP.rs");
 
 use log::info;
 use std::collections::HashMap;
@@ -30,31 +20,11 @@ pub struct CompanyTokenProcessor<'a> {
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
-    // pub fn new(
-    //     config: &'a CompanyTokenProcessorConfig,
-    //     company_symbol_list: &'a CompanySymbolList,
-    // ) -> Self {
-    //     let company_token_mapper = CompanyTokenMapper::new(&company_symbol_list);
-
-    //     CompanyTokenProcessor {
-    //         config,
-    //         company_token_mapper,
-    //     }
-    // }
-
-    pub fn from_prebuilt(config: &'a CompanyTokenProcessorConfig) -> Self {
-        let company_token_mapper =
-            CompanyTokenMapper::from_prebuilt(CompanyTokenMapperPrebuiltProps {
-                // TODO: Don't clone, but okay for now
-                ticker_symbol_map: COMPANY_TOKEN_MAPPER__TICKER_SYMBOL_MAP.clone(),
-                reverse_ticker_symbol_map: COMPANY_TOKEN_MAPPER__REVERSE_TICKER_SYMBOL_MAP.clone(),
-                company_token_sequences_map: COMPANY_TOKEN_MAPPER__COMPANY_TOKEN_SEQUENCES_MAP
-                    .clone(),
-                company_reverse_token_map: COMPANY_TOKEN_MAPPER__COMPANY_REVERSE_TOKEN_MAP.clone(),
-
-                token_map: TOKEN_MAPPER__TOKEN_MAP.clone(),
-                reverse_token_map: TOKEN_MAPPER__REVERSE_TOKEN_MAP.clone(),
-            });
+    pub fn new(
+        config: &'a CompanyTokenProcessorConfig,
+        company_symbol_list: &'a CompanySymbolList,
+    ) -> Self {
+        let company_token_mapper = CompanyTokenMapper::new(&company_symbol_list);
 
         CompanyTokenProcessor {
             config,
