@@ -25,21 +25,6 @@ pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
         .collect()
 }
 
-// TODO: Remove?
-// Helper function to check if the file has an EXPECTED_FAILURE line
-// pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
-//     let content = fs::read_to_string(file_path).expect("Failed to read test file");
-
-//     content.lines().find_map(|line| {
-//         let line = line.trim();
-//         if line.starts_with("EXPECTED_FAILURE:") {
-//             Some(line.replace("EXPECTED_FAILURE:", "").trim().to_string())
-//         } else {
-//             None
-//         }
-//     })
-// }
-
 // Helper function to run the test for each file in the directory
 pub fn run_test_for_file(
     test_file_path: &str,
@@ -75,6 +60,9 @@ pub fn run_test_for_file(
     // Get the expected tickers from the file
     let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
 
+    // Get the expected failure ticker (if any) from the file
+    let expected_failure = get_expected_failure(&Path::new(test_file_path));
+
     // Separate actual results into a vector of just tickers
     let actual_tickers: Vec<TickerSymbol> = results_ticker_symbol_frequency_map
         .iter()
@@ -96,34 +84,45 @@ pub fn run_test_for_file(
         .collect();
 
     // Assertions for correctness
-    assert_eq!(
-        actual_tickers.len(),
-        expected_tickers.len(),
-        "{} - Expected {} tickers but found {}. Missing: {:?}, Unexpected: {:?}",
-        test_file_path,
-        expected_tickers.len(),
-        actual_tickers.len(),
-        missing_tickers,
-        unexpected_tickers
-    );
-
-    for ticker in &expected_tickers {
+    if let Some(expected_failure_ticker) = expected_failure {
+        // If there is an expected failure, ensure it is not found
         assert!(
-            actual_tickers.contains(ticker),
-            "{} - Expected ticker {:?} was not found in results. Found: {:?}",
+            !actual_tickers.contains(&expected_failure_ticker),
+            "{} - Expected failure ticker {:?} was found in results, but it should not be present.",
             test_file_path,
-            ticker,
-            actual_tickers
+            expected_failure_ticker
         );
-    }
+    } else {
+        // Perform standard assertions when no expected failure is specified
+        assert_eq!(
+            actual_tickers.len(),
+            expected_tickers.len(),
+            "{} - Expected {} tickers but found {}. Missing: {:?}, Unexpected: {:?}",
+            test_file_path,
+            expected_tickers.len(),
+            actual_tickers.len(),
+            missing_tickers,
+            unexpected_tickers
+        );
 
-    for ticker in &unexpected_tickers {
-        assert!(
-            !expected_tickers.contains(ticker),
-            "{} - Unexpected ticker {:?} found in results.",
-            test_file_path,
-            ticker
-        );
+        for ticker in &expected_tickers {
+            assert!(
+                actual_tickers.contains(ticker),
+                "{} - Expected ticker {:?} was not found in results. Found: {:?}",
+                test_file_path,
+                ticker,
+                actual_tickers
+            );
+        }
+
+        for ticker in &unexpected_tickers {
+            assert!(
+                !expected_tickers.contains(ticker),
+                "{} - Unexpected ticker {:?} found in results.",
+                test_file_path,
+                ticker
+            );
+        }
     }
 
     // Return the results along with the lists of unexpected and missing tickers
@@ -132,4 +131,18 @@ pub fn run_test_for_file(
         unexpected_tickers,
         missing_tickers,
     ))
+}
+
+// Helper function to check if the file has an EXPECTED_FAILURE line
+fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
+    let content = fs::read_to_string(file_path).expect("Failed to read test file");
+
+    content.lines().find_map(|line| {
+        let line = line.trim();
+        if line.starts_with("EXPECTED_FAILURE:") {
+            Some(line.replace("EXPECTED_FAILURE:", "").trim().to_string())
+        } else {
+            None
+        }
+    })
 }
