@@ -2,10 +2,9 @@ use std::collections::HashMap;
 
 use crate::types::{
     CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolTokenId, TokenId,
-    TokenVector,
 };
 
-use crate::{TokenMapper, Tokenizer};
+use crate::{Error, TokenMapper, Tokenizer};
 
 pub struct CompanyTokenMapper {
     pub token_mapper: TokenMapper,
@@ -17,8 +16,9 @@ pub struct CompanyTokenMapper {
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbolTokenId>>,
 }
 
+// TODO: Document
 impl CompanyTokenMapper {
-    pub fn new(company_symbol_list: &CompanySymbolList) -> Self {
+    pub fn new(company_symbol_list: &CompanySymbolList) -> Result<Self, Error> {
         let token_mapper = TokenMapper::new();
 
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
@@ -34,9 +34,9 @@ impl CompanyTokenMapper {
             company_reverse_token_map: HashMap::new(),
         };
 
-        instance.ingest_company_tokens(&company_symbol_list);
+        instance.ingest_company_tokens(&company_symbol_list)?;
 
-        instance
+        Ok(instance)
     }
 
     fn clear(&mut self) {
@@ -47,12 +47,13 @@ impl CompanyTokenMapper {
     }
 
     /// Ingests tokens from the company symbol list
-    fn ingest_company_tokens(&mut self, company_symbol_list: &CompanySymbolList) {
+    fn ingest_company_tokens(
+        &mut self,
+        company_symbol_list: &CompanySymbolList,
+    ) -> Result<(), Error> {
         self.clear();
 
         for (ticker_symbol, company_name, alt_company_names) in company_symbol_list {
-            // let company_name_key = company_name.clone().unwrap();
-
             let mut all_company_name_token_ids = Vec::new();
 
             // Tokenize the ticker symbol and upsert token IDs
@@ -67,13 +68,7 @@ impl CompanyTokenMapper {
                     .insert(ticker_symbol_token_id, ticker_symbol.clone());
             }
 
-            // TODO: Don't use unwrap
-            // FIXME: This should use get_ticker_symbol_token_id instead but it's problematic here
-            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
-            let ticker_symbol_token_id = self
-                .token_mapper
-                .get_token_id(&ticker_symbol_tokens[0])
-                .unwrap();
+            let ticker_symbol_token_id = self.get_ticker_symbol_token_id(ticker_symbol)?.clone();
 
             if let Some(company_name) = company_name {
                 let company_name_token_ids = self.process_company_name_tokens(&company_name);
@@ -108,13 +103,9 @@ impl CompanyTokenMapper {
                 .entry(ticker_symbol_token_id)
                 .or_insert_with(Vec::new)
                 .extend(all_company_name_token_ids);
-
-            // TODO: Remove
-            // println!(
-            //     "sequences map length: {}",
-            //     self.company_reverse_token_map.len()
-            // );
         }
+
+        Ok(())
     }
 
     /// Helper method for per-company token ingestion
@@ -129,28 +120,25 @@ impl CompanyTokenMapper {
         company_name_token_ids
     }
 
-    // TODO: Use actual error type (or return option type)
     pub fn get_ticker_symbol_by_token_id(
         &self,
         token_id: &TokenId,
-    ) -> Result<&TickerSymbol, String> {
-        // TODO: Remove
-        // println!("{:?}", self.reverse_ticker_symbol_map);
-
+    ) -> Result<&TickerSymbol, Error> {
         match self.reverse_ticker_symbol_map.get(token_id) {
             Some(ticker_symbol) => Ok(ticker_symbol),
-            None => Err(format!("Could not ticker from token token id: {}", token_id).to_string()),
+            None => Err(Error::ParserError(
+                format!("Could not ticker from token token id: {}", token_id).to_string(),
+            )),
         }
     }
 
-    // TODO: Use actual error type (or return option type)
     pub fn get_ticker_symbol_token_id(
         &self,
         ticker_symbol: &TickerSymbol,
-    ) -> Result<&TokenId, String> {
+    ) -> Result<&TokenId, Error> {
         match self.ticker_symbol_map.get(ticker_symbol) {
             Some(token_id) => Ok(token_id),
-            None => Err("Could not obtain token id".to_string()),
+            None => Err(Error::ParserError("Could not obtain token id".to_string())),
         }
     }
 

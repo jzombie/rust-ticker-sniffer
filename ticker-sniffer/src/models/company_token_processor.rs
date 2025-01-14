@@ -23,13 +23,13 @@ impl<'a> CompanyTokenProcessor<'a> {
     pub fn new(
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
-    ) -> Self {
-        let company_token_mapper = CompanyTokenMapper::new(&company_symbol_list);
+    ) -> Result<Self, Error> {
+        let company_token_mapper = CompanyTokenMapper::new(&company_symbol_list)?;
 
-        CompanyTokenProcessor {
+        Ok(CompanyTokenProcessor {
             config,
             company_token_mapper,
-        }
+        })
     }
 
     pub fn process_text_doc(&mut self, text: &str) -> Result<TickerSymbolFrequencyMap, Error> {

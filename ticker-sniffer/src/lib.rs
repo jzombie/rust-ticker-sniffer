@@ -51,7 +51,7 @@ pub fn extract_tickers_from_text_with_custom_config(
     let mut company_token_processor =
         CompanyTokenProcessor::new(document_token_processor_config, &company_symbol_list);
 
-    let results_ticker_symbol_frequency_map = company_token_processor.process_text_doc(text)?;
+    let results_ticker_symbol_frequency_map = company_token_processor?.process_text_doc(text)?;
 
     Ok(results_ticker_symbol_frequency_map)
 }
