@@ -1,4 +1,4 @@
-pub const CODE_AUTOGEN_PREFIX: &str = &"__AUTOGEN__";
+pub const CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
 
 pub const STOP_WORDS: &[&str] = &[
     "a",

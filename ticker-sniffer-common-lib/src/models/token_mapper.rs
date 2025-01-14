@@ -11,6 +11,7 @@ pub struct TokenMapper {
 
 impl TokenMapper {
     /// Creates a new TokenMapper
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         TokenMapper {
             token_map: HashMap::new(),
@@ -59,7 +60,7 @@ impl TokenMapper {
     pub fn get_token_by_id(&self, token_id: TokenId) -> Option<String> {
         self.reverse_token_map
             .get(&token_id)
-            .map(|token_vector| Tokenizer::charcode_vector_to_token(token_vector))
+            .map(Tokenizer::charcode_vector_to_token)
     }
 
     pub fn get_tokens_by_ids(&self, token_ids: &[TokenId]) -> Vec<Option<String>> {

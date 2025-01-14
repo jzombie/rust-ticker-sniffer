@@ -76,8 +76,6 @@ impl TokenRangeState {
                     )
                 });
 
-        
-
         if total > 0 {
             exact_matches as f32 / total as f32
         } else {
@@ -219,7 +217,7 @@ impl TokenRangeState {
     ) -> Result<Vec<TokenRangeState>, Error> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
-        for (ticker_symbol_token_id, _) in potential_token_id_sequences {
+        for ticker_symbol_token_id in potential_token_id_sequences.keys() {
             let ticker_symbol =
                 company_token_mapper.get_ticker_symbol_by_token_id(ticker_symbol_token_id)?;
 
@@ -231,7 +229,7 @@ impl TokenRangeState {
             // Indicates whether we are starting a new subsequence.
             // A subsequence is a group of contiguous tokens from the query and company sequences
             // that belong to the same ticker symbol and are aligned in both sequences.
-            let mut is_new_sub_sequence = false;
+            let mut is_new_sub_sequence: bool;
 
             // Current token range state being constructed.
             let mut token_range_state: Option<TokenRangeState> = None;
@@ -300,8 +298,6 @@ impl TokenRangeState {
                 last_company_sequence_idx = token_parity_state.company_sequence_idx;
                 last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
                 last_query_token_idx = token_parity_state.query_token_idx;
-
-                is_new_sub_sequence = false;
             }
 
             // Finalize previous batch, if exists

@@ -49,10 +49,10 @@ impl Tokenizer {
 
         // Preprocess and tokenize the text
         text.replace("-\n", "") // Merge hyphenated words across lines
-            .replace('\n', " ") // Normalize line breaks to spaces
+            .replace(['\n', '\r'], " ") // Normalize line breaks to spaces
             .replace('\r', " ") // Handle potential carriage returns
             .replace("--", " ") // Replace standalone double hyphens
-            .replace(",", " ") // Normalize commas to spaces
+            .replace(',', " ") // Normalize commas to spaces
             .split_whitespace() // Split into words
             // Remove possessive endings
             .map(|word| {
@@ -128,7 +128,7 @@ impl Tokenizer {
     pub fn tokenize_to_charcode_vectors(&self, text: &TokenRef) -> Vec<TokenVector> {
         self.tokenize(text)
             .iter() // Use the existing `tokenize` function to get tokens
-            .map(|token| Tokenizer::token_to_charcode_vector(&token))
+            .map(|token| Tokenizer::token_to_charcode_vector(token))
             .collect()
     }
 
@@ -136,7 +136,7 @@ impl Tokenizer {
         token.chars().map(|c| c as u32).collect()
     }
 
-    pub fn tokens_to_charcode_vectors(tokens: &Vec<&TokenRef>) -> Vec<TokenVector> {
+    pub fn tokens_to_charcode_vectors(tokens: &[&TokenRef]) -> Vec<TokenVector> {
         tokens
             .iter()
             .map(|token| Tokenizer::token_to_charcode_vector(token))
@@ -150,10 +150,10 @@ impl Tokenizer {
             .collect()
     }
 
-    pub fn charcode_vectors_to_tokens(charcode_vectors: &Vec<TokenVector>) -> Vec<Token> {
+    pub fn charcode_vectors_to_tokens(charcode_vectors: &[TokenVector]) -> Vec<Token> {
         charcode_vectors
             .iter()
-            .map(|charcodes| Tokenizer::charcode_vector_to_token(charcodes))
+            .map(Tokenizer::charcode_vector_to_token)
             .collect() // Collect the resulting strings into a Vec<String>
     }
 }

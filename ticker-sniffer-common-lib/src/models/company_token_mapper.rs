@@ -34,7 +34,7 @@ impl CompanyTokenMapper {
             company_reverse_token_map: HashMap::new(),
         };
 
-        instance.ingest_company_tokens(&company_symbol_list)?;
+        instance.ingest_company_tokens(company_symbol_list)?;
 
         Ok(instance)
     }
@@ -57,7 +57,7 @@ impl CompanyTokenMapper {
             let mut all_company_name_token_ids = Vec::new();
 
             // Tokenize the ticker symbol and upsert token IDs
-            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(&ticker_symbol);
+            let ticker_symbol_tokens = self.ticker_symbol_tokenizer.tokenize(ticker_symbol);
             for ticker_symbol_token in ticker_symbol_tokens {
                 let ticker_symbol_token_id = self.token_mapper.upsert_token(&ticker_symbol_token);
 
@@ -68,32 +68,31 @@ impl CompanyTokenMapper {
                     .insert(ticker_symbol_token_id, ticker_symbol.clone());
             }
 
-            let ticker_symbol_token_id = self.get_ticker_symbol_token_id(ticker_symbol)?.clone();
+            let ticker_symbol_token_id = *self.get_ticker_symbol_token_id(ticker_symbol)?;
 
             if let Some(company_name) = company_name {
-                let company_name_token_ids = self.process_company_name_tokens(&company_name);
+                let company_name_token_ids = self.process_company_name_tokens(company_name);
                 all_company_name_token_ids.push(company_name_token_ids.clone());
 
                 // Populate reverse map
                 for token_id in company_name_token_ids {
                     self.company_reverse_token_map
-                        .entry(token_id.clone())
-                        .or_insert_with(Vec::new)
+                        .entry(token_id)
+                        .or_default()
                         .push(ticker_symbol_token_id);
                 }
             }
 
             // Process alternate company names
             for alt_company_name in alt_company_names {
-                let alt_company_name_token_ids =
-                    self.process_company_name_tokens(&alt_company_name);
+                let alt_company_name_token_ids = self.process_company_name_tokens(alt_company_name);
                 all_company_name_token_ids.push(alt_company_name_token_ids.clone());
 
                 // Populate reverse map
                 for token_id in alt_company_name_token_ids {
                     self.company_reverse_token_map
                         .entry(token_id)
-                        .or_insert_with(Vec::new)
+                        .or_default()
                         .push(ticker_symbol_token_id);
                 }
             }
@@ -101,7 +100,7 @@ impl CompanyTokenMapper {
             // Insert the collected token IDs into the map
             self.company_token_sequences_map
                 .entry(ticker_symbol_token_id)
-                .or_insert_with(Vec::new)
+                .or_default()
                 .extend(all_company_name_token_ids);
         }
 
@@ -110,7 +109,7 @@ impl CompanyTokenMapper {
 
     /// Helper method for per-company token ingestion
     fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<TokenId> {
-        let company_name_tokens = self.text_doc_tokenizer.tokenize(&company_name);
+        let company_name_tokens = self.text_doc_tokenizer.tokenize(company_name);
         let mut company_name_token_ids = Vec::new();
         for token in company_name_tokens {
             let token_id = self.token_mapper.upsert_token(&token);
@@ -148,7 +147,7 @@ impl CompanyTokenMapper {
         company_sequence_idx: CompanySequenceIndex,
     ) -> Option<usize> {
         self.company_token_sequences_map
-            .get(&ticker_symbol_token_id)
+            .get(ticker_symbol_token_id)
             .and_then(|seq| seq.get(company_sequence_idx).map(|s| s.len()))
     }
 }

@@ -228,8 +228,8 @@ impl<'a> CompanyTokenProcessor<'a> {
     // TODO: Don't return Result type; no error will be thrown
     fn get_filtered_query_token_ids(
         &self,
-        text_doc_tokens: &Vec<Token>,
-        ticker_symbol_tokens: &Vec<Token>,
+        text_doc_tokens: &[Token],
+        ticker_symbol_tokens: &[Token],
     ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self

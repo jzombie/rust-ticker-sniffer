@@ -47,7 +47,7 @@ rustup component add clippy
 cargo clippy --fix
 ```
 
-Suggestions
+Suggestions:
 
 ```bash
 cargo clippy -- -W clippy::all
