@@ -56,7 +56,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         // Identify token ID sequences which start with the first token of a company token sequence
         info!("Identifying token ID sequences...");
         let potential_token_id_sequences =
-            self.get_potential_token_sequences(&query_text_doc_token_ids);
+            self.get_potential_token_sequences(&query_text_doc_token_ids)?;
 
         // Aggregate token parity states
         info!("Collecting token parity states...");
@@ -174,11 +174,9 @@ impl<'a> CompanyTokenProcessor<'a> {
             for (query_ticker_symbol, query_ticker_symbol_frequency) in
                 query_ticker_frequencies.iter_mut()
             {
-                // TODO: Don't use unwrap
                 let query_ticker_symbol_token_id = self
                     .company_token_mapper
-                    .get_ticker_symbol_token_id(query_ticker_symbol)
-                    .unwrap();
+                    .get_ticker_symbol_token_id(query_ticker_symbol)?;
 
                 if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
                     *query_ticker_symbol_frequency =
@@ -257,7 +255,8 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn get_potential_token_sequences(
         &self,
         query_text_doc_token_ids: &[TokenId],
-    ) -> HashMap<TickerSymbolTokenId, Vec<(CompanySequenceIndex, Vec<TokenId>)>> {
+    ) -> Result<HashMap<TickerSymbolTokenId, Vec<(CompanySequenceIndex, Vec<TokenId>)>>, Error>
+    {
         let mut potential_token_id_sequences: HashMap<
             TickerSymbolTokenId,
             Vec<(CompanySequenceIndex, Vec<TokenId>)>,
@@ -288,30 +287,21 @@ impl<'a> CompanyTokenProcessor<'a> {
                                 // Add or update the hashmap entry for this ticker_symbol
                                 potential_token_id_sequences
                                     .entry(*ticker_symbol_token_id)
-                                    .or_insert_with(Vec::new) // Create an empty Vec if the key doesn't exist
+                                    .or_insert_with(Vec::new)
                                     .retain(|(existing_idx, existing_vec)| {
                                         *existing_idx != company_sequence_idx
                                             || *existing_vec != *company_name_variations_token_ids
                                     }); // Remove duplicates
 
-                                if !potential_token_id_sequences
-                                    .get(&ticker_symbol_token_id)
-                                    // TODO: Don't use unwrap
-                                    .unwrap()
-                                    .iter()
-                                    .any(|(existing_idx, existing_vec)| {
-                                        *existing_idx == company_sequence_idx
-                                            && *existing_vec == *company_name_variations_token_ids
-                                    })
+                                // If the ticker_symbol_token_id exists in the HashMap, retrieve its mutable Vec reference
+                                // and add the new (company_sequence_idx, company_name_variations_token_ids) entry to it.
+                                if let Some(vec) =
+                                    potential_token_id_sequences.get_mut(ticker_symbol_token_id)
                                 {
-                                    potential_token_id_sequences
-                                        .get_mut(ticker_symbol_token_id)
-                                        // TODO: Don't use unwrap
-                                        .unwrap()
-                                        .push((
-                                            company_sequence_idx,
-                                            company_name_variations_token_ids.clone(),
-                                        ));
+                                    vec.push((
+                                        company_sequence_idx,
+                                        company_name_variations_token_ids.clone(),
+                                    ));
                                 }
                             }
                         }
@@ -320,6 +310,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             }
         }
 
-        potential_token_id_sequences
+        Ok(potential_token_id_sequences)
     }
 }
