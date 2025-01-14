@@ -1,12 +1,10 @@
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use std::error::Error;
 use std::fs::File;
 use std::io;
 use ticker_sniffer_common_lib::constants::CODE_AUTOGEN_PREFIX;
-use ticker_sniffer_common_lib::types::CompanySymbolList;
 
-// TODO: Refactor
+// TODO: Move to constants
 const COMPANY_SYMBOL_FILE_PATH: &str = "../data/company_symbol_list.csv";
 
 pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {

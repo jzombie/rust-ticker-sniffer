@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::utils::count_ticker_symbol_frequencies;
-use crate::{CompanyTokenMapper, TokenParityState};
+use crate::{CompanyTokenMapper, Error, TokenParityState};
 use ticker_sniffer_common_lib::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
     TickerSymbolFrequencyMap, TickerSymbolTokenId, Token, TokenId,
@@ -12,9 +12,6 @@ pub struct TokenRangeState {
     pub ticker_symbol: TickerSymbol,
     pub ticker_symbol_token_id: TokenId,
     pub is_matched_on_ticker_symbol: Option<bool>,
-    // TODO: Track TD-IDF scores of query tokens in relation to the query itself?
-    // TODO: Track vector_similarity_state_indices?
-    // vector_similarity_states: Vec<QueryVectorIntermediateSimilarityState>,
     pub query_token_indices: Vec<QueryTokenIndex>,
     pub query_text_doc_token_ids: Vec<TokenId>,
     pub company_sequence_idx: CompanySequenceIndex,
@@ -123,7 +120,7 @@ impl TokenRangeState {
     pub fn collect_top_range_states(
         query_text_doc_token_ids: &[TokenId],
         token_range_states: &[TokenRangeState],
-    ) -> Vec<TokenRangeState> {
+    ) -> Result<Vec<TokenRangeState>, Error> {
         let mut top_range_states_map: Vec<Vec<&TokenRangeState>> =
             vec![Vec::new(); query_text_doc_token_ids.len()];
 
@@ -134,11 +131,13 @@ impl TokenRangeState {
                         // Initialize with the current range state if no state exists
                         top_range_states_map[query_token_idx].push(token_range_state);
                     } else {
-                        // TODO: Don't use unwrap
                         // Check the score of the existing states
                         let existing_score = top_range_states_map[query_token_idx][0]
                             .range_score
-                            .unwrap();
+                            .ok_or(Error::ParserError(format!(
+                            "Could not check score of existing state with ticker symbol:{} ",
+                            &token_range_state.ticker_symbol
+                        )))?;
 
                         if range_score > existing_score {
                             // Replace with a new top scorer
@@ -159,7 +158,7 @@ impl TokenRangeState {
             .flat_map(|states| states) // Flatten the vector of vectors
             .collect();
 
-        top_range_states.into_iter().cloned().collect()
+        Ok(top_range_states.into_iter().cloned().collect())
     }
 
     /// Determines the highest scores which map to each filtered token index.
@@ -180,16 +179,12 @@ impl TokenRangeState {
                 {
                     let score = token_range_state.company_token_coverage
                         // Increase score by continuity
-                        // TODO: Weight this accordingly
                         + token_range_state
                             .query_token_indices
                             .iter()
                             .position(|&x| x == query_token_idx)
                             .map(|idx| idx as f32)
                             .unwrap_or(0.0);
-
-                    // TODO: Remove
-                    // println!("score: {:?}, state: {:?}", score, token_range_state);
 
                     token_range_state.range_score = Some(score);
 
@@ -219,15 +214,13 @@ impl TokenRangeState {
             Vec<(CompanySequenceIndex, Vec<TokenId>)>,
         >,
         token_parity_states: &[TokenParityState],
-    ) -> Vec<TokenRangeState> {
+    ) -> Result<Vec<TokenRangeState>, Error> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
         for (ticker_symbol_token_id, _) in potential_token_id_sequences {
-            // TODO: This is the token not the symbol!
-            // TODO: Don't use unwrap here
-            let ticker_symbol = company_token_mapper
-                .get_ticker_symbol_by_token_id(&ticker_symbol_token_id)
-                .unwrap();
+            // TODO: Confirm: This is the token not the symbol!
+            let ticker_symbol =
+                company_token_mapper.get_ticker_symbol_by_token_id(&ticker_symbol_token_id)?;
 
             // TODO: Remove
             // println!("ticker symbol: {}", ticker_symbol);
@@ -320,7 +313,7 @@ impl TokenRangeState {
             }
         }
 
-        TokenRangeState::get_unique(&token_range_states)
+        Ok(TokenRangeState::get_unique(&token_range_states))
     }
 
     fn finalize_collection(&mut self) {

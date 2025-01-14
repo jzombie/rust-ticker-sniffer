@@ -71,7 +71,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             &self.company_token_mapper,
             &potential_token_id_sequences,
             &token_parity_states,
-        );
+        )?;
 
         // Assign scores to the range states
         info!("Assigning range scores...");
@@ -90,7 +90,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         let top_range_states = TokenRangeState::collect_top_range_states(
             &query_text_doc_token_ids,
             &token_range_states,
-        );
+        )?;
 
         // Used to determine whether to explicitly parse out symbols which may also be stop words, based on
         // percentage of symbols to company names in the doc (for instance, determine if "A" should be parsed
