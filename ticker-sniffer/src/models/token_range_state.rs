@@ -76,13 +76,13 @@ impl TokenRangeState {
                     )
                 });
 
-        let ratio_exact_matches = if total > 0 {
+        
+
+        if total > 0 {
             exact_matches as f32 / total as f32
         } else {
             0.0
-        };
-
-        ratio_exact_matches
+        }
     }
 
     /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
@@ -99,7 +99,7 @@ impl TokenRangeState {
 
             ticker_symbol_query_indices
                 .entry(ticker_symbol)
-                .or_insert_with(HashSet::new)
+                .or_default()
                 .insert(query_token_indices);
         }
 
@@ -157,7 +157,7 @@ impl TokenRangeState {
         // Collect only the valid range states
         let top_range_states: Vec<&TokenRangeState> = top_range_states_map
             .into_iter()
-            .flat_map(|states| states) // Flatten the vector of vectors
+            .flatten() // Flatten the vector of vectors
             .collect();
 
         Ok(top_range_states.into_iter().cloned().collect())
@@ -221,7 +221,7 @@ impl TokenRangeState {
 
         for (ticker_symbol_token_id, _) in potential_token_id_sequences {
             let ticker_symbol =
-                company_token_mapper.get_ticker_symbol_by_token_id(&ticker_symbol_token_id)?;
+                company_token_mapper.get_ticker_symbol_by_token_id(ticker_symbol_token_id)?;
 
             // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
@@ -269,7 +269,7 @@ impl TokenRangeState {
                         token_parity_state.company_sequence_idx,
                         company_token_mapper
                             .get_company_token_sequence_max_length(
-                                &ticker_symbol_token_id,
+                                ticker_symbol_token_id,
                                 token_parity_state.company_sequence_idx,
                             )
                             .ok_or_else(|| {

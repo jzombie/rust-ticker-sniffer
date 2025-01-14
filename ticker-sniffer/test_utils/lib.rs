@@ -53,20 +53,18 @@ pub fn run_test_for_file(
 
     // Extract tickers from the filtered text
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
-        &company_token_processor_config,
+        company_token_processor_config,
         &filtered_text,
     )?;
 
     // Get the expected tickers from the file
-    let expected_tickers = get_expected_tickers(&Path::new(test_file_path));
+    let expected_tickers = get_expected_tickers(Path::new(test_file_path));
 
     // Get the expected failure ticker (if any) from the file
-    let expected_failure = get_expected_failure(&Path::new(test_file_path));
+    let expected_failure = get_expected_failure(Path::new(test_file_path));
 
     // Separate actual results into a vector of just tickers
-    let actual_tickers: Vec<TickerSymbol> = results_ticker_symbol_frequency_map
-        .iter()
-        .map(|(symbol, _confidence)| symbol)
+    let actual_tickers: Vec<TickerSymbol> = results_ticker_symbol_frequency_map.keys()
         .cloned()
         .collect();
 

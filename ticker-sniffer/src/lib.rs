@@ -34,7 +34,7 @@ fn load_company_symbol_list() -> Result<CompanySymbolList, Error> {
 pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG,
-        &text,
+        text,
     )?;
 
     Ok(results_ticker_symbol_frequency_map)

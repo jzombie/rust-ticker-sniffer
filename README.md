@@ -35,6 +35,24 @@ Probably not going to use n-gram itself, but this is the latest prototype.
 RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="logger-support"
 ```
 
+## Lint
+
+If clippy is not already installed:
+
+```bash
+rustup component add clippy
+```
+
+```bash
+cargo clippy --fix
+```
+
+Suggestions
+
+```bash
+cargo clippy -- -W clippy::all
+```
+
 ## ChatGPT-based Alternative Name Suggester
 
 This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/README.md](data/README.md).

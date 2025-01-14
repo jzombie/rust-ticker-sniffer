@@ -24,7 +24,7 @@ impl<'a> CompanyTokenProcessor<'a> {
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
     ) -> Result<Self, Error> {
-        let company_token_mapper = CompanyTokenMapper::new(&company_symbol_list)?;
+        let company_token_mapper = CompanyTokenMapper::new(company_symbol_list)?;
 
         Ok(CompanyTokenProcessor {
             config,
@@ -179,7 +179,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                     .company_token_mapper
                     .get_ticker_symbol_token_id(query_ticker_symbol)?;
 
-                if range_text_doc_token_ids.contains(&query_ticker_symbol_token_id) {
+                if range_text_doc_token_ids.contains(query_ticker_symbol_token_id) {
                     *query_ticker_symbol_frequency =
                         query_ticker_symbol_frequency.saturating_sub(1);
                 }
@@ -288,7 +288,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                                 // Add or update the hashmap entry for this ticker_symbol
                                 potential_token_id_sequences
                                     .entry(*ticker_symbol_token_id)
-                                    .or_insert_with(Vec::new)
+                                    .or_default()
                                     .retain(|(existing_idx, existing_vec)| {
                                         *existing_idx != company_sequence_idx
                                             || *existing_vec != *company_name_variations_token_ids
