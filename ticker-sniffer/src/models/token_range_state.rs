@@ -22,8 +22,7 @@ pub struct TokenRangeState {
     pub company_sequence_max_length: usize,
     pub company_token_coverage: f32,
     pub range_score: Option<f32>,
-    // TODO: Consider renaming; I believe range scores are set after finalization
-    pub is_finalized: bool,
+    pub is_collection_finalized: bool,
 }
 
 impl TokenRangeState {
@@ -44,7 +43,7 @@ impl TokenRangeState {
             company_sequence_max_length,
             company_token_coverage: 0.0,
             range_score: None,
-            is_finalized: false,
+            is_collection_finalized: false,
         }
     }
 
@@ -264,8 +263,8 @@ impl TokenRangeState {
                 if is_new_sub_sequence {
                     // Finalize previous batch, if exists
                     if let Some(ref mut token_range_state) = token_range_state {
-                        if !token_range_state.is_finalized {
-                            token_range_state.finalize();
+                        if !token_range_state.is_collection_finalized {
+                            token_range_state.finalize_collection();
 
                             if !token_range_state.query_token_indices.is_empty() {
                                 token_range_states.push(token_range_state.clone());
@@ -311,8 +310,8 @@ impl TokenRangeState {
 
             // Finalize previous batch, if exists
             if let Some(ref mut token_range_state) = token_range_state {
-                if !token_range_state.is_finalized {
-                    token_range_state.finalize();
+                if !token_range_state.is_collection_finalized {
+                    token_range_state.finalize_collection();
 
                     if !token_range_state.query_token_indices.is_empty() {
                         token_range_states.push(token_range_state.clone());
@@ -324,8 +323,7 @@ impl TokenRangeState {
         TokenRangeState::get_unique(&token_range_states)
     }
 
-    // TODO: Make this non-public if possible
-    pub fn finalize(&mut self) {
+    fn finalize_collection(&mut self) {
         self.update_coverage();
 
         self.is_matched_on_ticker_symbol = Some(
@@ -333,7 +331,7 @@ impl TokenRangeState {
                 && self.query_text_doc_token_ids[0] == self.ticker_symbol_token_id,
         );
 
-        self.is_finalized = true;
+        self.is_collection_finalized = true;
     }
 
     /// Recalculates the coverage based on the filtered indices and sequence length
