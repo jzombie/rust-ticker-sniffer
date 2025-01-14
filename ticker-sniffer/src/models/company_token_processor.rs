@@ -143,6 +143,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .cloned()
             .cloned()
             .collect();
+
         let mut query_ticker_frequencies =
             count_ticker_symbol_frequencies(&query_tickers_not_in_text_doc);
 

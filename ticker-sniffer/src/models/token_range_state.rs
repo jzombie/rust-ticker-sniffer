@@ -134,10 +134,12 @@ impl TokenRangeState {
                         // Check the score of the existing states
                         let existing_score = top_range_states_map[query_token_idx][0]
                             .range_score
-                            .ok_or(Error::ParserError(format!(
-                            "Could not check score of existing state with ticker symbol:{} ",
-                            &token_range_state.ticker_symbol
-                        )))?;
+                            .ok_or_else(|| {
+                            Error::ParserError(format!(
+                                "Could not check score of existing state with ticker symbol:{} ",
+                                &token_range_state.ticker_symbol
+                            ))
+                        })?;
 
                         if range_score > existing_score {
                             // Replace with a new top scorer
@@ -270,8 +272,13 @@ impl TokenRangeState {
                                 &ticker_symbol_token_id,
                                 token_parity_state.company_sequence_idx,
                             )
-                            // TODO: Replace with ?
-                            .unwrap(),
+                            .ok_or_else(|| {
+                                Error::ParserError(format!(
+                                    "Failed to fetch max length for ticker_symbol_token_id: {:?}, company_sequence_idx: {}",
+                                    ticker_symbol_token_id,
+                                    token_parity_state.company_sequence_idx
+                                ))
+                            })?,
                     ));
                 }
 
