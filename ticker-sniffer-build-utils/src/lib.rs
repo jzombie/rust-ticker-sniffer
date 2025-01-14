@@ -11,6 +11,7 @@ pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {
     // Tell Cargo to fully recompile if this asset changes
     println!("cargo:rerun-if-changed={}", COMPANY_SYMBOL_FILE_PATH);
 
+    // TODO: Don't hardcode path
     let output_file_path = format!("{}company_symbol_list.csv.gz", CODE_AUTOGEN_PREFIX);
 
     // Open the input CSV file

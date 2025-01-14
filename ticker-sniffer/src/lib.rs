@@ -1,4 +1,5 @@
 mod config;
+mod utils;
 pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub mod models;
 pub use models::{
@@ -12,8 +13,6 @@ pub use ticker_sniffer_common_lib::types::{
 
 use flate2::read::GzDecoder;
 use std::io::Read;
-
-mod utils;
 
 const COMPRESSED_COMPANY_SYMBOL_LIST: &[u8] =
     include_bytes!("../__AUTOGEN__company_symbol_list.csv.gz");
@@ -48,7 +47,7 @@ pub fn extract_tickers_from_text_with_custom_config(
     // Load the company symbol list
     let company_symbol_list = load_company_symbol_list()?;
 
-    let mut company_token_processor =
+    let company_token_processor =
         CompanyTokenProcessor::new(document_token_processor_config, &company_symbol_list);
 
     let results_ticker_symbol_frequency_map = company_token_processor?.process_text_doc(text)?;

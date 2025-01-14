@@ -217,7 +217,7 @@ fn main() {
     let query = "Eric";
 
     let query = "A";
-    let query = "BRK-B";
+    let query = "Berkshire Hathaway";
 
     let results = extract_tickers_from_text(&query).unwrap();
 
