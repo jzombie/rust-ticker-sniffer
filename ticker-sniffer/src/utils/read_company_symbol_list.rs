@@ -1,11 +1,9 @@
 use csv::ReaderBuilder;
-use std::error::Error;
 use std::io::Cursor;
 use ticker_sniffer_common_lib::types::CompanySymbolList;
+use ticker_sniffer_common_lib::Error;
 
-pub fn read_company_symbol_list_from_string(
-    csv: &str,
-) -> Result<CompanySymbolList, Box<dyn Error>> {
+pub fn read_company_symbol_list_from_string(csv: &str) -> Result<CompanySymbolList, Error> {
     let mut company_symbols_list = CompanySymbolList::new();
 
     // Use a cursor to simulate a file reader from the string
@@ -14,13 +12,24 @@ pub fn read_company_symbol_list_from_string(
         .from_reader(Cursor::new(csv));
 
     // Extract column headers
-    let headers = reader.headers()?.clone();
+    let headers = reader
+        .headers()
+        .map_err(|e| Error::ParserError(format!("Failed to read headers: {}", e)))?
+        .clone();
 
     for record in reader.records() {
-        let record = record?;
+        let record =
+            record.map_err(|e| Error::ParserError(format!("Failed to read record: {}", e)))?;
+
         // Extract values based on header names
-        let symbol = record.get(headers.iter().position(|h| h == "Symbol").unwrap());
-        let company_name = record.get(headers.iter().position(|h| h == "Company Name").unwrap());
+        let symbol = record
+            .get(headers.iter().position(|h| h == "Symbol").unwrap())
+            .ok_or_else(|| Error::ParserError("Missing 'Symbol' field".to_string()))?;
+
+        let company_name = record
+            .get(headers.iter().position(|h| h == "Company Name").unwrap())
+            .map(|name| name.to_string());
+
         let comma_separated_alternate_names =
             record.get(headers.iter().position(|h| h == "Alternate Names").unwrap());
 
@@ -33,15 +42,7 @@ pub fn read_company_symbol_list_from_string(
             Vec::new() // Default to an empty vector if alternate names are missing
         };
 
-        if let Some(symbol) = symbol {
-            company_symbols_list.push((
-                symbol.to_uppercase(),
-                company_name.map(|name| name.to_string()),
-                alternate_names,
-            ));
-        } else {
-            eprintln!("Skipping invalid row: {:?}", record);
-        }
+        company_symbols_list.push((symbol.to_uppercase(), company_name, alternate_names));
     }
 
     Ok(company_symbols_list)
