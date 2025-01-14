@@ -107,15 +107,19 @@ impl<'a> CompanyTokenProcessor<'a> {
         let text_doc_ticker_frequencies =
             TokenRangeState::count_token_range_ticker_symbol_frequencies(&top_range_states);
 
-        // TODO: Don't use unwrap
-        let query_ticker_symbols: Vec<&String> = query_ticker_symbol_token_ids
+        let query_ticker_symbols: Vec<&TickerSymbol> = query_ticker_symbol_token_ids
             .iter()
             .map(|token_id| {
                 self.company_token_mapper
                     .get_ticker_symbol_by_token_id(token_id)
-                    .unwrap()
+                    .map_err(|e| {
+                        ticker_sniffer_common_lib::Error::ParserError(format!(
+                            "Failed to fetch token ID {:?}: {:?}",
+                            token_id, e
+                        ))
+                    })
             })
-            .collect();
+            .collect::<Result<Vec<&TickerSymbol>, _>>()?;
 
         let unique_query_ticker_symbols = dedup_vector(&query_ticker_symbols);
 
