@@ -25,19 +25,20 @@ pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
         .collect()
 }
 
+// TODO: Remove?
 // Helper function to check if the file has an EXPECTED_FAILURE line
-pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
-    let content = fs::read_to_string(file_path).expect("Failed to read test file");
+// pub fn get_expected_failure(file_path: &Path) -> Option<TickerSymbol> {
+//     let content = fs::read_to_string(file_path).expect("Failed to read test file");
 
-    content.lines().find_map(|line| {
-        let line = line.trim();
-        if line.starts_with("EXPECTED_FAILURE:") {
-            Some(line.replace("EXPECTED_FAILURE:", "").trim().to_string())
-        } else {
-            None
-        }
-    })
-}
+//     content.lines().find_map(|line| {
+//         let line = line.trim();
+//         if line.starts_with("EXPECTED_FAILURE:") {
+//             Some(line.replace("EXPECTED_FAILURE:", "").trim().to_string())
+//         } else {
+//             None
+//         }
+//     })
+// }
 
 // Helper function to run the test for each file in the directory
 pub fn run_test_for_file(
