@@ -218,12 +218,8 @@ impl TokenRangeState {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
         for (ticker_symbol_token_id, _) in potential_token_id_sequences {
-            // TODO: Confirm: This is the token not the symbol!
             let ticker_symbol =
                 company_token_mapper.get_ticker_symbol_by_token_id(&ticker_symbol_token_id)?;
-
-            // TODO: Remove
-            // println!("ticker symbol: {}", ticker_symbol);
 
             // Initialize state variables to track the last indices for continuity checks.
             let mut last_company_sequence_idx = usize::MAX - 1;
