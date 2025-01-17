@@ -43,7 +43,7 @@ impl TokenMapper {
         self.token_map.get(&token_vector).copied()
     }
 
-    pub fn get_filtered_tokens<'a>(&'a self, tokens: Vec<&'a TokenRef>) -> Vec<&TokenRef> {
+    pub fn get_filtered_tokens<'a>(&'a self, tokens: Vec<&'a TokenRef>) -> Vec<&'a TokenRef> {
         tokens
             .into_iter()
             .filter(|token| self.get_token_id(token).is_some())
