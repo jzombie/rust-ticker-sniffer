@@ -30,7 +30,7 @@ pub fn extract_tickers_from_text_with_custom_config(
     // Load the company symbol list
     let company_symbol_list =
         CompanySymbolListPreprocessor::extract_company_symbol_list_from_bytes(
-            &COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY,
+            COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY,
         )?;
 
     let company_token_processor =
