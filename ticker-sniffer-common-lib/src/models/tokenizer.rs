@@ -18,6 +18,7 @@ impl Tokenizer {
             pre_processed_stop_words: None,
         }
     }
+
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
         Self {
