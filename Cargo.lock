@@ -560,9 +560,7 @@ name = "ticker-sniffer"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "csv",
  "env_logger",
- "flate2",
  "log",
  "ticker-sniffer-build-utils",
  "ticker-sniffer-common-lib",
@@ -579,6 +577,10 @@ dependencies = [
 [[package]]
 name = "ticker-sniffer-common-lib"
 version = "0.1.0"
+dependencies = [
+ "csv",
+ "flate2",
+]
 
 [[package]]
 name = "tinytemplate"

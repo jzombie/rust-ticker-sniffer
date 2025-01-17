@@ -1,6 +1,5 @@
 #![allow(dead_code, unused_imports, unused_variables)]
 
-#[path = "../../test_utils/lib.rs"]
 use ticker_sniffer::extract_tickers_from_text;
 
 use log::{debug, error, info, log_enabled, Level};
