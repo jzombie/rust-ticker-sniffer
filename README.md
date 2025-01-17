@@ -27,8 +27,16 @@ pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>
 
 ## Test with Filename Capturing in Output
 
+To run all tests:
+
 ```bash
 cargo test -- --nocapture
+```
+
+To run Tokenizer tests in isolation:
+
+```bash
+cargo test --test tokenizer_tests  -- --nocapture
 ```
 
 ## Benching
