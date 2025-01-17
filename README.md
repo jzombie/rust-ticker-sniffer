@@ -19,11 +19,21 @@ Regardless of the decision, the engine ensures that stock symbols are always mat
 ---
 
 ```rust
-pub type TickerSymbol = String;
-pub type TickerSymbolFrequency = usize;
-pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>;
-```
+use ticker_sniffer::extract_tickers_from_text;
 
+fn main() {
+    let text = "Apple and Microsoft are performing well in the market.";
+
+    match extract_tickers_from_text(text) {
+        Ok(results) => {
+            for (ticker, frequency) in results {
+                println!("{}: {}", ticker, frequency);
+            }
+        }
+        Err(e) => eprintln!("Error extracting tickers: {}", e),
+    }
+}
+```
 
 ## Test with Filename Capturing in Output
 
