@@ -13,9 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Install Rust
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -23,10 +25,25 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install additional dependencies
+      # Install additional dependencies
+      - name: Install additional Rust components
         run: |
           rustup component add clippy
           rustup component add rustfmt
 
+      # Run Clippy
+      - name: Run Clippy
+        run: cargo clippy -- -D warnings
+
+      # Run Tests
       - name: Run tests with filename capturing
         run: cargo test -- --nocapture
+
+      # Build CLI Tool
+      - name: Build CLI Tool
+        run: cargo build --release --bin ticker-sniffer-cli --features="logger-support"
+
+      # Test CLI Tool
+      - name: Test CLI Tool
+        run: |
+          echo "Amazon and Google" | ./target/release/ticker-sniffer-cli

@@ -81,6 +81,18 @@ Suggestions:
 cargo clippy -- -W clippy::all
 ```
 
+## Building CLI tool
+
+```bash
+cargo build --release --bin ticker-sniffer-cli --features="logger-support"
+```
+
+## Running CLI tool (on Unix)
+
+```bash
+./target/release/ticker-sniffer-cli
+```
+
 ## ChatGPT-based Alternative Name Suggester
 
 This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/README.md](data/README.md).
