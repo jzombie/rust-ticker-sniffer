@@ -213,10 +213,15 @@ fn main() {
     Intel CFO David Zinsner and product chief MJ Holthaus currently serve as interim co-CEOs.
     "#;
 
-    let query = "Eric";
+    let query = "Eric"; // TODO: Ensure this doesn't match to ERIC symbol as a false positive
 
     let query = "A";
     let query = "Berkshire Hathaway";
+
+    // let query = "Shell Corp";
+    let query = "Shell";
+    // let query = "Well Corp";
+    // let query = "Biote";
 
     let results = extract_tickers_from_text(&query).unwrap();
 
