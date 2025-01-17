@@ -1,7 +1,5 @@
 use ticker_sniffer::Tokenizer;
 
-// TODO: Add ticker symbol tokenizer tests (specifically test for stop-words)
-
 #[cfg(test)]
 mod text_doc_tokenizer_tests {
     use super::*;
@@ -127,5 +125,73 @@ mod text_doc_tokenizer_tests {
         let text = "BRK.A and BRK-B are both valid!";
         let tokens = tokenizer.tokenize(text);
         assert_eq!(tokens, vec!["BRKA", "BRKB"]);
+    }
+}
+
+#[cfg(test)]
+mod ticker_symbol_tokenizer_tests {
+    use super::*;
+
+    #[test]
+    fn test_ticker_tokenize_with_uppercase_symbols() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "AAPL MSFT TSLA";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec!["AAPL", "MSFT", "TSLA"]);
+    }
+
+    #[test]
+    fn test_ticker_tokenize_ignores_lowercase_words() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "aapl msft tsla";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, Vec::<&str>::new());
+    }
+
+    #[test]
+    fn test_ticker_tokenize_with_mixed_case() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "AAPL msft TSLA Goog";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec!["AAPL", "TSLA"]);
+    }
+
+    #[test]
+    fn test_ticker_tokenize_with_numbers() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "BRK.A BRK-B 12345";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec!["BRKA", "BRKB"]);
+    }
+
+    #[test]
+    fn test_ticker_tokenize_with_stop_words() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "The AAPL and MSFT stocks are rising.";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec!["AAPL", "MSFT"]);
+    }
+
+    #[test]
+    fn test_ticker_tokenize_with_punctuation() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "AAPL, MSFT; TSLA. BRK-A!";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec!["AAPL", "MSFT", "TSLA", "BRKA"]);
+    }
+
+    #[test]
+    fn test_ticker_tokenize_empty_string() {
+        let tokenizer = Tokenizer::ticker_symbol_parser();
+
+        let text = "";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, Vec::<&str>::new());
     }
 }
