@@ -6,7 +6,6 @@ use ticker_sniffer::{
 };
 
 fn benchmark_extract_tickers_short(c: &mut Criterion) {
-    // Example text for benchmarking (shorter text)
     let text = "AAPL is performing well, but MSFT is also a strong contender. \
                 Amazon is another company making waves in the market.";
 
@@ -22,7 +21,6 @@ fn benchmark_extract_tickers_short(c: &mut Criterion) {
 }
 
 fn benchmark_extract_tickers_long(c: &mut Criterion) {
-    // Provided long example text for benchmarking
     let text = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined \
         the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator \
         Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle \
@@ -53,9 +51,15 @@ fn benchmark_extract_tickers_long(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    benchmark_extract_tickers_short,
-    benchmark_extract_tickers_long
-);
+fn configure_criterion() -> Criterion {
+    Criterion::default()
+        .measurement_time(std::time::Duration::from_secs(21))
+        .sample_size(20)
+}
+
+criterion_group! {
+    name = benches;
+    config = configure_criterion();
+    targets = benchmark_extract_tickers_short, benchmark_extract_tickers_long
+}
 criterion_main!(benches);
