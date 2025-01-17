@@ -1,4 +1,4 @@
-# Ticker Sniffer
+# Ticker Sniffer (Work in Progress)
 
 `Ticker Sniffer` is a Rust library built to parse and extract ticker symbols from text documents. It specializes in analyzing text content to identify references to U.S. stock market ticker symbols and calculates their frequency counts, returning the results as a `HashMap`.
 
