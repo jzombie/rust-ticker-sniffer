@@ -8,6 +8,9 @@ use ticker_sniffer_common_lib::types::{
 use log::info;
 use std::collections::HashMap;
 
+type PotentialTokenSequenceMap =
+    HashMap<TickerSymbolTokenId, Vec<(CompanySequenceIndex, Vec<TokenId>)>>;
+
 pub struct CompanyTokenProcessorConfig {
     // TODO: Rename
     pub threshold_ratio_exact_matches: f32,
@@ -256,8 +259,7 @@ impl<'a> CompanyTokenProcessor<'a> {
     fn get_potential_token_sequences(
         &self,
         query_text_doc_token_ids: &[TokenId],
-    ) -> Result<HashMap<TickerSymbolTokenId, Vec<(CompanySequenceIndex, Vec<TokenId>)>>, Error>
-    {
+    ) -> Result<PotentialTokenSequenceMap, Error> {
         let mut potential_token_id_sequences: HashMap<
             TickerSymbolTokenId,
             Vec<(CompanySequenceIndex, Vec<TokenId>)>,
