@@ -45,15 +45,9 @@ cargo test --test tokenizer_tests  -- --nocapture
 cargo bench
 ```
 
-## WASM Test Builds
+## Prototype Bin (temporary debug bin)
 
-```bash
-DOCKER_BUILDKIT=0 docker build -f docker/wasm-test/Dockerfile -t rust-wasm-test .
-```
-
-## Prototype `n-gram` Bin
-
-Probably not going to use n-gram itself, but this is the latest prototype.
+Note: n-gram is not used, but this is currently used for prototyping.
 
 ```bash
 RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="logger-support"
