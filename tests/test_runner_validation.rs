@@ -1,5 +1,3 @@
-#[path = "../test_utils/src/lib.rs"]
-mod test_utils;
 use test_utils::constants::TEST_RUNNER_VALIDATION_FILES_DIRECTORY;
 
 use std::fs::read_dir;
