@@ -1,3 +1,8 @@
+use std::env;
+use std::fs;
+use std::path::PathBuf;
+use std::sync::LazyLock;
+
 mod config;
 pub mod constants;
 mod utils;
@@ -14,10 +19,11 @@ pub use types::{
     Token, TokenId, TokenRef, TokenVector,
 };
 
-// FIXME: `include_bytes` requires a string literal and a workaround is to dynamically generate an `.rs`
-// file with these included bytes already baked in, but at the moment this is the way it is.
-const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] =
-    include_bytes!("../__AUTOGEN__company_symbol_list.csv.gz");
+// LazyLock for dynamically determining the file path at runtime
+static COMPRESSED_COMPANY_SYMBOL_FILE_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
+    let out_dir = env::var("OUT_DIR").expect("OUT_DIR is not set");
+    PathBuf::from(out_dir).join("__AUTOGEN__company_symbol_list.csv.gz")
+});
 
 pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
     let results_ticker_symbol_frequency_map =
@@ -30,11 +36,11 @@ pub fn extract_tickers_from_text_with_custom_config(
     document_token_processor_config: &CompanyTokenProcessorConfig,
     text: &str,
 ) -> Result<TickerSymbolFrequencyMap, Error> {
-    // Load the company symbol list
+    // Load the compressed company symbol list at runtime
+    let compressed_data = load_compressed_company_symbol_list()?;
+
     let company_symbol_list =
-        CompanySymbolListPreprocessor::extract_company_symbol_list_from_bytes(
-            COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY,
-        )?;
+        CompanySymbolListPreprocessor::extract_company_symbol_list_from_bytes(&compressed_data)?;
 
     let company_token_processor =
         CompanyTokenProcessor::new(document_token_processor_config, &company_symbol_list);
@@ -42,4 +48,10 @@ pub fn extract_tickers_from_text_with_custom_config(
     let results_ticker_symbol_frequency_map = company_token_processor?.process_text_doc(text)?;
 
     Ok(results_ticker_symbol_frequency_map)
+}
+
+// Function to load the compressed file from OUT_DIR
+fn load_compressed_company_symbol_list() -> Result<Vec<u8>, std::io::Error> {
+    let file_path = &*COMPRESSED_COMPANY_SYMBOL_FILE_PATH;
+    fs::read(file_path)
 }
