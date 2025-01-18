@@ -560,26 +560,10 @@ name = "ticker-sniffer"
 version = "0.1.0-alpha"
 dependencies = [
  "criterion",
- "env_logger",
- "log",
- "ticker-sniffer-build-utils",
- "ticker-sniffer-common-lib",
-]
-
-[[package]]
-name = "ticker-sniffer-build-utils"
-version = "0.1.0"
-dependencies = [
- "flate2",
- "ticker-sniffer-common-lib",
-]
-
-[[package]]
-name = "ticker-sniffer-common-lib"
-version = "0.1.0"
-dependencies = [
  "csv",
+ "env_logger",
  "flate2",
+ "log",
 ]
 
 [[package]]

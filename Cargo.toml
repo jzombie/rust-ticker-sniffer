@@ -1,8 +1,6 @@
 [workspace]
 members = [
     "ticker-sniffer", 
-    "ticker-sniffer-build-utils",
-    "ticker-sniffer-common-lib"
 ]
 default-members = ["ticker-sniffer"]
 resolver = "2"
