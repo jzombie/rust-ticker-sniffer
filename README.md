@@ -55,13 +55,23 @@ cargo test --test tokenizer_tests  -- --nocapture
 cargo bench
 ```
 
-## Prototype Bin (temporary debug bin)
+## Example
 
-Note: n-gram is not used, but this is currently used for prototyping.
+Simple example:
 
 ```bash
-RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="logger-support"
+cargo run --example simple
 ```
+
+## Prototype Debug
+
+```bash
+RUST_LOG=debug cargo dev
+```
+
+Note: `dev` is an aliased Cargo command, as specified in the [.cargo/config.toml](.cargo/config.toml) file.
+
+More information about Cargo aliases can be found at: https://doc.rust-lang.org/cargo/reference/config.html#configuration-format.
 
 ## Lint
 
