@@ -14,6 +14,8 @@ pub use types::{
     Token, TokenId, TokenRef, TokenVector,
 };
 
+// FIXME: `include_bytes` requires a string literal and a workaround is to dynamically generate an `.rs`
+// file with these included bytes already baked in, but at the moment this is the way it is.
 const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] =
     include_bytes!("../__AUTOGEN__company_symbol_list.csv.gz");
 
