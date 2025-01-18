@@ -118,3 +118,7 @@ cargo publish --allow-dirty
 This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/README.md](data/README.md).
 
 https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternative-name-suggester
+
+## License
+
+[MIT License](LICENSE) (c) 2024 Jeremy Harris.
