@@ -1,8 +1,6 @@
 use ticker_sniffer::extract_tickers_from_text;
 
 fn main() {
-    env_logger::init();
-
     let text = "Berkshire Hathaway and Apple";
 
     let results = extract_tickers_from_text(&text).unwrap();

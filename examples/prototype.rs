@@ -7,7 +7,10 @@ use log::{debug, error, info, log_enabled, Level};
 use std::collections::HashMap;
 
 fn main() {
-    env_logger::init();
+    #[cfg(feature = "logger-support")]
+    {
+        env_logger::init();
+    }
 
     // let mut matches = HashSet::new();
 

@@ -60,13 +60,13 @@ cargo bench
 Simple example:
 
 ```bash
-cargo run --example simple --features="logger-support"
+cargo run --example simple
 ```
 
 Prototype debug:
 
 ```bash
-cargo run --example prototype --features="logger-support"
+RUST_LOG=debug cargo run --example prototype --features="logger-support"
 ```
 
 ## Lint
