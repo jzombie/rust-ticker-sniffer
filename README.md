@@ -55,10 +55,18 @@ cargo test --test tokenizer_tests  -- --nocapture
 cargo bench
 ```
 
-## Prototype Bin (temporary debug bin)
+## Examples
+
+Simple example:
 
 ```bash
-cargo run --manifest-path dev/Cargo.toml
+cargo run --example simple --features="logger-support"
+```
+
+Prototype debug:
+
+```bash
+cargo run --example prototype --features="logger-support"
 ```
 
 ## Lint

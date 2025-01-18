@@ -3,7 +3,6 @@ use ticker_sniffer::{
     extract_tickers_from_text_with_custom_config, CompanyTokenProcessorConfig, Error as LibError,
     TickerSymbol, TickerSymbolFrequencyMap,
 };
-// pub use models::EvaluationResult;
 pub mod constants;
 
 // Helper function to get the expected tickers from the text file
@@ -64,7 +63,8 @@ pub fn run_test_for_file(
     let expected_failure = get_expected_failure(Path::new(test_file_path));
 
     // Separate actual results into a vector of just tickers
-    let actual_tickers: Vec<TickerSymbol> = results_ticker_symbol_frequency_map.keys()
+    let actual_tickers: Vec<TickerSymbol> = results_ticker_symbol_frequency_map
+        .keys()
         .cloned()
         .collect();
 

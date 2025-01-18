@@ -32,8 +32,3 @@ required-features = ["logger-support"]
 [features]
 default = []
 logger-support = ["dep:env_logger"]
-
-[workspace]
-members = [
-    "dev"
-]
