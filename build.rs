@@ -1,7 +1,7 @@
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use shared::constants::{
-    CODE_AUTOGEN_PREFIX, COMPANY_SYMBOL_FILE_PATH, COMPRESSED_COMPANY_SYMBOL_FILE_NAME,
+    CODE_AUTOGEN_PREFIX, COMPANY_SYMBOL_CSV_FILE_PATH, COMPRESSED_COMPANY_SYMBOL_FILE_NAME,
 };
 use std::fs::File;
 use std::io;
@@ -10,7 +10,10 @@ use std::io;
 /// symbol list into a compressed format before building the main project.
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Tell Cargo to fully recompile if this asset changes
-    println!("cargo:rerun-if-changed={:?}", &*COMPANY_SYMBOL_FILE_PATH);
+    println!(
+        "cargo:rerun-if-changed={:?}",
+        &*COMPANY_SYMBOL_CSV_FILE_PATH
+    );
 
     let output_file_path = format!(
         "{}{}",
@@ -19,7 +22,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Open the input CSV file
     let input_file =
-        File::open(&*COMPANY_SYMBOL_FILE_PATH).expect("Could not open the input CSV file");
+        File::open(&*COMPANY_SYMBOL_CSV_FILE_PATH).expect("Could not open the input CSV file");
 
     // Open the output file for writing
     let output_file =
@@ -36,7 +39,7 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Successfully compressed '{:?}' to '{}'",
-        &*COMPANY_SYMBOL_FILE_PATH, output_file_path
+        &*COMPANY_SYMBOL_CSV_FILE_PATH, output_file_path
     );
 
     Ok(())

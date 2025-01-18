@@ -14,7 +14,7 @@ pub static TEST_FILES_DIRECTORY: LazyLock<PathBuf> =
 pub static TEST_RUNNER_VALIDATION_FILES_DIRECTORY: LazyLock<PathBuf> =
     LazyLock::new(|| define_path!("tests", "test_runner_validation_files"));
 
-pub static COMPANY_SYMBOL_FILE_PATH: LazyLock<PathBuf> =
+pub static COMPANY_SYMBOL_CSV_FILE_PATH: LazyLock<PathBuf> =
     LazyLock::new(|| define_path!("data", "company_symbol_list.csv"));
 
 pub static CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
