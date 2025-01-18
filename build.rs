@@ -1,8 +1,11 @@
-use flate2::write::GzEncoder;
-use flate2::Compression;
+#[path = "shared/lib.rs"]
+mod shared;
 use shared::constants::{
     CODE_AUTOGEN_PREFIX, COMPANY_SYMBOL_CSV_FILE_PATH, COMPRESSED_COMPANY_SYMBOL_FILE_NAME,
 };
+
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use std::env;
 use std::fs::{self, File};
 use std::io;

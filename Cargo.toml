@@ -17,11 +17,9 @@ flate2 = "1.0.35"
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
-shared = { path = "shared" }
 
 [build-dependencies]
 flate2 = "1.0.35"
-shared = { path = "shared" }
 
 [[bench]]
 name = "my_benchmark"
@@ -39,5 +37,6 @@ logger-support = ["dep:env_logger"]
 [workspace]
 members = [
     ".",
-    "dev", "shared", "test_utils",
+    "dev",
+    "test_utils"
 ]

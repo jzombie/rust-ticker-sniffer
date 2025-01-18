@@ -1,3 +1,5 @@
+#[path = "../shared/lib.rs"]
+mod shared;
 use shared::constants::TEST_FILES_DIRECTORY;
 
 use std::fs::read_dir;

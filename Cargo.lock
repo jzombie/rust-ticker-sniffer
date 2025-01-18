@@ -576,10 +576,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shared"
-version = "0.0.0"
-
-[[package]]
 name = "sval"
 version = "2.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -684,7 +680,6 @@ dependencies = [
  "env_logger",
  "flate2",
  "log",
- "shared",
  "test_utils",
 ]
 
