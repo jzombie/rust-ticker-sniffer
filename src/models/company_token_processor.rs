@@ -54,7 +54,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .get_filtered_query_token_ids(
                 &text_doc_tokens_pre_filtered,
                 &ticker_symbol_tokens_pre_filtered,
-            )?;
+            );
 
         // Identify token ID sequences which start with the first token of a company token sequence
         info!("Identifying token ID sequences...");
@@ -129,12 +129,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         let unique_text_doc_ticker_symbols: Vec<TickerSymbol> =
             text_doc_ticker_frequencies.keys().cloned().collect();
 
-        // TODO: Remove
-        // println!(
-        //     "query_ticker_symbols: {:?}, query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-        //     query_ticker_symbols, query_text_doc_token_ids, self.company_token_mapper.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
-        // );
-
         let query_tickers_not_in_text_doc: Vec<&TickerSymbol> = unique_query_ticker_symbols
             .clone()
             .into_iter()
@@ -156,12 +150,6 @@ impl<'a> CompanyTokenProcessor<'a> {
             text_doc_ticker_frequencies.clone(),
             query_ticker_frequencies.clone(),
         ]);
-
-        // TODO: Remove
-        // println!(
-        //     "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
-        //     unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
-        // );
 
         Ok(combined_ticker_frequencies)
     }
@@ -228,12 +216,11 @@ impl<'a> CompanyTokenProcessor<'a> {
     //     }
     // }
 
-    // TODO: Don't return Result type; no error will be thrown
     fn get_filtered_query_token_ids(
         &self,
         text_doc_tokens: &[Token],
         ticker_symbol_tokens: &[Token],
-    ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
+    ) -> (Vec<TokenId>, Vec<TokenId>) {
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self
             .company_token_mapper
@@ -253,7 +240,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             })
             .collect();
 
-        Ok((query_text_doc_token_ids, query_ticker_symbol_token_ids))
+        (query_text_doc_token_ids, query_ticker_symbol_token_ids)
     }
 
     fn get_potential_token_sequences(
