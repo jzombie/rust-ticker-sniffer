@@ -1,12 +1,10 @@
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use shared::constants::{
+    CODE_AUTOGEN_PREFIX, COMPANY_SYMBOL_FILE_PATH, COMPRESSED_COMPANY_SYMBOL_FILE_NAME,
+};
 use std::fs::File;
 use std::io;
-
-include!("test_utils/src/constants.rs");
-
-static CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
-static COMPRESSED_COMPANY_SYMBOL_FILE_NAME: &str = "company_symbol_list.csv.gz";
 
 /// This is a standalone utility binary used for preprocessing the company
 /// symbol list into a compressed format before building the main project.

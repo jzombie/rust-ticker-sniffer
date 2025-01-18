@@ -1,4 +1,4 @@
-use test_utils::constants::TEST_RUNNER_VALIDATION_FILES_DIRECTORY;
+use shared::constants::TEST_RUNNER_VALIDATION_FILES_DIRECTORY;
 
 use std::fs::read_dir;
 use test_utils::run_test_for_file;

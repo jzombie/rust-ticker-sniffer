@@ -3,7 +3,6 @@ use ticker_sniffer::{
     extract_tickers_from_text_with_custom_config, CompanyTokenProcessorConfig, Error as LibError,
     TickerSymbol, TickerSymbolFrequencyMap,
 };
-pub mod constants;
 
 // Helper function to get the expected tickers from the text file
 pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
