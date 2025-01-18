@@ -57,10 +57,8 @@ cargo bench
 
 ## Prototype Bin (temporary debug bin)
 
-Note: n-gram is not used, but this is currently used for prototyping.
-
 ```bash
-RUST_LOG=debug RUST_BACKTRACE=1 cargo run --bin proto_n_gram --features="logger-support"
+cargo run --manifest-path dev/Cargo.toml
 ```
 
 ## Lint

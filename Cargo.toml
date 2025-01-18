@@ -25,11 +25,6 @@ name = "my_benchmark"
 harness = false
 
 [[bin]]
-name = "proto_n_gram"
-path = "src/bin/proto_n_gram.rs"
-required-features = ["logger-support"]
-
-[[bin]]
 name = "ticker-sniffer-cli"
 path = "src/main.rs"
 required-features = ["logger-support"]
@@ -37,3 +32,8 @@ required-features = ["logger-support"]
 [features]
 default = []
 logger-support = ["dep:env_logger"]
+
+[workspace]
+members = [
+    "dev"
+]
