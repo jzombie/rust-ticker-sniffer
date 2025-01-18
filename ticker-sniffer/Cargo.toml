@@ -4,6 +4,7 @@ version = "0.1.0-alpha"
 authors = ["Jeremy Harris <jeremy.harris@zenosmosis.com>"]
 edition = "2021"
 description = "A library for extracting multiple stock ticker symbols from a text document."
+repository = "https://github.com/jzombie/rust-ticker-sniffer"
 license = "MIT"
 
 [dependencies]
