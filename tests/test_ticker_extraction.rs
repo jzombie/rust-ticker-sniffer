@@ -1,4 +1,4 @@
-#[path = "../test_utils/lib.rs"]
+#[path = "../test_utils/src/lib.rs"]
 mod test_utils;
 use test_utils::constants::TEST_FILES_DIRECTORY;
 

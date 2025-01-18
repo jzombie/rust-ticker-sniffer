@@ -665,6 +665,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "test_utils"
+version = "0.0.0"
+dependencies = [
+ "ticker-sniffer",
+]
+
+[[package]]
 name = "ticker-sniffer"
 version = "0.1.0-alpha.1"
 dependencies = [
@@ -673,6 +680,7 @@ dependencies = [
  "env_logger",
  "flate2",
  "log",
+ "test_utils",
 ]
 
 [[package]]
