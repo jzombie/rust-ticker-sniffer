@@ -66,8 +66,12 @@ cargo run --example simple
 ## Prototype Debug
 
 ```bash
-RUST_LOG=debug cargo run --manifest-path dev/Cargo.toml
+RUST_LOG=debug cargo dev
 ```
+
+Note: `dev` is an aliased Cargo command, as specified in the [.cargo/config.toml](.cargo/config.toml) file.
+
+More information about Cargo aliases can be found at: https://doc.rust-lang.org/cargo/reference/config.html#configuration-format.
 
 ## Lint
 
