@@ -55,7 +55,7 @@ cargo test --test tokenizer_tests  -- --nocapture
 cargo bench
 ```
 
-## Examples
+## Example
 
 Simple example:
 
@@ -63,10 +63,10 @@ Simple example:
 cargo run --example simple
 ```
 
-Prototype debug:
+## Prototype Debug
 
 ```bash
-RUST_LOG=debug cargo run --example prototype --features="logger-support"
+RUST_LOG=debug cargo run --manifest-path dev/Cargo.toml
 ```
 
 ## Lint
