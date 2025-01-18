@@ -3,17 +3,18 @@ use flate2::Compression;
 use std::fs::File;
 use std::io;
 
-const CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
-
-// TODO: Move to constants
-const COMPANY_SYMBOL_FILE_PATH: &str = "data/company_symbol_list.csv";
+static CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
+static COMPANY_SYMBOL_FILE_PATH: &str = "data/company_symbol_list.csv";
+static COMPRESSED_COMPANY_SYMBOL_FILE_NAME: &str = "company_symbol_list.csv.gz";
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Tell Cargo to fully recompile if this asset changes
     println!("cargo:rerun-if-changed={}", COMPANY_SYMBOL_FILE_PATH);
 
-    // TODO: Don't hardcode path
-    let output_file_path = format!("{}company_symbol_list.csv.gz", CODE_AUTOGEN_PREFIX);
+    let output_file_path = format!(
+        "{}{}",
+        CODE_AUTOGEN_PREFIX, COMPRESSED_COMPANY_SYMBOL_FILE_NAME
+    );
 
     // Open the input CSV file
     let input_file =
