@@ -121,4 +121,4 @@ https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternati
 
 ## License
 
-[MIT License](LICENSE) (c) 2024 Jeremy Harris.
+[MIT License](LICENSE) (c) 2025 Jeremy Harris.
