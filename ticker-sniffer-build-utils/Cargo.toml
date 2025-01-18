@@ -1,8 +1,0 @@
-[package]
-name = "ticker-sniffer-build-utils"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-flate2 = "1.0.35"
-ticker-sniffer-common-lib = { path = "../ticker-sniffer-common-lib" }

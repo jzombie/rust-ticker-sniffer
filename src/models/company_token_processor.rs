@@ -1,9 +1,9 @@
-use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
-use crate::{CompanyTokenMapper, Error, TokenParityState, TokenRangeState};
-use ticker_sniffer_common_lib::types::{
+use crate::types::{
     CompanySequenceIndex, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap,
     TickerSymbolTokenId, Token, TokenId,
 };
+use crate::utils::{count_ticker_symbol_frequencies, dedup_vector};
+use crate::{CompanyTokenMapper, Error, TokenParityState, TokenRangeState};
 
 use log::info;
 use std::collections::HashMap;
@@ -116,7 +116,7 @@ impl<'a> CompanyTokenProcessor<'a> {
                 self.company_token_mapper
                     .get_ticker_symbol_by_token_id(token_id)
                     .map_err(|e| {
-                        ticker_sniffer_common_lib::Error::ParserError(format!(
+                        crate::Error::ParserError(format!(
                             "Failed to fetch token ID {:?}: {:?}",
                             token_id, e
                         ))

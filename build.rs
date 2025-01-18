@@ -2,12 +2,13 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 use std::fs::File;
 use std::io;
-use ticker_sniffer_common_lib::constants::CODE_AUTOGEN_PREFIX;
+
+const CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
 
 // TODO: Move to constants
-const COMPANY_SYMBOL_FILE_PATH: &str = "../data/company_symbol_list.csv";
+const COMPANY_SYMBOL_FILE_PATH: &str = "data/company_symbol_list.csv";
 
-pub fn run_build_utils() -> Result<(), Box<dyn std::error::Error>> {
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Tell Cargo to fully recompile if this asset changes
     println!("cargo:rerun-if-changed={}", COMPANY_SYMBOL_FILE_PATH);
 
