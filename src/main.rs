@@ -1,5 +1,3 @@
-#![allow(dead_code, unused_imports, unused_variables)]
-
 use log::{error, info};
 use std::collections::HashMap;
 use std::io::{self, Read};
