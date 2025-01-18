@@ -13,7 +13,7 @@ mod tests {
         println!("Testing ticker extractions...");
 
         // Directory containing the test files
-        let test_dir = TEST_FILES_DIRECTORY;
+        let test_dir = &*TEST_FILES_DIRECTORY;
 
         // Read all files in the directory
         let files = read_dir(test_dir)

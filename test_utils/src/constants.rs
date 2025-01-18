@@ -1,8 +1,15 @@
-// TODO: Use path lib
-pub const TEST_FILES_DIRECTORY: &str = "tests/test_files";
+use std::path::PathBuf;
+use std::sync::LazyLock;
 
-// TODO: Use path lib
-pub const TEST_RUNNER_VALIDATION_FILES_DIRECTORY: &str = "tests/test_runner_validation_files";
+macro_rules! define_path {
+    ($($segment:expr),*) => {{
+        PathBuf::from_iter(vec![$($segment),*])
+    }};
+}
 
-// TODO: Remove
-// pub const TEST_SYMBOLS_CSV_PATH: &str = "../data/company_symbol_list.csv";
+// Lazy-initialized static variables
+pub static TEST_FILES_DIRECTORY: LazyLock<PathBuf> =
+    LazyLock::new(|| define_path!("tests", "test_files"));
+
+pub static TEST_RUNNER_VALIDATION_FILES_DIRECTORY: LazyLock<PathBuf> =
+    LazyLock::new(|| define_path!("tests", "test_runner_validation_files"));
