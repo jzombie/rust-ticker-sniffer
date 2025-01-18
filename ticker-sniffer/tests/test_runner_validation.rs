@@ -12,7 +12,7 @@ mod tests {
 
     #[test]
     fn test_extract_tickers_from_multiple_files() {
-        println!("Testing ticker extractions...");
+        println!("Testing test runner validations...");
 
         // Directory containing the test files
         let test_dir = TEST_RUNNER_VALIDATION_FILES_DIRECTORY;

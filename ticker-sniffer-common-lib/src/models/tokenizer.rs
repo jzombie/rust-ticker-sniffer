@@ -18,6 +18,7 @@ impl Tokenizer {
             pre_processed_stop_words: None,
         }
     }
+
     /// Configuration for arbitrary text doc parsing
     pub fn text_doc_parser() -> Self {
         Self {
@@ -112,17 +113,9 @@ impl Tokenizer {
         uppercase_chars / total_chars
     }
 
-    /// Pre-process the stop words by removing non-alphanumeric characters and converting to uppercase
+    /// Pre-process the stop words by converting to uppercase
     fn preprocess_stop_words() -> HashSet<String> {
-        STOP_WORDS
-            .iter()
-            .map(|word| {
-                word.chars()
-                    .filter(|c| c.is_alphanumeric())
-                    .collect::<String>()
-                    .to_uppercase()
-            })
-            .collect()
+        STOP_WORDS.iter().map(|word| word.to_uppercase()).collect()
     }
 
     pub fn tokenize_to_charcode_vectors(&self, text: &TokenRef) -> Vec<TokenVector> {

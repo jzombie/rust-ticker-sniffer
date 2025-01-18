@@ -109,7 +109,12 @@ impl CompanyTokenMapper {
 
     /// Helper method for per-company token ingestion
     fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<TokenId> {
-        let company_name_tokens = self.text_doc_tokenizer.tokenize(company_name);
+        // Note: Company name is explcitly converted to upper-case here as this is
+        // part of the token ingestion and the data source isn't guaranteed to be 100% normalized
+        // with uppercase words
+        let uppercased_name = company_name.to_uppercase();
+
+        let company_name_tokens = self.text_doc_tokenizer.tokenize(&uppercased_name);
         let mut company_name_token_ids = Vec::new();
         for token in company_name_tokens {
             let token_id = self.token_mapper.upsert_token(&token);

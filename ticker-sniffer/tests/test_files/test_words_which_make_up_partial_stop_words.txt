@@ -1,0 +1,5 @@
+Shell is a petroleum company.
+
+EXPECTED: SHEL
+
+COMMENT: There is the stop word "she'll" which shouldn't cause this to fail.
