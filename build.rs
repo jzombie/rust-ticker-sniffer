@@ -6,7 +6,7 @@ use std::io;
 const CODE_AUTOGEN_PREFIX: &str = "__AUTOGEN__";
 
 // TODO: Move to constants
-const COMPANY_SYMBOL_FILE_PATH: &str = "../data/company_symbol_list.csv";
+const COMPANY_SYMBOL_FILE_PATH: &str = "data/company_symbol_list.csv";
 
 pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Tell Cargo to fully recompile if this asset changes
