@@ -45,8 +45,14 @@ pub type TickerSymbolFrequency = usize;
 /// The key is the `TickerSymbol`, and the value is the `TickerSymbolFrequency`.
 pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>;
 
-// TODO: Document
+/// Represents a word number in a text document after non-sequence words have been filtered out.
 pub type QueryTokenIndex = usize;
+
+// Represents a sequence number of a company name or alias.
 pub type CompanySequenceIndex = usize;
+
+// Represents a word number in a company name or alias.
 pub type CompanySequenceTokenIndex = usize;
+
+// Represents the token ID of a ticker symbol.
 pub type TickerSymbolTokenId = TokenId;
