@@ -1,3 +1,2 @@
-
 [alias]
 dev = "run --manifest-path dev/Cargo.toml"

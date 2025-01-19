@@ -2,7 +2,34 @@
 
 `Ticker Sniffer` is a Rust library built to parse and extract ticker symbols from text documents. It specializes in analyzing text content to identify references to U.S. stock market ticker symbols and calculates their frequency counts, returning the results as a `HashMap`.
 
-## How it Works (draft)
+## Examples
+
+### CLI Example
+
+```bash
+cargo run --example simple
+```
+
+### Code Example
+
+```rust
+use ticker_sniffer::extract_tickers_from_text;
+
+fn main() {
+    let text = "Apple and Microsoft are performing well in the market.";
+
+    match extract_tickers_from_text(text) {
+        Ok(results) => {
+            for (ticker_symbol, frequency) in results {
+                println!("{}: {}", ticker_symbol, frequency);
+            }
+        }
+        Err(e) => eprintln!("Error extracting tickers: {}", e),
+    }
+}
+```
+
+## How it Works
 
 The text search engine employs a hybrid approach to identify company names and stock symbols in documents.
 
@@ -16,34 +43,21 @@ Based on this ratio, it determines whether to include exact stock symbol matches
 
 Regardless of the decision, the engine ensures that stock symbols are always matched, but the contextual importance of symbols is weighted by their relationship to identified company names.
 
----
 
-```rust
-use ticker_sniffer::extract_tickers_from_text;
 
-fn main() {
-    let text = "Apple and Microsoft are performing well in the market.";
+## Running Tests with Output Capturing
 
-    match extract_tickers_from_text(text) {
-        Ok(results) => {
-            for (ticker, frequency) in results {
-                println!("{}: {}", ticker, frequency);
-            }
-        }
-        Err(e) => eprintln!("Error extracting tickers: {}", e),
-    }
-}
-```
+When running tests, you can use the `--nocapture` flag to display output from tests in the console. This is particularly useful for this package as there are tests which process several files at once.
 
-## Test with Filename Capturing in Output
-
-To run all tests:
+### Running All Tests
 
 ```bash
 cargo test -- --nocapture
 ```
 
-To run Tokenizer tests in isolation:
+### Running Specific Tests
+
+For example, to run the `tokenizer_tests` module in isolation with visible output:
 
 ```bash
 cargo test --test tokenizer_tests  -- --nocapture
@@ -55,13 +69,6 @@ cargo test --test tokenizer_tests  -- --nocapture
 cargo bench
 ```
 
-## Example
-
-Simple example:
-
-```bash
-cargo run --example simple
-```
 
 ## Prototype Debug
 
@@ -93,14 +100,24 @@ cargo clippy -- -W clippy::all
 
 ## Building CLI tool
 
+### Without Logging Support
+
+```bash
+cargo build --release --bin ticker-sniffer-cli
+```
+
+### With Logging Support
+
 ```bash
 cargo build --release --bin ticker-sniffer-cli --features="logger-support"
 ```
 
 ## Running CLI tool (on Unix)
 
+With debugging enabled. Note, it has to be compiled with `logger-support` feature added.
+
 ```bash
-./target/release/ticker-sniffer-cli
+echo "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
 ```
 
 ## Publishing Note

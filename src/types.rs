@@ -8,11 +8,15 @@ pub type Token = String;
 /// Represents a borrowed view of a token as a `str`. This is used when ownership is not required.
 pub type TokenRef = str;
 
-// TODO: This might could be a u16 for this use case
-//
-/// A vector of token IDs, represented as `u32`. This type is used to store sequences of token IDs
-/// that map to specific tokens in a `TokenMapper`.
-pub type TokenVector = Vec<u32>;
+/// Represents the numeric Unicode scalar value (`char`) of a token's character.
+///
+/// Each character in a token is converted to its corresponding Unicode scalar
+/// value (`char`), which is stored as a `u32`. This type is used for better
+/// semantic clarity in representing character codes of tokens.
+pub type TokenCharCode = u32;
+
+/// A vector of token character codes, represented as `u32` values.
+pub type TokenVector = Vec<TokenCharCode>;
 
 /// A unique identifier for a token, represented as a `usize`. This is typically used to index
 /// tokens in a data structure such as a `HashMap` or `Vec`.
@@ -41,8 +45,14 @@ pub type TickerSymbolFrequency = usize;
 /// The key is the `TickerSymbol`, and the value is the `TickerSymbolFrequency`.
 pub type TickerSymbolFrequencyMap = HashMap<TickerSymbol, TickerSymbolFrequency>;
 
-// TODO: Document
+/// Represents a word number in a text document after non-sequence words have been filtered out.
 pub type QueryTokenIndex = usize;
+
+// Represents a sequence number of a company name or alias.
 pub type CompanySequenceIndex = usize;
+
+// Represents a word number in a company name or alias.
 pub type CompanySequenceTokenIndex = usize;
+
+// Represents the token ID of a ticker symbol.
 pub type TickerSymbolTokenId = TokenId;

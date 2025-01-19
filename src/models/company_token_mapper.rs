@@ -16,8 +16,14 @@ pub struct CompanyTokenMapper {
     pub company_reverse_token_map: HashMap<TokenId, Vec<TickerSymbolTokenId>>,
 }
 
-// TODO: Document
 impl CompanyTokenMapper {
+    /// Creates a new instance of `CompanyTokenMapper` by processing the provided company symbol list.
+    ///
+    /// # Arguments
+    /// * `company_symbol_list` - A reference to the list of company symbols.
+    ///
+    /// # Errors
+    /// Returns an error if token ingestion fails.
     pub fn new(company_symbol_list: &CompanySymbolList) -> Result<Self, Error> {
         let token_mapper = TokenMapper::new();
 
@@ -39,6 +45,7 @@ impl CompanyTokenMapper {
         Ok(instance)
     }
 
+    /// Clears all token maps and associated data from the mapper.
     fn clear(&mut self) {
         self.company_token_sequences_map.clear();
         self.company_reverse_token_map.clear();
@@ -46,7 +53,13 @@ impl CompanyTokenMapper {
         self.reverse_ticker_symbol_map.clear();
     }
 
-    /// Ingests tokens from the company symbol list
+    /// Ingests tokens from the provided company symbol list into the mapper.
+    ///
+    /// # Arguments
+    /// * `company_symbol_list` - A reference to the list of company symbols.
+    ///
+    /// # Errors
+    /// Returns an error if the ingestion process fails.
     fn ingest_company_tokens(
         &mut self,
         company_symbol_list: &CompanySymbolList,
@@ -107,7 +120,13 @@ impl CompanyTokenMapper {
         Ok(())
     }
 
-    /// Helper method for per-company token ingestion
+    /// Tokenizes the given company name and processes its tokens into unique token IDs.
+    ///
+    /// # Arguments
+    /// * `company_name` - A reference to the company name as a string.
+    ///
+    /// # Returns
+    /// A vector of token IDs for the processed company name.
     fn process_company_name_tokens(&mut self, company_name: &str) -> Vec<TokenId> {
         // Note: Company name is explcitly converted to upper-case here as this is
         // part of the token ingestion and the data source isn't guaranteed to be 100% normalized
@@ -124,6 +143,13 @@ impl CompanyTokenMapper {
         company_name_token_ids
     }
 
+    /// Retrieves the ticker symbol corresponding to the given token ID.
+    ///
+    /// # Arguments
+    /// * `token_id` - The ID of the token to look up.
+    ///
+    /// # Errors
+    /// Returns an error if no ticker symbol is associated with the provided token ID.
     pub fn get_ticker_symbol_by_token_id(
         &self,
         token_id: &TokenId,
@@ -136,6 +162,13 @@ impl CompanyTokenMapper {
         }
     }
 
+    /// Retrieves the token ID corresponding to the given ticker symbol.
+    ///
+    /// # Arguments
+    /// * `ticker_symbol` - A reference to the ticker symbol as a string.
+    ///
+    /// # Errors
+    /// Returns an error if the token ID is not found.
     pub fn get_ticker_symbol_token_id(
         &self,
         ticker_symbol: &TickerSymbol,
@@ -146,6 +179,14 @@ impl CompanyTokenMapper {
         }
     }
 
+    /// Retrieves the maximum sequence length for a company's token sequence.
+    ///
+    /// # Arguments
+    /// * `ticker_symbol_token_id` - The token ID of the ticker symbol.
+    /// * `company_sequence_idx` - The index of the company sequence.
+    ///
+    /// # Returns
+    /// The maximum length of the token sequence, if found.
     pub fn get_company_token_sequence_max_length(
         &self,
         ticker_symbol_token_id: &TickerSymbolTokenId,

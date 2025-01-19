@@ -1,6 +1,15 @@
 use crate::types::TickerSymbol;
 use std::collections::HashMap;
 
+/// Counts the frequency of ticker symbols in the given list.
+///
+/// # Arguments
+/// * `ticker_symbols` - A slice of ticker symbols to analyze.
+///
+/// # Returns
+/// * A `HashMap` where the keys are ticker symbols and the values are their
+///   respective frequencies.
+/// ```
 pub fn count_ticker_symbol_frequencies(
     ticker_symbols: &[TickerSymbol],
 ) -> HashMap<TickerSymbol, usize> {

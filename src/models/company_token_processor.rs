@@ -23,6 +23,14 @@ pub struct CompanyTokenProcessor<'a> {
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
+    /// Creates a new `CompanyTokenProcessor` with the given configuration and company symbol list.
+    ///
+    /// # Arguments
+    /// * `config` - A reference to the configuration for processing tokens.
+    /// * `company_symbol_list` - A reference to the list of company symbols.
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails.
     pub fn new(
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
@@ -35,6 +43,13 @@ impl<'a> CompanyTokenProcessor<'a> {
         })
     }
 
+    /// Processes a text document and extracts ticker symbols with their frequencies.
+    ///
+    /// # Arguments
+    /// * `text` - The text document to process.
+    ///
+    /// # Errors
+    /// Returns an error if the processing fails.
     pub fn process_text_doc(&mut self, text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
         // Tokenize the input text
         info!("Tokenizing...");
@@ -54,7 +69,7 @@ impl<'a> CompanyTokenProcessor<'a> {
             .get_filtered_query_token_ids(
                 &text_doc_tokens_pre_filtered,
                 &ticker_symbol_tokens_pre_filtered,
-            )?;
+            );
 
         // Identify token ID sequences which start with the first token of a company token sequence
         info!("Identifying token ID sequences...");
@@ -129,12 +144,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         let unique_text_doc_ticker_symbols: Vec<TickerSymbol> =
             text_doc_ticker_frequencies.keys().cloned().collect();
 
-        // TODO: Remove
-        // println!(
-        //     "query_ticker_symbols: {:?}, query_text_doc_token_ids: {:?}, query_text_doc_tokens: {:?}, query_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, text_doc_ticker_frequencies: {:?}, ratio_exact_matches: {}, match_threshold: {}",
-        //     query_ticker_symbols, query_text_doc_token_ids, self.company_token_mapper.token_mapper.get_tokens_by_ids(&query_text_doc_token_ids), &query_ticker_symbols, &unique_query_ticker_symbols, text_doc_ticker_frequencies, ratio_exact_matches, self.config.threshold_ratio_exact_matches
-        // );
-
         let query_tickers_not_in_text_doc: Vec<&TickerSymbol> = unique_query_ticker_symbols
             .clone()
             .into_iter()
@@ -157,16 +166,17 @@ impl<'a> CompanyTokenProcessor<'a> {
             query_ticker_frequencies.clone(),
         ]);
 
-        // TODO: Remove
-        // println!(
-        //     "unique_text_doc_ticker_symbols: {:?}, unique_query_ticker_symbols: {:?}, query_tickers_not_in_text_doc: {:?}, text_doc_ticker_frequencies: {:?}, query_ticker_frequencies: {:?}, combined_ticker_frequencies: {:?}",
-        //     unique_text_doc_ticker_symbols, unique_query_ticker_symbols, query_tickers_not_in_text_doc, text_doc_ticker_frequencies, query_ticker_frequencies, combined_ticker_frequencies
-        // );
-
         Ok(combined_ticker_frequencies)
     }
 
-    /// Reduces query ticker frequency counts based on matches in top range states
+    /// Reduces ticker symbol frequency counts based on matches in token range states.
+    ///
+    /// # Arguments
+    /// * `query_ticker_frequencies` - Mutable reference to the query ticker frequencies.
+    /// * `top_range_states` - A reference to the top token range states.
+    ///
+    /// # Errors
+    /// Returns an error if adjustment fails.
     fn adjust_query_ticker_frequencies(
         &self,
         query_ticker_frequencies: &mut TickerSymbolFrequencyMap,
@@ -195,6 +205,13 @@ impl<'a> CompanyTokenProcessor<'a> {
         Ok(())
     }
 
+    /// Combines multiple maps of ticker symbol frequencies into one.
+    ///
+    /// # Arguments
+    /// * `ticker_symbol_frequency_hash_maps` - A slice of frequency maps to combine.
+    ///
+    /// # Returns
+    /// A single map with combined frequencies.
     fn combine_ticker_symbol_frequencies(
         &self,
         ticker_symbol_frequency_hash_maps: &[TickerSymbolFrequencyMap],
@@ -228,12 +245,19 @@ impl<'a> CompanyTokenProcessor<'a> {
     //     }
     // }
 
-    // TODO: Don't return Result type; no error will be thrown
+    /// Retrieves filtered token IDs for both text documents and ticker symbols.
+    ///
+    /// # Arguments
+    /// * `text_doc_tokens` - Tokens from the text document.
+    /// * `ticker_symbol_tokens` - Tokens from the ticker symbols.
+    ///
+    /// # Returns
+    /// A tuple containing vectors of token IDs.
     fn get_filtered_query_token_ids(
         &self,
         text_doc_tokens: &[Token],
         ticker_symbol_tokens: &[Token],
-    ) -> Result<(Vec<TokenId>, Vec<TokenId>), Error> {
+    ) -> (Vec<TokenId>, Vec<TokenId>) {
         // Get the filtered token IDs (IDs present in the TokenMapper)
         let query_text_doc_token_ids = self
             .company_token_mapper
@@ -253,9 +277,19 @@ impl<'a> CompanyTokenProcessor<'a> {
             })
             .collect();
 
-        Ok((query_text_doc_token_ids, query_ticker_symbol_token_ids))
+        (query_text_doc_token_ids, query_ticker_symbol_token_ids)
     }
 
+    /// Identifies potential token sequences from the query tokens.
+    ///
+    /// # Arguments
+    /// * `query_text_doc_token_ids` - A slice of token IDs from the query text document.
+    ///
+    /// # Errors
+    /// Returns an error if the process fails.
+    ///
+    /// # Returns
+    /// A map of potential token sequences.
     fn get_potential_token_sequences(
         &self,
         query_text_doc_token_ids: &[TokenId],
