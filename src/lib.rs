@@ -33,7 +33,7 @@ const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] =
 /// ```
 /// use ticker_sniffer::extract_tickers_from_text;
 ///
-/// let text = "AAPL and MSFT are leading companies.";
+/// let text = "Apple and Microsoft are leading companies.";
 /// let result = extract_tickers_from_text(text);
 /// assert!(result.is_ok());
 /// ```
@@ -63,7 +63,7 @@ pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap,
 /// use ticker_sniffer::extract_tickers_from_text_with_custom_config;
 ///
 /// let config = DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
-/// let text = "GOOGL is a tech giant.";
+/// let text = "Google is a tech giant.";
 /// let result = extract_tickers_from_text_with_custom_config(&config, text);
 /// assert!(result.is_ok());
 /// ```
