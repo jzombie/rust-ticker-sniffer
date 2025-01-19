@@ -35,15 +35,19 @@ fn main() {
 }
 ```
 
-## Test with Filename Capturing in Output
+## Running Tests with Output Capturing
 
-To run all tests:
+When running tests, you can use the `--nocapture` flag to display output from tests in the console. This is particularly useful for this package as there are tests which process several files at once.
+
+### Running All Tests
 
 ```bash
 cargo test -- --nocapture
 ```
 
-To run Tokenizer tests in isolation:
+### Running Specific Tests
+
+For example, to run the `tokenizer_tests` module in isolation with visible output:
 
 ```bash
 cargo test --test tokenizer_tests  -- --nocapture
