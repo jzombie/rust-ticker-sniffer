@@ -28,7 +28,6 @@ harness = false
 [[bin]]
 name = "ticker-sniffer-cli"
 path = "src/main.rs"
-required-features = ["logger-support"]
 
 [features]
 default = []

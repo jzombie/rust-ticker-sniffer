@@ -93,14 +93,24 @@ cargo clippy -- -W clippy::all
 
 ## Building CLI tool
 
+### Without Logging Support
+
+```bash
+cargo build --release --bin ticker-sniffer-cli
+```
+
+### With Logging Support
+
 ```bash
 cargo build --release --bin ticker-sniffer-cli --features="logger-support"
 ```
 
 ## Running CLI tool (on Unix)
 
+With debugging enabled. Note, it has to be compiled with `logger-support` feature added.
+
 ```bash
-./target/release/ticker-sniffer-cli
+cho "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
 ```
 
 ## Publishing Note

@@ -1,11 +1,13 @@
-use log::{error, info};
-use std::collections::HashMap;
+use log::error;
 use std::io::{self, Read};
 use ticker_sniffer::extract_tickers_from_text;
 
 fn main() {
     // Initialize the logger
-    env_logger::init();
+    #[cfg(feature = "logger-support")]
+    {
+        env_logger::init();
+    }
 
     // Read the input text from stdin
     let mut input = String::new();
