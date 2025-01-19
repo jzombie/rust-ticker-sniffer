@@ -117,7 +117,7 @@ cargo build --release --bin ticker-sniffer-cli --features="logger-support"
 With debugging enabled. Note, it has to be compiled with `logger-support` feature added.
 
 ```bash
-cho "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
+echo "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
 ```
 
 ## Publishing Note
