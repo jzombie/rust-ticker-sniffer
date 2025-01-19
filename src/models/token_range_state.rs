@@ -7,22 +7,60 @@ use crate::types::{
 use crate::utils::count_ticker_symbol_frequencies;
 use crate::{CompanyTokenMapper, Error, TokenParityState};
 
+/// Represents a range of tokens associated with a specific ticker symbol.
+///
+/// This struct tracks information about tokens in a document and their relation
+/// to a company's ticker symbol and token sequences.
 #[derive(Debug, Clone)]
 pub struct TokenRangeState {
+    /// The ticker symbol associated with this token range.
     pub ticker_symbol: TickerSymbol,
+
+    /// The unique token ID for the associated ticker symbol.
     pub ticker_symbol_token_id: TokenId,
+
+    /// Indicates whether this range matches the ticker symbol exactly.
+    /// If `None`, the match has not been determined yet.
     pub is_matched_on_ticker_symbol: Option<bool>,
+
+    /// A list of indices of tokens in the query text document that are part
+    /// of this range.
     pub query_token_indices: Vec<QueryTokenIndex>,
+
+    /// A list of token IDs from the query text document that are part of
+    /// this range.
     pub query_text_doc_token_ids: Vec<TokenId>,
+
+    /// The index of the company's token sequence in the preprocessed symbol list.
     pub company_sequence_idx: CompanySequenceIndex,
+
+    /// A list of indices of tokens in the company's sequence that are part
+    /// of this range.
     pub company_sequence_token_indices: Vec<CompanySequenceTokenIndex>,
+
+    /// The maximum length of the company's token sequence.
     pub company_sequence_max_length: usize,
+
+    /// The ratio of tokens in the company's sequence that are covered
+    /// by this range.
     pub company_token_coverage: f32,
+
+    /// The score assigned to this range based on token alignment and coverage.
+    /// If `None`, the range has not been scored yet.
     pub range_score: Option<f32>,
+
+    /// Indicates whether the token range state has been finalized.
     pub is_collection_finalized: bool,
 }
 
 impl TokenRangeState {
+    /// Creates a new `TokenRangeState` instance.
+    ///
+    /// # Arguments
+    /// * `ticker_symbol` - The ticker symbol associated with the range state.
+    /// * `ticker_symbol_token_id` - The unique token ID for the ticker symbol.
+    /// * `company_sequence_idx` - The index of the company's token sequence.
+    /// * `company_sequence_max_length` - The maximum length of the company's token sequence.
     pub fn new(
         ticker_symbol: TickerSymbol,
         ticker_symbol_token_id: TokenId,
@@ -44,6 +82,12 @@ impl TokenRangeState {
         }
     }
 
+    /// Adds a partial state to the current token range state.
+    ///
+    /// # Arguments
+    /// * `query_token_idx` - The index of the query token in the text document.
+    /// * `query_token_id` - The unique token ID for the query token.
+    /// * `company_sequence_token_idx` - The index of the token in the company's token sequence.
     pub fn add_partial_state(
         &mut self,
         query_token_idx: QueryTokenIndex,
@@ -56,6 +100,13 @@ impl TokenRangeState {
             .push(company_sequence_token_idx);
     }
 
+    /// Calculates the ratio of exact ticker symbol matches in the top token range states.
+    ///
+    /// # Arguments
+    /// * `top_token_range_states` - A slice of the top token range states to analyze.
+    ///
+    /// # Returns
+    /// * The ratio of exact matches as a floating-point number.
     pub fn calc_exact_ticker_symbol_match_ratio(top_token_range_states: &[TokenRangeState]) -> f32 {
         if top_token_range_states.is_empty() {
             return 1.0;
@@ -83,7 +134,13 @@ impl TokenRangeState {
         }
     }
 
-    /// Given a vector of token range states, this counts the number of symbols iwth unique query token indices
+    /// Counts the frequencies of ticker symbols based on unique query token indices.
+    ///
+    /// # Arguments
+    /// * `range_states` - A slice of token range states to analyze.
+    ///
+    /// # Returns
+    /// * A map of ticker symbols to their frequency counts.
     pub fn count_token_range_ticker_symbol_frequencies(
         range_states: &[TokenRangeState],
     ) -> TickerSymbolFrequencyMap {
@@ -115,6 +172,17 @@ impl TokenRangeState {
         count_ticker_symbol_frequencies(&ticker_symbols)
     }
 
+    /// Collects the top range states by analyzing token scores and retaining the best matches.
+    ///
+    /// # Arguments
+    /// * `query_text_doc_token_ids` - A slice of token IDs from the query text document.
+    /// * `token_range_states` - A slice of token range states to evaluate.
+    ///
+    /// # Returns
+    /// * A vector of the top range states.
+    ///
+    /// # Errors
+    /// * Returns an error if range scores are not properly assigned.
     pub fn collect_top_range_states(
         query_text_doc_token_ids: &[TokenId],
         token_range_states: &[TokenRangeState],
@@ -161,7 +229,11 @@ impl TokenRangeState {
         Ok(top_range_states.into_iter().cloned().collect())
     }
 
-    /// Determines the highest scores which map to each filtered token index.
+    /// Assigns scores to token range states based on their token coverage and continuity.
+    ///
+    /// # Arguments
+    /// * `query_text_doc_token_ids` - A slice of token IDs from the query text document.
+    /// * `token_range_states` - A mutable slice of token range states to assign scores to.
     pub fn assign_token_range_scores(
         query_text_doc_token_ids: &[TokenId],
         token_range_states: &mut [TokenRangeState],
@@ -206,7 +278,18 @@ impl TokenRangeState {
         }
     }
 
-    /// The returned vector represents unique token range states.
+    /// Collects unique token range states by removing duplicates based on their key properties.
+    ///
+    /// # Arguments
+    /// * `company_token_mapper` - A reference to the token mapper for company tokens.
+    /// * `potential_token_id_sequences` - A map of potential token ID sequences.
+    /// * `token_parity_states` - A slice of token parity states.
+    ///
+    /// # Returns
+    /// * A vector of unique token range states.
+    ///
+    /// # Errors
+    /// * Returns an error if fetching maximum sequence lengths or ticker symbols fails.
     pub fn collect_token_range_states(
         company_token_mapper: &CompanyTokenMapper,
         potential_token_id_sequences: &HashMap<
@@ -315,6 +398,8 @@ impl TokenRangeState {
         Ok(TokenRangeState::get_unique(&token_range_states))
     }
 
+    /// Finalizes the collection of a token range state by calculating its coverage
+    /// and determining if it exactly matches a ticker symbol.
     fn finalize_collection(&mut self) {
         self.update_coverage();
 
@@ -326,12 +411,19 @@ impl TokenRangeState {
         self.is_collection_finalized = true;
     }
 
-    /// Recalculates the coverage based on the filtered indices and sequence length
+    /// Updates the coverage of a token range state based on its token indices and sequence length.
     fn update_coverage(&mut self) {
         self.company_token_coverage =
             self.query_token_indices.len() as f32 / self.company_sequence_max_length as f32;
     }
 
+    /// Filters and returns a vector of unique token range states by deduplication.
+    ///
+    /// # Arguments
+    /// * `token_range_states` - A slice of token range states to deduplicate.
+    ///
+    /// # Returns
+    /// * A vector of unique token range states.
     pub fn get_unique(token_range_states: &[TokenRangeState]) -> Vec<TokenRangeState> {
         // Use a HashSet to track unique combinations of ticker_symbol and query_text_doc_token_ids
         let mut seen = HashSet::new();

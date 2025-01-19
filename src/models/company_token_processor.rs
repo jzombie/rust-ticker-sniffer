@@ -23,6 +23,14 @@ pub struct CompanyTokenProcessor<'a> {
 }
 
 impl<'a> CompanyTokenProcessor<'a> {
+    /// Creates a new `CompanyTokenProcessor` with the given configuration and company symbol list.
+    ///
+    /// # Arguments
+    /// * `config` - A reference to the configuration for processing tokens.
+    /// * `company_symbol_list` - A reference to the list of company symbols.
+    ///
+    /// # Errors
+    /// Returns an error if initialization fails.
     pub fn new(
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
@@ -35,6 +43,13 @@ impl<'a> CompanyTokenProcessor<'a> {
         })
     }
 
+    /// Processes a text document and extracts ticker symbols with their frequencies.
+    ///
+    /// # Arguments
+    /// * `text` - The text document to process.
+    ///
+    /// # Errors
+    /// Returns an error if the processing fails.
     pub fn process_text_doc(&mut self, text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
         // Tokenize the input text
         info!("Tokenizing...");
@@ -154,7 +169,14 @@ impl<'a> CompanyTokenProcessor<'a> {
         Ok(combined_ticker_frequencies)
     }
 
-    /// Reduces query ticker frequency counts based on matches in top range states
+    /// Reduces ticker symbol frequency counts based on matches in token range states.
+    ///
+    /// # Arguments
+    /// * `query_ticker_frequencies` - Mutable reference to the query ticker frequencies.
+    /// * `top_range_states` - A reference to the top token range states.
+    ///
+    /// # Errors
+    /// Returns an error if adjustment fails.
     fn adjust_query_ticker_frequencies(
         &self,
         query_ticker_frequencies: &mut TickerSymbolFrequencyMap,
@@ -183,6 +205,13 @@ impl<'a> CompanyTokenProcessor<'a> {
         Ok(())
     }
 
+    /// Combines multiple maps of ticker symbol frequencies into one.
+    ///
+    /// # Arguments
+    /// * `ticker_symbol_frequency_hash_maps` - A slice of frequency maps to combine.
+    ///
+    /// # Returns
+    /// A single map with combined frequencies.
     fn combine_ticker_symbol_frequencies(
         &self,
         ticker_symbol_frequency_hash_maps: &[TickerSymbolFrequencyMap],
@@ -216,6 +245,14 @@ impl<'a> CompanyTokenProcessor<'a> {
     //     }
     // }
 
+    /// Retrieves filtered token IDs for both text documents and ticker symbols.
+    ///
+    /// # Arguments
+    /// * `text_doc_tokens` - Tokens from the text document.
+    /// * `ticker_symbol_tokens` - Tokens from the ticker symbols.
+    ///
+    /// # Returns
+    /// A tuple containing vectors of token IDs.
     fn get_filtered_query_token_ids(
         &self,
         text_doc_tokens: &[Token],
@@ -243,6 +280,16 @@ impl<'a> CompanyTokenProcessor<'a> {
         (query_text_doc_token_ids, query_ticker_symbol_token_ids)
     }
 
+    /// Identifies potential token sequences from the query tokens.
+    ///
+    /// # Arguments
+    /// * `query_text_doc_token_ids` - A slice of token IDs from the query text document.
+    ///
+    /// # Errors
+    /// Returns an error if the process fails.
+    ///
+    /// # Returns
+    /// A map of potential token sequences.
     fn get_potential_token_sequences(
         &self,
         query_text_doc_token_ids: &[TokenId],
