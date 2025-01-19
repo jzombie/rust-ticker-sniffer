@@ -1,5 +1,5 @@
 use crate::constants::STOP_WORDS;
-use crate::types::{Token, TokenRef, TokenVector};
+use crate::types::{Token, TokenCharCode, TokenRef, TokenVector};
 use std::char;
 use std::collections::HashSet;
 
@@ -126,7 +126,7 @@ impl Tokenizer {
     }
 
     pub fn token_to_charcode_vector(token: &TokenRef) -> TokenVector {
-        token.chars().map(|c| c as u32).collect()
+        token.chars().map(|c| c as TokenCharCode).collect()
     }
 
     pub fn tokens_to_charcode_vectors(tokens: &[&TokenRef]) -> Vec<TokenVector> {
