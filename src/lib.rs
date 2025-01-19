@@ -1,8 +1,8 @@
-mod config;
-pub mod constants;
-mod utils;
+pub mod config;
 pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
+pub mod constants;
 pub mod models;
+mod utils;
 pub use models::{
     CompanySymbolListPreprocessor, CompanyTokenMapper, CompanyTokenProcessor,
     CompanyTokenProcessorConfig, Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer,
@@ -31,6 +31,8 @@ const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] =
 ///
 /// # Example
 /// ```
+/// use ticker_sniffer::extract_tickers_from_text;
+///
 /// let text = "AAPL and MSFT are leading companies.";
 /// let result = extract_tickers_from_text(text);
 /// assert!(result.is_ok());
@@ -57,7 +59,10 @@ pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap,
 ///
 /// # Example
 /// ```
-/// let config = CompanyTokenProcessorConfig::default();
+/// use ticker_sniffer::config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
+/// use ticker_sniffer::extract_tickers_from_text_with_custom_config;
+///
+/// let config = DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 /// let text = "GOOGL is a tech giant.";
 /// let result = extract_tickers_from_text_with_custom_config(&config, text);
 /// assert!(result.is_ok());

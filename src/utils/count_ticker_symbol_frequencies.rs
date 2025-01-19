@@ -9,13 +9,6 @@ use std::collections::HashMap;
 /// # Returns
 /// * A `HashMap` where the keys are ticker symbols and the values are their
 ///   respective frequencies.
-///
-/// # Example
-/// ```
-/// let symbols = vec!["AAPL".to_string(), "GOOGL".to_string(), "AAPL".to_string()];
-/// let frequencies = count_ticker_symbol_frequencies(&symbols);
-/// assert_eq!(frequencies.get("AAPL"), Some(&2));
-/// assert_eq!(frequencies.get("GOOGL"), Some(&1));
 /// ```
 pub fn count_ticker_symbol_frequencies(
     ticker_symbols: &[TickerSymbol],
