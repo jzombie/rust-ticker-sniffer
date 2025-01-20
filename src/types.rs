@@ -18,8 +18,14 @@ pub type TokenCharCode = u32;
 /// A vector of token character codes, represented as `u32` values.
 pub type TokenVector = Vec<TokenCharCode>;
 
-/// A unique identifier for a token, represented as a `usize`. This is typically used to index
-/// tokens in a data structure such as a `HashMap` or `Vec`.
+/// A unique identifier for a token, represented as a `usize`. This identifier is
+/// used for a static mapping between a token (e.g., a word or symbol) and its
+/// associated data in structures like `HashMap` or `Vec`.
+///
+/// Unlike a query token index, which refers to a position-based index during
+/// runtime queries, a `TokenId` is a persistent, position-independent value
+/// that serves as a reference to a specific token. It does not imply or rely
+/// on index positioning within any particular data structure.
 pub type TokenId = usize;
 
 /// Represents the name of a company as an owned `String`.
