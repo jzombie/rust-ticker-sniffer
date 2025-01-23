@@ -220,6 +220,8 @@ fn main() {
 
     // let query = "Shell Corp";
     let query = "Shell";
+
+    let query = "Arm and Apple";
     //
     // let query = "Well Corp";
     // let query = "Biote";
