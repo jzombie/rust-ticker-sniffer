@@ -127,26 +127,6 @@ With debugging enabled. Note, it has to be compiled with `logger-support` featur
 echo "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
 ```
 
-## Publishing Note
-
-Currently, the build process does not use the `OUT_DIR` environment variable to generate temporary artifacts. Instead, temporary files are created directly within the repository. This approach ensures that a compressed form of the [company_symbol_list.csv](data/company_symbol_list.csv) file is bundled correctly with the build, though it is acknowledged that this solution could likely be improved.
-
-### Known Issue During Publishing
-
-When publishing the crate, you may encounter the following error:
-
-```bash
-error: 1 files in the working directory contain changes that were not yet committed into git:
-```
-
-### Workaround
-
-To proceed with publishing, use the `--allow-dirty` flag:
-
-```bash
-cargo publish --allow-dirty
-```
-
 ## ChatGPT-based Alternative Name Suggester
 
 This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/README.md](data/README.md).
