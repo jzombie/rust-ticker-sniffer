@@ -1,26 +1,37 @@
+use flate2::write::GzEncoder;
+use flate2::Compression;
+use std::env;
+use std::fs::{self, File};
+use std::io;
+
 #[path = "shared/lib.rs"]
 mod shared;
 use shared::constants::{
     CODE_AUTOGEN_PREFIX, COMPANY_SYMBOL_CSV_FILE_PATH, COMPRESSED_COMPANY_SYMBOL_FILE_NAME,
 };
 
-use flate2::write::GzEncoder;
-use flate2::Compression;
-use std::fs::File;
-use std::io;
-
 /// This is a standalone utility binary used for preprocessing the company
 /// symbol list into a compressed format before building the main project.
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> io::Result<()> {
+    // Set a conditional compilation flag for builds
+    println!("cargo:rustc-cfg=build_env");
+
     // Tell Cargo to fully recompile if this asset changes
     println!(
         "cargo:rerun-if-changed={:?}",
         &*COMPANY_SYMBOL_CSV_FILE_PATH
     );
 
+    // Get OUT_DIR
+    let out_dir = env::var("OUT_DIR").expect("OUT_DIR is not set");
+
+    // Ensure the directory exists
+    fs::create_dir_all(&out_dir).expect("Failed to create OUT_DIR");
+
+    // Build the output file path using OUT_DIR
     let output_file_path = format!(
-        "{}{}",
-        CODE_AUTOGEN_PREFIX, COMPRESSED_COMPANY_SYMBOL_FILE_NAME
+        "{}/{}{}",
+        out_dir, CODE_AUTOGEN_PREFIX, COMPRESSED_COMPANY_SYMBOL_FILE_NAME
     );
 
     // Open the input CSV file
@@ -40,10 +51,6 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Finish the compression process
     encoder.finish().expect("Failed to finalize compression");
 
-    println!(
-        "Successfully compressed '{:?}' to '{}'",
-        &*COMPANY_SYMBOL_CSV_FILE_PATH, output_file_path
-    );
-
+    println!("File compressed to: {}", output_file_path);
     Ok(())
 }
