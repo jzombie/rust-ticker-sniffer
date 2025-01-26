@@ -4,7 +4,7 @@
 #[cfg(feature = "build_resource_byte_arrays")]
 #[doc = "This file path is automatically generated during compilation and points to a build-time resource (generated pre-compilation by `build.rs`)."]
 #[doc = "It reflects the state of the resource at the time of compilation, which may not match the source code or file system in subsequent builds."]
-pub static COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] = include_bytes!("../target/debug/build/ticker-sniffer-82f0d34d30344691/out/bin/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin");
+pub static COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] = &[];
 
 #[cfg(not(feature = "build_resource_byte_arrays"))]
 pub static COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] = &[];
