@@ -19,9 +19,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
 
 [build-dependencies]
-flate2 = "1.0.35"
-embed-bytes = "0.1.0-alpha"
-# embed-bytes = { path = "/home/jeremy/Projects/rust-embed-bytes" }
+embed-resources = "0.1.0-alpha"
 
 [[bench]]
 name = "my_benchmark"
