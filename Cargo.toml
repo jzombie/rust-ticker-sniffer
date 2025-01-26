@@ -20,7 +20,8 @@ test_utils = { path = "test_utils" }
 
 [build-dependencies]
 flate2 = "1.0.35"
-build-resource-byte-arrays = "=0.1.0-alpha5"
+embed-bytes = "0.1.0-alpha"
+# embed-bytes = { path = "/home/jeremy/Projects/rust-embed-bytes" }
 
 [[bench]]
 name = "my_benchmark"

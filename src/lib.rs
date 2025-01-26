@@ -14,7 +14,7 @@ pub use types::{
     Token, TokenId, TokenRef, TokenVector,
 };
 
-include!("dynamic_resources.rs");
+include!("../embed.rs");
 
 /// Extracts ticker symbols from the provided text using the default configuration.
 ///
