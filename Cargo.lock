@@ -80,9 +80,9 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "build-resource-byte-arrays"
-version = "0.1.0-alpha4"
+version = "0.1.0-alpha5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bff72baf31a37a51d8b65badc7e43708ed67d05f4f1350aaf289774c097d3a72"
+checksum = "f06c87c4a5ca33a60a0fe91f7463e388231fb77dc381efaf72be524ebaabc7b4"
 dependencies = [
  "bytes",
 ]
@@ -688,7 +688,7 @@ dependencies = [
 
 [[package]]
 name = "ticker-sniffer"
-version = "0.1.0-alpha.1h"
+version = "0.1.0-alpha.1i"
 dependencies = [
  "build-resource-byte-arrays",
  "criterion",
