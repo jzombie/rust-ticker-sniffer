@@ -14,9 +14,7 @@ pub use types::{
     Token, TokenId, TokenRef, TokenVector,
 };
 
-// Note: Ideally this string would not be hardcoded, but `include_bytes!` requires a string literal.
-const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &[u8] =
-    include_bytes!("../__AUTOGEN__company_symbol_list.csv.gz");
+include!("dynamic_resources.rs");
 
 /// Extracts ticker symbols from the provided text using the default configuration.
 ///

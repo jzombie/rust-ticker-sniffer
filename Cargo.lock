@@ -79,10 +79,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
+name = "build-resource-byte-arrays"
+version = "0.1.0-alpha3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7e5fb79db0ef51a423090632db0745d4b5011239a7aee19a74b387bd5db86af"
+dependencies = [
+ "bytes",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
+
+[[package]]
+name = "bytes"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
 
 [[package]]
 name = "cast"
@@ -673,8 +688,9 @@ dependencies = [
 
 [[package]]
 name = "ticker-sniffer"
-version = "0.1.0-alpha.1f"
+version = "0.1.0-alpha.1h"
 dependencies = [
+ "build-resource-byte-arrays",
  "criterion",
  "csv",
  "env_logger",
