@@ -1,5 +1,3 @@
-# Ticker Sniffer
-
 [![crates.io](https://img.shields.io/crates/v/ticker-sniffer.svg)](https://crates.io/crates/ticker-sniffer)
 [![Documentation](https://docs.rs/ticker-sniffer/badge.svg)](https://docs.rs/ticker-sniffer)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
