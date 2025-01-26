@@ -1,6 +1,6 @@
 [package]
 name = "ticker-sniffer"
-version = "0.1.0-alpha.1k"
+version = "0.1.0-alpha.1l"
 authors = ["Jeremy Harris <jeremy.harris@zenosmosis.com>"]
 edition = "2021"
 description = "A Rust crate for extracting multiple stock ticker symbols from a text document."
@@ -19,7 +19,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
 
 [build-dependencies]
-embed-resources = "0.1.0-alpha"
+embed-resources = "0.1.0-alpha1"
 
 [[bench]]
 name = "my_benchmark"
@@ -30,8 +30,6 @@ name = "ticker-sniffer-cli"
 path = "src/main.rs"
 
 [features]
-default = ["build_resource_byte_arrays"]
-build_resource_byte_arrays = []
 logger-support = ["dep:env_logger"]
 
 [workspace]

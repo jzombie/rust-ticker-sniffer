@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set the output directory for generated files
     let output_rust_path = PathBuf::from("embed");
 
-    let mut resource_container = ResourceContainer::new();
+    let mut resource_container = ResourceContainer::new(&output_rust_path);
 
     resource_container.add_resource(
         "COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY",
@@ -25,9 +25,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .expect("Path contains invalid UTF-8 characters")
                 .to_string(),
         ),
+        true,
     );
 
-    resource_container.embed_all(&output_rust_path, true)?;
+    resource_container.embed_all()?;
 
     println!("Files successfully written to {:?}", output_rust_path);
 
