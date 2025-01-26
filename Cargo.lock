@@ -80,9 +80,9 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
 name = "build-resource-byte-arrays"
-version = "0.1.0-alpha3"
+version = "0.1.0-alpha4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7e5fb79db0ef51a423090632db0745d4b5011239a7aee19a74b387bd5db86af"
+checksum = "bff72baf31a37a51d8b65badc7e43708ed67d05f4f1350aaf289774c097d3a72"
 dependencies = [
  "bytes",
 ]

@@ -20,7 +20,7 @@ test_utils = { path = "test_utils" }
 
 [build-dependencies]
 flate2 = "1.0.35"
-build-resource-byte-arrays = "=0.1.0-alpha3"
+build-resource-byte-arrays = "=0.1.0-alpha4"
 
 [[bench]]
 name = "my_benchmark"
