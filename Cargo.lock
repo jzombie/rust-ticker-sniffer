@@ -352,18 +352,18 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "embed-bytes"
-version = "0.1.0-alpha3"
+version = "0.1.0-alpha4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e370ab8266216e9cf892290bd83b6ccf6f9dda7b4f1ac86f877599b9771ce38"
+checksum = "c86722edd0d920b1b71b038bf7cbc3def68c664a420bc031f433464785edf8ff"
 dependencies = [
  "bytes",
 ]
 
 [[package]]
 name = "embed-resources"
-version = "0.1.0-alpha3"
+version = "0.1.0-alpha4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ada7cce97947291747ab2b3cda8d0b6be3458fca0e9660834e519c17fd41a62"
+checksum = "a3042f5c7dab8d32abf3500a3f9af47b9142ef27f4abbedc50a28798bb412143"
 dependencies = [
  "bytes",
  "embed-bytes",
@@ -1587,7 +1587,7 @@ dependencies = [
 
 [[package]]
 name = "ticker-sniffer"
-version = "0.1.0-alpha.1n"
+version = "0.1.0-alpha.1o"
 dependencies = [
  "criterion",
  "csv",
