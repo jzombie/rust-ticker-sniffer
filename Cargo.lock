@@ -1587,7 +1587,7 @@ dependencies = [
 
 [[package]]
 name = "ticker-sniffer"
-version = "0.1.0-alpha.1o"
+version = "0.1.0-alpha.2"
 dependencies = [
  "criterion",
  "csv",
