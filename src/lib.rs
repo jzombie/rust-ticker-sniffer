@@ -37,7 +37,7 @@ include!("../embed.rs");
 /// ```
 pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
     // Skip entirely if there is no text
-    if text.len() == 0 {
+    if text.is_empty() {
         return Ok(TickerSymbolFrequencyMap::new());
     }
 
