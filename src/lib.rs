@@ -36,6 +36,11 @@ include!("../embed.rs");
 /// assert!(result.is_ok());
 /// ```
 pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
+    // Skip entirely if there is no text
+    if text.len() == 0 {
+        return Ok(TickerSymbolFrequencyMap::new());
+    }
+
     let results_ticker_symbol_frequency_map =
         extract_tickers_from_text_with_custom_config(DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG, text)?;
 
