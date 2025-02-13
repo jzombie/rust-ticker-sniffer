@@ -178,7 +178,7 @@ cargo build --release --bin ticker-sniffer-cli
 cargo build --release --bin ticker-sniffer-cli --features="logger-support"
 ```
 
-## Publishing Note
+## Maintainer Note
 
 Currently, the build process does not use the `OUT_DIR` environment variable to generate temporary artifacts. Instead, temporary files are created directly within the repository. This approach ensures that a compressed form of the [company_symbol_list.csv](data/company_symbol_list.csv) file is bundled correctly with the build, though it is acknowledged that this solution could likely be improved.
 
