@@ -1,3 +1,6 @@
+#[cfg(doctest)]
+doc_comment::doctest!("../README.md");
+
 pub mod config;
 pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub mod constants;
