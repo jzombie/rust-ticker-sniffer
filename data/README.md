@@ -35,5 +35,5 @@ This ensures compatibility with standard CSV parsers and prevents errors due to 
 ```
 
 ### Notes
-- Ensure alternate names are concise and meaningful.
+- Ensure alternate names are concise and meaningful (a GPT-powered app was created to help with alternate name suggestions: https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternative-name-suggester).
 - Verify that all entries are accurate and free of duplicates or formatting issues.

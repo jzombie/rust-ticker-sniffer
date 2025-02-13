@@ -10,7 +10,7 @@
 
 Use cases include extracting tickers from news articles and search queries.
 
-Parsing is performed using a [self-contained CSV file](data) embedded in the binary. No external CSV or file-reading dependencies are required in the final build, and it is fully compatible with WASM.
+Parsing is performed using a [self-contained CSV file](data) embedded in the binary using Gzip compression, which is generated automatically during the build process. No external CSV or file-reading dependencies are required in the final build, and it is fully compatible with WASM.
 
 ## Install
 
@@ -189,12 +189,6 @@ To proceed with publishing, use the `--allow-dirty` flag:
 ```bash
 cargo publish --allow-dirty
 ```
-
-## ChatGPT-based Alternative Name Suggester
-
-This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/README.md](data/README.md).
-
-https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternative-name-suggester
 
 ## License
 

@@ -26,11 +26,11 @@ impl Tokenizer {
     /// Creates a tokenizer configured for parsing ticker symbols.
     ///
     /// Enforces uppercase ratios and does not filter stop words.
-    pub fn ticker_symbol_parser() -> Self {
+    pub fn ticker_symbol_parser(is_case_sensitive: bool) -> Self {
         Self {
             as_verbatim: false,
             min_uppercase_ratio: Some(0.9),
-            is_case_sensitive: false,
+            is_case_sensitive,
             pre_processed_stop_words: None,
         }
     }
@@ -94,18 +94,19 @@ impl Tokenizer {
                     .collect::<String>()
             })
             .filter(|word| {
-                // Apply uppercase ratio filter and any capital letter requirement
-                let passes_uppercase_ratio = self
-                    .min_uppercase_ratio
-                    .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
-
-                let passes_any_caps_or_is_number = if self.is_case_sensitive {
-                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric())
-                } else {
+                if !self.is_case_sensitive {
                     true
-                };
+                } else {
+                    // Apply uppercase ratio filter and any capital letter requirement
+                    let passes_uppercase_ratio = self
+                        .min_uppercase_ratio
+                        .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
 
-                passes_uppercase_ratio && passes_any_caps_or_is_number
+                    let passes_any_caps_or_is_number = word.chars().any(|c| c.is_uppercase())
+                        || word.chars().all(|c| c.is_numeric());
+
+                    passes_uppercase_ratio && passes_any_caps_or_is_number
+                }
             })
             // Split hyphenated words into multiple words
             .flat_map(|word| {

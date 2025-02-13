@@ -223,11 +223,15 @@ fn main() {
 
     let query = "Arm and Apple";
 
+    // let query = "aapl msft goog amzn";
+
     //
     // let query = "Well Corp";
     // let query = "Biote";
 
-    let results = extract_tickers_from_text(&query, true).unwrap();
+    const IS_CASE_SENSITIVE: bool = true;
+
+    let results = extract_tickers_from_text(&query, IS_CASE_SENSITIVE).unwrap();
 
     println!("Extracted Tickers:");
     for (ticker_symbol, frequency) in results {

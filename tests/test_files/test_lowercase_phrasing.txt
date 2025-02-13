@@ -1,0 +1,9 @@
+apple and microsoft and google and amazon
+
+EXPECTED: AAPL
+EXPECTED: MSFT
+EXPECTED: GOOG
+EXPECTED: GOOGL
+EXPECTED: AMZN
+
+IS_CASE_SENSITIVE: no
