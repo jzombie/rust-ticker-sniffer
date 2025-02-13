@@ -1,6 +1,6 @@
-#[path = "../shared/lib.rs"]
-mod shared;
-use shared::constants::TEST_FILES_DIRECTORY;
+#[path = "../dev_shared/lib.rs"]
+mod dev_shared;
+use dev_shared::constants::TEST_FILES_DIRECTORY;
 
 use std::fs::read_dir;
 use test_utils::run_test_for_file;
