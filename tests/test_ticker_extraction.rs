@@ -26,19 +26,19 @@ mod tests {
         let total_files = files.len();
 
         for (file_idx, file) in files.iter().enumerate() {
-            let file_path = file.path();
+            let test_file_path = file.path();
 
             println!(
                 "   -- {:?} ({} of {})",
-                file_path,
+                test_file_path,
                 file_idx + 1,
                 total_files
             );
 
             // Run the test for each file (if it is a file)
-            if file_path.is_file() {
+            if test_file_path.is_file() {
                 let _ = run_test_for_file(
-                    file_path.to_str().unwrap(),
+                    test_file_path.as_path(),
                     DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG,
                 );
             }

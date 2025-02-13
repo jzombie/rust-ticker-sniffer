@@ -25,7 +25,7 @@ pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
 
 // Helper function to run the test for each file in the directory
 pub fn run_test_for_file(
-    test_file_path: &str, // TODO: Use `Path`
+    test_file_path: &Path,
     company_token_processor_config: &CompanyTokenProcessorConfig,
 ) -> Result<
     (
@@ -88,7 +88,7 @@ pub fn run_test_for_file(
         // If there is an expected failure, ensure it is not found
         assert!(
             !actual_tickers.contains(&expected_failure_ticker),
-            "{} - Expected failure ticker {:?} was found in results, but it should not be present.",
+            "{:?} - Expected failure ticker {:?} was found in results, but it should not be present.",
             test_file_path,
             expected_failure_ticker
         );
@@ -97,7 +97,7 @@ pub fn run_test_for_file(
         assert_eq!(
             actual_tickers.len(),
             expected_tickers.len(),
-            "{} - Expected {} tickers but found {}. Missing: {:?}, Unexpected: {:?}",
+            "{:?} - Expected {} tickers but found {}. Missing: {:?}, Unexpected: {:?}",
             test_file_path,
             expected_tickers.len(),
             actual_tickers.len(),
@@ -108,7 +108,7 @@ pub fn run_test_for_file(
         for ticker in &expected_tickers {
             assert!(
                 actual_tickers.contains(ticker),
-                "{} - Expected ticker {:?} was not found in results. Found: {:?}",
+                "{:?} - Expected ticker {:?} was not found in results. Found: {:?}",
                 test_file_path,
                 ticker,
                 actual_tickers
@@ -118,7 +118,7 @@ pub fn run_test_for_file(
         for ticker in &unexpected_tickers {
             assert!(
                 !expected_tickers.contains(ticker),
-                "{} - Unexpected ticker {:?} found in results.",
+                "{:?} - Unexpected ticker {:?} found in results.",
                 test_file_path,
                 ticker
             );
@@ -134,8 +134,8 @@ pub fn run_test_for_file(
 }
 
 // Helper function to determine case sensitivity
-fn get_case_sensitive_config(file_path: &Path) -> bool {
-    let content = fs::read_to_string(file_path).expect("Failed to read test file");
+fn get_case_sensitive_config(test_file_path: &Path) -> bool {
+    let content = fs::read_to_string(test_file_path).expect("Failed to read test file");
 
     for line in content.lines() {
         let line = line.trim();
@@ -146,7 +146,7 @@ fn get_case_sensitive_config(file_path: &Path) -> bool {
                 "no" => return false,
                 _ => panic!(
                     "Invalid value for IS_CASE_SENSITIVE in {:?}: Expected 'yes' or 'no', found '{}'",
-                    file_path, value
+                    test_file_path, value
                 ),
             }
         }
