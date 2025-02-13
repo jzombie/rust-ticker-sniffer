@@ -433,6 +433,7 @@ impl TokenRangeState {
             // Create a tuple representing the unique key
             let unique_key = (
                 &state.ticker_symbol,
+                &state.query_token_indices,
                 &state.query_text_doc_token_ids,
                 &state.company_sequence_idx,
             );

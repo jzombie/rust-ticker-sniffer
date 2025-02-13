@@ -6,33 +6,72 @@
 [![MIT licensed][license-badge]][license-page]
 [![CI Pipeline][ci-badge]][ci-page]
 
-`Ticker Sniffer` is a Rust crate built to parse and extract ticker symbols from text documents. It specializes in analyzing text content to identify references to U.S. stock market ticker symbols and calculates their frequency counts, returning the results as a `HashMap`.
+`Ticker Sniffer` is a Rust crate for extracting U.S. stock market ticker symbols from text. It analyzes content, identifies ticker references, and calculates their frequency, returning the results as a `HashMap`.
 
-## Examples
+Use cases include extracting tickers from news articles and search queries.
 
-### CLI Example
+Parsing is performed using a [self-contained CSV file](data) embedded in the binary. No external CSV or file-reading dependencies are required in the final build, and it is fully compatible with WASM.
+
+## Install
 
 ```bash
-cargo run --example simple
+cargo add ticker-sniffer
 ```
 
-### Code Example
+## Code Example
 
 ```rust
 use ticker_sniffer::extract_tickers_from_text;
+use ticker_sniffer::types::TickerSymbolFrequencyMap;
 
 fn main() {
-    let text = "Apple and Microsoft are performing well in the market.";
+    let text = r#"E-commerce giant Amazon.com Inc. joined the blue-chip index, 
+    Dow Jones Industrial Average, replacing drugstore operator Walgreens Boots 
+    Alliance on Feb 26. The reshuffle reflects the ongoing shift in economic 
+    power from traditional brick-and-mortar retail to e-commerce and 
+    technology-driven companies.
+
+    The inclusion of Amazon in the Dow marks a significant milestone in the 
+    recognition of the e-commerce giant's influence and its role in the broader 
+    market. The shift was prompted by Walmart's decision to execute a 3-to-1 
+    stock split, which has reduced its stock's weighting in the index.
+
+    The Dow is a price-weighted index. So, stocks that fetch higher prices are 
+    given more weight. Amazon's addition has increased consumer retail exposure 
+    within the index, alongside enhancing the representation of various other 
+    business sectors that Amazon engages in, including cloud computing, digital 
+    streaming, and artificial intelligence, among others.
+
+    Amazon took the 17th position in the index, while Walmart's weighting dropped 
+    to 26 from 17. UnitedHealth Group remained the most heavily weighted stock in 
+    the index. Amazon's entry into the Dow Jones is not just a symbolic change but 
+    a reflection of the evolving priorities and dynamics within the investment world.
+
+    It signals a broader recognition of the value and impact of technology and 
+    e-commerce sectors, encouraging investors to perhaps rethink their investment 
+    approaches in light of these trends."#;
+
 
     // Setting this to false will increase false positives between nouns 
-    // (e.g., "apple") and company names (e.g., "Apple"), but might be useful 
-    // for certain use cases.
-    let case_sensitive_doc_parsing = true;
+    // (e.g., "apple") and company names (e.g., "Apple"), but might be better 
+    // suited for search query inputs
+    let is_case_sensitive_doc_parsing = true;
 
-    match extract_tickers_from_text(text, case_sensitive_doc_parsing) {
+    match extract_tickers_from_text(text, is_case_sensitive_doc_parsing) {
         Ok(results) => {
-            for (ticker_symbol, frequency) in results {
-                println!("{}: {}", ticker_symbol, frequency);
+            assert_eq!(
+                results,
+                TickerSymbolFrequencyMap::from([
+                    ("AMZN".to_string(), 6),
+                    ("WMT".to_string(), 2),
+                    ("DIA".to_string(), 4),
+                    ("WBA".to_string(), 1),
+                    ("UNH".to_string(), 1),
+                ])
+            );
+
+            for (ticker, count) in &results {
+                println!("{}: {}", ticker, count);
             }
         }
         Err(e) => eprintln!("Error extracting tickers: {}", e),
