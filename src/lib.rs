@@ -24,7 +24,7 @@ include!("../embed.rs");
 /// # Arguments
 /// * `text` - A reference to the input text document from which ticker symbols
 ///   are to be extracted.
-/// * `case_sensitive` - Whether or not the text document should be filtered by case sensitivity.
+/// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
 ///
 /// # Returns
 /// * `Ok(TickerSymbolFrequencyMap)` - A map of ticker symbols and their
@@ -64,7 +64,7 @@ pub fn extract_tickers_from_text(
 ///   for processing tokens.
 /// * `text` - A reference to the input text document from which ticker symbols
 ///   are to be extracted.
-/// * `case_sensitive` - Whether or not the text document should be filtered by case sensitivity.
+/// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
 ///
 /// # Returns
 /// * `Ok(TickerSymbolFrequencyMap)` - A map of ticker symbols and their

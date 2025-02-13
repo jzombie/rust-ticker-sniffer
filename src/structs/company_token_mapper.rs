@@ -21,7 +21,7 @@ impl CompanyTokenMapper {
     ///
     /// # Arguments
     /// * `company_symbol_list` - A reference to the list of company symbols.
-    /// * `case_sensitive` - Whether or not the text document should be filtered by case sensitivity.
+    /// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
     ///
     /// # Errors
     /// Returns an error if token ingestion fails.
