@@ -1,8 +1,9 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 
 use crate::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
-    TickerSymbolFrequencyMap, TickerSymbolTokenId, Token, TokenId,
+    TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::count_ticker_symbol_frequencies;
 use crate::{CompanyTokenMapper, Error, TokenParityState};
@@ -53,7 +54,41 @@ pub struct TokenRangeState {
     pub is_collection_finalized: bool,
 }
 
+impl Hash for TokenRangeState {
+    /// Generates a hash for `TokenRangeState` using key fields.
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.key_fields().hash(state);
+    }
+}
+
+/// Required for HashSet to work with `TokenRangeState`.
+impl Eq for TokenRangeState {}
+
+impl PartialEq for TokenRangeState {
+    /// Determines equality based on key fields.
+    fn eq(&self, other: &Self) -> bool {
+        self.key_fields() == other.key_fields()
+    }
+}
+
 impl TokenRangeState {
+    /// Returns the key fields used for equality, hashing, and deduplication.
+    fn key_fields(
+        &self,
+    ) -> (
+        &TickerSymbol,
+        &Vec<QueryTokenIndex>,
+        &Vec<TokenId>,
+        &CompanySequenceIndex,
+    ) {
+        (
+            &self.ticker_symbol,
+            &self.query_token_indices,
+            &self.query_text_doc_token_ids,
+            &self.company_sequence_idx,
+        )
+    }
+
     /// Creates a new `TokenRangeState` instance.
     ///
     /// # Arguments
@@ -390,7 +425,7 @@ impl TokenRangeState {
             }
         }
 
-        Ok(TokenRangeState::get_unique(&token_range_states))
+        Ok(TokenRangeState::to_unique(&token_range_states))
     }
 
     /// Finalizes the collection of a token range state by calculating its coverage
@@ -412,7 +447,6 @@ impl TokenRangeState {
             self.query_token_indices.len() as f32 / self.company_sequence_max_length as f32;
     }
 
-    // TODO: Refactor
     /// Filters and returns a vector of unique token range states by deduplication.
     ///
     /// # Arguments
@@ -420,22 +454,12 @@ impl TokenRangeState {
     ///
     /// # Returns
     /// * A vector of unique token range states.
-    pub fn get_unique(token_range_states: &[TokenRangeState]) -> Vec<TokenRangeState> {
-        // Use a HashSet to track unique combinations of ticker_symbol and query_text_doc_token_ids
+    pub fn to_unique(token_range_states: &[Self]) -> Vec<Self> {
         let mut seen = HashSet::new();
         let mut unique_states = Vec::new();
 
         for state in token_range_states {
-            // Create a tuple representing the unique key
-            let unique_key = (
-                &state.ticker_symbol,
-                &state.query_token_indices,
-                &state.query_text_doc_token_ids,
-                &state.company_sequence_idx,
-            );
-
-            // Check if this combination has been seen before
-            if seen.insert(unique_key) {
+            if seen.insert(state.clone()) {
                 unique_states.push(state.clone());
             }
         }
