@@ -62,7 +62,7 @@ fn main() {
             assert_eq!(
                 results,
                 TickerSymbolFrequencyMap::from([
-                    ("AMZN".to_string(), 2),
+                    ("AMZN".to_string(), 6),
                     ("WMT".to_string(), 1),
                     ("DIA".to_string(), 1),
                     ("WBA".to_string(), 1),
