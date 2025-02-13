@@ -33,7 +33,7 @@ include!("../embed.rs");
 /// use ticker_sniffer::extract_tickers_from_text;
 ///
 /// let text = "Apple and Microsoft are leading companies.";
-/// let result = extract_tickers_from_text(text);
+/// let result = extract_tickers_from_text(text, true);
 /// assert!(result.is_ok());
 /// ```
 pub fn extract_tickers_from_text(
@@ -75,7 +75,7 @@ pub fn extract_tickers_from_text(
 ///
 /// let config = DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 /// let text = "Google is a tech giant.";
-/// let result = extract_tickers_from_text_with_custom_config(&config, text);
+/// let result = extract_tickers_from_text_with_custom_config(&config, text, true);
 /// assert!(result.is_ok());
 /// ```
 pub fn extract_tickers_from_text_with_custom_config(

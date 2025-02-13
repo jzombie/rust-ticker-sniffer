@@ -24,7 +24,7 @@ use ticker_sniffer::extract_tickers_from_text;
 fn main() {
     let text = "Apple and Microsoft are performing well in the market.";
 
-    match extract_tickers_from_text(text) {
+    match extract_tickers_from_text(text, true) {
         Ok(results) => {
             for (ticker_symbol, frequency) in results {
                 println!("{}: {}", ticker_symbol, frequency);
