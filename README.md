@@ -18,7 +18,23 @@ Parsing is performed using a [self-contained CSV file](data) embedded in the bin
 cargo add ticker-sniffer
 ```
 
-## Code Example
+## Usage
+
+### CLI
+
+```bash
+echo "E-commerce giant Amazon.com Inc. joined the blue-chip index, Dow Jones Industrial Average... Walmart, Amazon, Walmart" | RUST_LOG=debug cargo run
+```
+
+#### Output
+
+```bash
+AMZN: 2
+WMT: 2
+DIA: 1
+```
+
+### Code Example
 
 ```rust
 use ticker_sniffer::extract_tickers_from_text;
@@ -79,7 +95,7 @@ fn main() {
 }
 ```
 
-## How it Works
+## Design Overview
 
 The text search engine employs a hybrid approach to identify company names and stock symbols in documents.
 
@@ -95,7 +111,7 @@ Regardless of the decision, the engine ensures that stock symbols are always mat
 
 
 
-## Running Tests with Output Capturing
+## Testing
 
 When running tests, you can use the `--nocapture` flag to display output from tests in the console. This is particularly useful for this package as there are tests which process several files at once.
 
@@ -120,7 +136,7 @@ cargo bench
 ```
 
 
-## Prototype Debug
+## Debugging
 
 ```bash
 RUST_LOG=debug cargo dev
@@ -160,14 +176,6 @@ cargo build --release --bin ticker-sniffer-cli
 
 ```bash
 cargo build --release --bin ticker-sniffer-cli --features="logger-support"
-```
-
-## Running CLI tool (on Unix)
-
-With debugging enabled. Note, it has to be compiled with `logger-support` feature added.
-
-```bash
-echo "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
 ```
 
 ## Publishing Note
