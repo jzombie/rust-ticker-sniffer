@@ -190,9 +190,16 @@ When publishing the crate, you may encounter the following error:
 
 ```bash
 error: 1 files in the working directory contain changes that were not yet committed into git:
+
+embed/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin
+
+to proceed despite this and include the uncommitted changes, pass the `--allow-dirty` flag
 ```
 
+
 ### Workaround
+
+Provided that `embed/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin` is the **only** file that is the only error file mentioned, you can safely proceed with the following.
 
 To proceed with publishing, use the `--allow-dirty` flag:
 
