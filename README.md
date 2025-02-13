@@ -190,12 +190,6 @@ To proceed with publishing, use the `--allow-dirty` flag:
 cargo publish --allow-dirty
 ```
 
-## ChatGPT-based Alternative Name Suggester
-
-This app, powered by ChatGPT, assists in generating alternative names for companies. For more details, refer to [data/README.md](data/README.md).
-
-https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternative-name-suggester
-
 ## License
 
 [MIT License](LICENSE) (c) 2025 Jeremy Harris.
