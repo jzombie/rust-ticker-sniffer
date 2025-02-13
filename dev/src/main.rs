@@ -226,7 +226,7 @@ fn main() {
     // let query = "Well Corp";
     // let query = "Biote";
 
-    let results = extract_tickers_from_text(&query).unwrap();
+    let results = extract_tickers_from_text(&query, true).unwrap();
 
     println!("Extracted Tickers:");
     for (ticker_symbol, frequency) in results {

@@ -1,4 +1,4 @@
-use crate::models::CompanyTokenProcessorConfig;
+use crate::structs::CompanyTokenProcessorConfig;
 
 pub const DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG: &CompanyTokenProcessorConfig =
     &CompanyTokenProcessorConfig {

@@ -17,7 +17,7 @@ fn main() {
     }
 
     // Extract tickers from the input text
-    match extract_tickers_from_text(&input) {
+    match extract_tickers_from_text(&input, true) {
         Ok(results) => {
             // Convert the HashMap into a Vec and sort it by frequency (descending),
             // then by ticker symbol (ascending) for deterministic order.

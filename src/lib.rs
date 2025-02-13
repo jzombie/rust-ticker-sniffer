@@ -1,9 +1,12 @@
+#[cfg(doctest)]
+doc_comment::doctest!("../README.md");
+
 pub mod config;
 pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub mod constants;
-pub mod models;
+pub mod structs;
 mod utils;
-pub use models::{
+pub use structs::{
     CompanySymbolListPreprocessor, CompanyTokenMapper, CompanyTokenProcessor,
     CompanyTokenProcessorConfig, Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer,
 };
@@ -21,6 +24,7 @@ include!("../embed.rs");
 /// # Arguments
 /// * `text` - A reference to the input text document from which ticker symbols
 ///   are to be extracted.
+/// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
 ///
 /// # Returns
 /// * `Ok(TickerSymbolFrequencyMap)` - A map of ticker symbols and their
@@ -32,17 +36,23 @@ include!("../embed.rs");
 /// use ticker_sniffer::extract_tickers_from_text;
 ///
 /// let text = "Apple and Microsoft are leading companies.";
-/// let result = extract_tickers_from_text(text);
+/// let result = extract_tickers_from_text(text, true);
 /// assert!(result.is_ok());
 /// ```
-pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap, Error> {
+pub fn extract_tickers_from_text(
+    text: &str,
+    case_sensitive: bool,
+) -> Result<TickerSymbolFrequencyMap, Error> {
     // Skip entirely if there is no text
     if text.is_empty() {
         return Ok(TickerSymbolFrequencyMap::new());
     }
 
-    let results_ticker_symbol_frequency_map =
-        extract_tickers_from_text_with_custom_config(DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG, text)?;
+    let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
+        DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG,
+        text,
+        case_sensitive,
+    )?;
 
     Ok(results_ticker_symbol_frequency_map)
 }
@@ -54,6 +64,7 @@ pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap,
 ///   for processing tokens.
 /// * `text` - A reference to the input text document from which ticker symbols
 ///   are to be extracted.
+/// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
 ///
 /// # Returns
 /// * `Ok(TickerSymbolFrequencyMap)` - A map of ticker symbols and their
@@ -67,12 +78,13 @@ pub fn extract_tickers_from_text(text: &str) -> Result<TickerSymbolFrequencyMap,
 ///
 /// let config = DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 /// let text = "Google is a tech giant.";
-/// let result = extract_tickers_from_text_with_custom_config(&config, text);
+/// let result = extract_tickers_from_text_with_custom_config(&config, text, true);
 /// assert!(result.is_ok());
 /// ```
 pub fn extract_tickers_from_text_with_custom_config(
     document_token_processor_config: &CompanyTokenProcessorConfig,
     text: &str,
+    case_sensitive: bool,
 ) -> Result<TickerSymbolFrequencyMap, Error> {
     // Load the company symbol list
     let company_symbol_list =
@@ -80,8 +92,11 @@ pub fn extract_tickers_from_text_with_custom_config(
             COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY,
         )?;
 
-    let company_token_processor =
-        CompanyTokenProcessor::new(document_token_processor_config, &company_symbol_list);
+    let company_token_processor = CompanyTokenProcessor::new(
+        document_token_processor_config,
+        &company_symbol_list,
+        case_sensitive,
+    );
 
     let results_ticker_symbol_frequency_map = company_token_processor?.process_text_doc(text)?;
 

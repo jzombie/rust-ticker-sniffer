@@ -53,6 +53,7 @@ pub fn run_test_for_file(
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         company_token_processor_config,
         &filtered_text,
+        true,
     )?;
 
     // Get the expected tickers from the file

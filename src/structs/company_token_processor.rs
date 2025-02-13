@@ -28,14 +28,16 @@ impl<'a> CompanyTokenProcessor<'a> {
     /// # Arguments
     /// * `config` - A reference to the configuration for processing tokens.
     /// * `company_symbol_list` - A reference to the list of company symbols.
+    /// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
     ///
     /// # Errors
     /// Returns an error if initialization fails.
     pub fn new(
         config: &'a CompanyTokenProcessorConfig,
         company_symbol_list: &'a CompanySymbolList,
+        case_sensitive: bool,
     ) -> Result<Self, Error> {
-        let company_token_mapper = CompanyTokenMapper::new(company_symbol_list)?;
+        let company_token_mapper = CompanyTokenMapper::new(company_symbol_list, case_sensitive)?;
 
         Ok(CompanyTokenProcessor {
             config,
