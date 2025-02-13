@@ -14,6 +14,7 @@ fn benchmark_extract_tickers_short(c: &mut Criterion) {
             extract_tickers_from_text_with_custom_config(
                 black_box(DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG),
                 black_box(text),
+                true,
             )
             .expect("Ticker extraction failed");
         })
@@ -45,6 +46,7 @@ fn benchmark_extract_tickers_long(c: &mut Criterion) {
             extract_tickers_from_text_with_custom_config(
                 black_box(DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG),
                 black_box(text),
+                true,
             )
             .expect("Ticker extraction failed");
         })
