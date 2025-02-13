@@ -1,6 +1,6 @@
-#[path = "shared/lib.rs"]
-mod shared;
-use shared::constants::COMPANY_SYMBOL_CSV_FILE_PATH;
+#[path = "dev_shared/lib.rs"]
+mod dev_shared;
+use dev_shared::constants::COMPANY_SYMBOL_CSV_FILE_PATH;
 
 use embed_resources::{Resource, ResourceContainer};
 use std::path::PathBuf;

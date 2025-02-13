@@ -18,7 +18,23 @@ Parsing is performed using a [self-contained CSV file](data) embedded in the bin
 cargo add ticker-sniffer
 ```
 
-## Code Example
+## Usage
+
+### CLI
+
+```bash
+echo "E-commerce giant Amazon.com Inc. joined the blue-chip index, Dow Jones Industrial Average... Walmart, Amazon, Walmart" | RUST_LOG=debug cargo run
+```
+
+#### Output
+
+```bash
+AMZN: 2
+WMT: 2
+DIA: 1
+```
+
+### Code Example
 
 ```rust
 use ticker_sniffer::extract_tickers_from_text;
@@ -79,7 +95,7 @@ fn main() {
 }
 ```
 
-## How it Works
+## Design Overview
 
 The text search engine employs a hybrid approach to identify company names and stock symbols in documents.
 
@@ -95,7 +111,7 @@ Regardless of the decision, the engine ensures that stock symbols are always mat
 
 
 
-## Running Tests with Output Capturing
+## Testing
 
 When running tests, you can use the `--nocapture` flag to display output from tests in the console. This is particularly useful for this package as there are tests which process several files at once.
 
@@ -120,7 +136,7 @@ cargo bench
 ```
 
 
-## Prototype Debug
+## Debugging
 
 ```bash
 RUST_LOG=debug cargo dev
@@ -162,17 +178,11 @@ cargo build --release --bin ticker-sniffer-cli
 cargo build --release --bin ticker-sniffer-cli --features="logger-support"
 ```
 
-## Running CLI tool (on Unix)
+## Maintainer Note
 
-With debugging enabled. Note, it has to be compiled with `logger-support` feature added.
+Currently, the build process generates temporary artifacts that are included in the build but are ignored by `.git`. However, Rust's package verification treats these files as uncommitted changes, which can cause issues when running `cargo publish`.  
 
-```bash
-echo "Amazon" | RUST_LOG=debug ./target/release/ticker-sniffer-cli
-```
-
-## Publishing Note
-
-Currently, the build process does not use the `OUT_DIR` environment variable to generate temporary artifacts. Instead, temporary files are created directly within the repository. This approach ensures that a compressed form of the [company_symbol_list.csv](data/company_symbol_list.csv) file is bundled correctly with the build, though it is acknowledged that this solution could likely be improved.
+This approach ensures that a compressed form of the [company_symbol_list.csv](data/company_symbol_list.csv) file is bundled correctly during the build process. However, it may require improvements to avoid conflicts with Cargo’s publishing workflow.
 
 ### Known Issue During Publishing
 
@@ -180,9 +190,16 @@ When publishing the crate, you may encounter the following error:
 
 ```bash
 error: 1 files in the working directory contain changes that were not yet committed into git:
+
+embed/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin
+
+to proceed despite this and include the uncommitted changes, pass the `--allow-dirty` flag
 ```
 
+
 ### Workaround
+
+Provided that `embed/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin` is the **only** file that is the only error file mentioned, you can safely proceed with the following.
 
 To proceed with publishing, use the `--allow-dirty` flag:
 
