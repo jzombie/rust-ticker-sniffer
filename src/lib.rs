@@ -24,7 +24,7 @@ include!("../embed.rs");
 /// # Arguments
 /// * `text` - A reference to the input text document from which ticker symbols
 ///   are to be extracted.
-/// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
+/// * `is_case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
 ///
 /// # Returns
 /// * `Ok(TickerSymbolFrequencyMap)` - A map of ticker symbols and their
@@ -41,7 +41,7 @@ include!("../embed.rs");
 /// ```
 pub fn extract_tickers_from_text(
     text: &str,
-    case_sensitive: bool,
+    is_case_sensitive: bool,
 ) -> Result<TickerSymbolFrequencyMap, Error> {
     // Skip entirely if there is no text
     if text.is_empty() {
@@ -51,7 +51,7 @@ pub fn extract_tickers_from_text(
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG,
         text,
-        case_sensitive,
+        is_case_sensitive,
     )?;
 
     Ok(results_ticker_symbol_frequency_map)
@@ -64,7 +64,7 @@ pub fn extract_tickers_from_text(
 ///   for processing tokens.
 /// * `text` - A reference to the input text document from which ticker symbols
 ///   are to be extracted.
-/// * `case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
+/// * `is_case_sensitive` - Whether or not the text document should be filtered using case sensitivity.
 ///
 /// # Returns
 /// * `Ok(TickerSymbolFrequencyMap)` - A map of ticker symbols and their
@@ -84,7 +84,7 @@ pub fn extract_tickers_from_text(
 pub fn extract_tickers_from_text_with_custom_config(
     document_token_processor_config: &CompanyTokenProcessorConfig,
     text: &str,
-    case_sensitive: bool,
+    is_case_sensitive: bool,
 ) -> Result<TickerSymbolFrequencyMap, Error> {
     // Load the company symbol list
     let company_symbol_list =
@@ -95,7 +95,7 @@ pub fn extract_tickers_from_text_with_custom_config(
     let company_token_processor = CompanyTokenProcessor::new(
         document_token_processor_config,
         &company_symbol_list,
-        case_sensitive,
+        is_case_sensitive,
     );
 
     let results_ticker_symbol_frequency_map = company_token_processor?.process_text_doc(text)?;

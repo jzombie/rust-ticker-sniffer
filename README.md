@@ -27,9 +27,9 @@ fn main() {
     // Setting this to false will increase false positives between nouns 
     // (e.g., "apple") and company names (e.g., "Apple"), but might be useful 
     // for certain use cases.
-    let case_sensitive_doc_parsing = true;
+    let is_case_sensitive_doc_parsing = true;
 
-    match extract_tickers_from_text(text, case_sensitive_doc_parsing) {
+    match extract_tickers_from_text(text, is_case_sensitive_doc_parsing) {
         Ok(results) => {
             for (ticker_symbol, frequency) in results {
                 println!("{}: {}", ticker_symbol, frequency);

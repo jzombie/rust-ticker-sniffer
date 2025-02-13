@@ -16,7 +16,7 @@ pub struct Tokenizer {
     /// Disabling this may cause a loss of precision (e.g., the noun "apple" will
     /// match the company name "Apple"). This may cause some tests to fail but
     /// could improve handling of certain input fields.
-    case_sensitive: bool,
+    is_case_sensitive: bool,
 
     /// Preprocessed stop words for filtering tokens.
     pre_processed_stop_words: Option<HashSet<String>>,
@@ -30,7 +30,7 @@ impl Tokenizer {
         Self {
             as_verbatim: false,
             min_uppercase_ratio: Some(0.9),
-            case_sensitive: false,
+            is_case_sensitive: false,
             pre_processed_stop_words: None,
         }
     }
@@ -38,11 +38,11 @@ impl Tokenizer {
     /// Creates a tokenizer configured for parsing arbitrary text documents.
     ///
     /// Normalizes text, filters stop words, and allows tokens with mixed case.
-    pub fn text_doc_parser(case_sensitive: bool) -> Self {
+    pub fn text_doc_parser(is_case_sensitive: bool) -> Self {
         Self {
             as_verbatim: false,
             min_uppercase_ratio: None,
-            case_sensitive,
+            is_case_sensitive,
             pre_processed_stop_words: Some(Self::preprocess_stop_words()),
             // TODO: Make configurable
         }
@@ -55,7 +55,7 @@ impl Tokenizer {
         Self {
             as_verbatim: true,
             min_uppercase_ratio: None,
-            case_sensitive: false,
+            is_case_sensitive: false,
             pre_processed_stop_words: None,
         }
     }
@@ -99,7 +99,7 @@ impl Tokenizer {
                     .min_uppercase_ratio
                     .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
 
-                let passes_any_caps_or_is_number = if self.case_sensitive {
+                let passes_any_caps_or_is_number = if self.is_case_sensitive {
                     word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric())
                 } else {
                     true

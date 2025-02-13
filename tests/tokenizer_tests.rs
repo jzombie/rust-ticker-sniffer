@@ -14,6 +14,15 @@ mod text_doc_tokenizer_tests {
     }
 
     #[test]
+    fn test_case_sensitive() {
+        let tokenizer = Tokenizer::text_doc_parser(true);
+
+        let text = "these are all lowercase tokens";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec![]);
+    }
+
+    #[test]
     fn test_tokenize_ignores_stop_words() {
         let tokenizer = Tokenizer::text_doc_parser(true);
 
