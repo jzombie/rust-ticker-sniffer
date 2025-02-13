@@ -1,4 +1,4 @@
-use ticker_sniffer::Tokenizer;
+use ticker_sniffer::{Token, Tokenizer};
 
 #[cfg(test)]
 mod text_doc_tokenizer_tests {
@@ -19,7 +19,7 @@ mod text_doc_tokenizer_tests {
 
         let text = "these are all lowercase tokens";
         let tokens = tokenizer.tokenize(text);
-        assert_eq!(tokens, vec![]);
+        assert_eq!(tokens, Vec::<Token>::new());
     }
 
     #[test]
