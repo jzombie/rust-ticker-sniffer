@@ -25,7 +25,7 @@ pub fn get_expected_tickers(file_path: &Path) -> Vec<TickerSymbol> {
 
 // Helper function to run the test for each file in the directory
 pub fn run_test_for_file(
-    test_file_path: &str,
+    test_file_path: &str, // TODO: Use `Path`
     company_token_processor_config: &CompanyTokenProcessorConfig,
 ) -> Result<
     (
@@ -49,11 +49,13 @@ pub fn run_test_for_file(
         .collect::<Vec<&str>>()
         .join("\n");
 
+    let is_case_sensitive = get_case_sensitive_config(Path::new(test_file_path));
+
     // Extract tickers from the filtered text
     let results_ticker_symbol_frequency_map = extract_tickers_from_text_with_custom_config(
         company_token_processor_config,
         &filtered_text,
-        true,
+        is_case_sensitive,
     )?;
 
     // Get the expected tickers from the file
@@ -129,6 +131,29 @@ pub fn run_test_for_file(
         unexpected_tickers,
         missing_tickers,
     ))
+}
+
+// Helper function to determine case sensitivity
+fn get_case_sensitive_config(file_path: &Path) -> bool {
+    let content = fs::read_to_string(file_path).expect("Failed to read test file");
+
+    for line in content.lines() {
+        let line = line.trim();
+        if line.starts_with("IS_CASE_SENSITIVE:") {
+            let value = line.replace("IS_CASE_SENSITIVE:", "").trim().to_lowercase();
+            match value.as_str() {
+                "yes" => return true,
+                "no" => return false,
+                _ => panic!(
+                    "Invalid value for IS_CASE_SENSITIVE in {:?}: Expected 'yes' or 'no', found '{}'",
+                    file_path, value
+                ),
+            }
+        }
+    }
+
+    // Default to case-sensitive (true)
+    true
 }
 
 // Helper function to check if the file has an EXPECTED_FAILURE line
