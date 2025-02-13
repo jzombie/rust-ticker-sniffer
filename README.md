@@ -180,7 +180,9 @@ cargo build --release --bin ticker-sniffer-cli --features="logger-support"
 
 ## Maintainer Note
 
-Currently, the build process does not use the `OUT_DIR` environment variable to generate temporary artifacts. Instead, temporary files are created directly within the repository. This approach ensures that a compressed form of the [company_symbol_list.csv](data/company_symbol_list.csv) file is bundled correctly with the build, though it is acknowledged that this solution could likely be improved.
+Currently, the build process generates temporary artifacts that are included in the build but are ignored by `.git`. However, Rust's package verification treats these files as uncommitted changes, which can cause issues when running `cargo publish`.  
+
+This approach ensures that a compressed form of the [company_symbol_list.csv](data/company_symbol_list.csv) file is bundled correctly during the build process. However, it may require improvements to avoid conflicts with Cargo’s publishing workflow.
 
 ### Known Issue During Publishing
 
