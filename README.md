@@ -8,7 +8,7 @@
 
 `Ticker Sniffer` is a Rust crate for extracting U.S. stock market ticker symbols from text. It analyzes content, identifies ticker references, and calculates their frequency, returning the results as a `HashMap`.
 
-Use cases include extracting tickers from news articles and stock search query processing.
+Use cases include extracting tickers from news articles and stock search query tokenization.
 
 Parsing is performed using a [self-contained CSV file](data) embedded in the binary. No external CSV or file-reading dependencies are required in the final build, and it is fully compatible with WASM.
 
