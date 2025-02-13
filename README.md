@@ -24,7 +24,12 @@ use ticker_sniffer::extract_tickers_from_text;
 fn main() {
     let text = "Apple and Microsoft are performing well in the market.";
 
-    match extract_tickers_from_text(text, true) {
+    // Setting this to false will increase false positives between nouns 
+    // (e.g., "apple") and company names (e.g., "Apple"), but might be useful 
+    // for certain use cases.
+    let case_sensitive_doc_parsing = true;
+
+    match extract_tickers_from_text(text, case_sensitive_doc_parsing) {
         Ok(results) => {
             for (ticker_symbol, frequency) in results {
                 println!("{}: {}", ticker_symbol, frequency);
