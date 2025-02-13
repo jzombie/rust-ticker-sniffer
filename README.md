@@ -10,7 +10,7 @@
 
 Use cases include extracting tickers from news articles and search queries.
 
-Parsing is performed using a [self-contained CSV file](data) embedded in the binary. No external CSV or file-reading dependencies are required in the final build, and it is fully compatible with WASM.
+Parsing is performed using a [self-contained CSV file](data) embedded in the binary using Gzip compression, which is generated automatically during the build process. No external CSV or file-reading dependencies are required in the final build, and it is fully compatible with WASM.
 
 ## Install
 
