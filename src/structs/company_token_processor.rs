@@ -12,7 +12,6 @@ type PotentialTokenSequenceMap =
     HashMap<TickerSymbolTokenId, Vec<(CompanySequenceIndex, Vec<TokenId>)>>;
 
 pub struct CompanyTokenProcessorConfig {
-    // TODO: Rename
     pub threshold_ratio_exact_matches: f32,
     pub threshold_min_company_token_coverage: f32,
 }
