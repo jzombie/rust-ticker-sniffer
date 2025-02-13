@@ -1,8 +1,9 @@
 use std::collections::{HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 
 use crate::types::{
     CompanySequenceIndex, CompanySequenceTokenIndex, QueryTokenIndex, TickerSymbol,
-    TickerSymbolFrequencyMap, TickerSymbolTokenId, Token, TokenId,
+    TickerSymbolFrequencyMap, Token, TokenId,
 };
 use crate::utils::count_ticker_symbol_frequencies;
 use crate::{CompanyTokenMapper, Error, TokenParityState};
@@ -53,7 +54,41 @@ pub struct TokenRangeState {
     pub is_collection_finalized: bool,
 }
 
+impl Hash for TokenRangeState {
+    /// Generates a hash for `TokenRangeState` using key fields.
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.key_fields().hash(state);
+    }
+}
+
+/// Required for HashSet to work with `TokenRangeState`.
+impl Eq for TokenRangeState {}
+
+impl PartialEq for TokenRangeState {
+    /// Determines equality based on key fields.
+    fn eq(&self, other: &Self) -> bool {
+        self.key_fields() == other.key_fields()
+    }
+}
+
 impl TokenRangeState {
+    /// Returns the key fields used for equality, hashing, and deduplication.
+    fn key_fields(
+        &self,
+    ) -> (
+        &TickerSymbol,
+        &Vec<QueryTokenIndex>,
+        &Vec<TokenId>,
+        &CompanySequenceIndex,
+    ) {
+        (
+            &self.ticker_symbol,
+            &self.query_token_indices,
+            &self.query_text_doc_token_ids,
+            &self.company_sequence_idx,
+        )
+    }
+
     /// Creates a new `TokenRangeState` instance.
     ///
     /// # Arguments
@@ -292,59 +327,56 @@ impl TokenRangeState {
     /// * Returns an error if fetching maximum sequence lengths or ticker symbols fails.
     pub fn collect_token_range_states(
         company_token_mapper: &CompanyTokenMapper,
-        potential_token_id_sequences: &HashMap<
-            TickerSymbolTokenId,
-            Vec<(CompanySequenceIndex, Vec<TokenId>)>,
-        >,
         token_parity_states: &[TokenParityState],
     ) -> Result<Vec<TokenRangeState>, Error> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
-        for ticker_symbol_token_id in potential_token_id_sequences.keys() {
+        // Initialize state variables to track the last indices for continuity checks.
+        let mut last_company_sequence_idx = usize::MAX - 1;
+        let mut last_company_sequence_token_idx = usize::MAX - 1;
+        let mut last_query_token_idx = usize::MAX - 1;
+
+        // Indicates whether we are starting a new subsequence.
+        // A subsequence is a group of contiguous tokens from the query and company sequences
+        // that belong to the same ticker symbol and are aligned in both sequences.
+        let mut is_new_sub_sequence: bool;
+
+        // Current token range state being constructed.
+        let mut token_range_state: Option<TokenRangeState> = None;
+
+        for token_parity_state in token_parity_states {
+            let ticker_symbol_token_id = &token_parity_state.ticker_symbol_token_id;
+
             let ticker_symbol =
                 company_token_mapper.get_ticker_symbol_by_token_id(ticker_symbol_token_id)?;
 
-            // Initialize state variables to track the last indices for continuity checks.
-            let mut last_company_sequence_idx = usize::MAX - 1;
-            let mut last_company_sequence_token_idx = usize::MAX - 1;
-            let mut last_query_token_idx = usize::MAX - 1;
+            if token_parity_state.ticker_symbol_token_id != *ticker_symbol_token_id {
+                last_company_sequence_idx = usize::MAX - 1;
+                last_company_sequence_token_idx = usize::MAX - 1;
+                last_query_token_idx = usize::MAX - 1;
 
-            // Indicates whether we are starting a new subsequence.
-            // A subsequence is a group of contiguous tokens from the query and company sequences
-            // that belong to the same ticker symbol and are aligned in both sequences.
-            let mut is_new_sub_sequence: bool;
+                continue;
+            }
 
-            // Current token range state being constructed.
-            let mut token_range_state: Option<TokenRangeState> = None;
+            is_new_sub_sequence = token_parity_state.company_sequence_token_idx == 0
+                || last_company_sequence_idx != token_parity_state.company_sequence_idx
+                || token_parity_state.company_sequence_token_idx
+                    != last_company_sequence_token_idx + 1
+                || token_parity_state.query_token_idx != last_query_token_idx + 1;
 
-            for token_parity_state in token_parity_states {
-                if token_parity_state.ticker_symbol_token_id != *ticker_symbol_token_id {
-                    last_company_sequence_idx = usize::MAX - 1;
-                    last_company_sequence_token_idx = usize::MAX - 1;
-                    last_query_token_idx = usize::MAX - 1;
+            if is_new_sub_sequence {
+                // Finalize previous batch, if exists
+                if let Some(ref mut token_range_state) = token_range_state {
+                    if !token_range_state.is_collection_finalized {
+                        token_range_state.finalize_collection();
 
-                    continue;
-                }
-
-                is_new_sub_sequence = token_parity_state.company_sequence_token_idx == 0
-                    || last_company_sequence_idx != token_parity_state.company_sequence_idx
-                    || token_parity_state.company_sequence_token_idx
-                        != last_company_sequence_token_idx + 1
-                    || token_parity_state.query_token_idx != last_query_token_idx + 1;
-
-                if is_new_sub_sequence {
-                    // Finalize previous batch, if exists
-                    if let Some(ref mut token_range_state) = token_range_state {
-                        if !token_range_state.is_collection_finalized {
-                            token_range_state.finalize_collection();
-
-                            if !token_range_state.query_token_indices.is_empty() {
-                                token_range_states.push(token_range_state.clone());
-                            }
+                        if !token_range_state.query_token_indices.is_empty() {
+                            token_range_states.push(token_range_state.clone());
                         }
                     }
+                }
 
-                    token_range_state = Some(TokenRangeState::new(
+                token_range_state = Some(TokenRangeState::new(
                         ticker_symbol.to_string(),
                         *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
@@ -361,41 +393,39 @@ impl TokenRangeState {
                                 ))
                             })?,
                     ));
-                }
-
-                // Add partial state to the current token range state
-                if let Some(ref mut token_range_state) = token_range_state {
-                    // Only add the current token to the token range if:
-                    // - It's not a new subsequence, or
-                    // - It is the first token in the company sequence.
-                    if !(is_new_sub_sequence && token_parity_state.company_sequence_token_idx != 0)
-                    {
-                        token_range_state.add_partial_state(
-                            token_parity_state.query_token_idx,
-                            token_parity_state.query_token_id,
-                            token_parity_state.company_sequence_token_idx,
-                        );
-                    }
-                }
-
-                last_company_sequence_idx = token_parity_state.company_sequence_idx;
-                last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
-                last_query_token_idx = token_parity_state.query_token_idx;
             }
 
-            // Finalize previous batch, if exists
+            // Add partial state to the current token range state
             if let Some(ref mut token_range_state) = token_range_state {
-                if !token_range_state.is_collection_finalized {
-                    token_range_state.finalize_collection();
+                // Only add the current token to the token range if:
+                // - It's not a new subsequence, or
+                // - It is the first token in the company sequence.
+                if !(is_new_sub_sequence && token_parity_state.company_sequence_token_idx != 0) {
+                    token_range_state.add_partial_state(
+                        token_parity_state.query_token_idx,
+                        token_parity_state.query_token_id,
+                        token_parity_state.company_sequence_token_idx,
+                    );
+                }
+            }
 
-                    if !token_range_state.query_token_indices.is_empty() {
-                        token_range_states.push(token_range_state.clone());
-                    }
+            last_company_sequence_idx = token_parity_state.company_sequence_idx;
+            last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
+            last_query_token_idx = token_parity_state.query_token_idx;
+        }
+
+        // Finalize previous batch, if exists
+        if let Some(ref mut token_range_state) = token_range_state {
+            if !token_range_state.is_collection_finalized {
+                token_range_state.finalize_collection();
+
+                if !token_range_state.query_token_indices.is_empty() {
+                    token_range_states.push(token_range_state.clone());
                 }
             }
         }
 
-        Ok(TokenRangeState::get_unique(&token_range_states))
+        Ok(TokenRangeState::to_unique(&token_range_states))
     }
 
     /// Finalizes the collection of a token range state by calculating its coverage
@@ -424,22 +454,12 @@ impl TokenRangeState {
     ///
     /// # Returns
     /// * A vector of unique token range states.
-    pub fn get_unique(token_range_states: &[TokenRangeState]) -> Vec<TokenRangeState> {
-        // Use a HashSet to track unique combinations of ticker_symbol and query_text_doc_token_ids
+    pub fn to_unique(token_range_states: &[Self]) -> Vec<Self> {
         let mut seen = HashSet::new();
         let mut unique_states = Vec::new();
 
         for state in token_range_states {
-            // Create a tuple representing the unique key
-            let unique_key = (
-                &state.ticker_symbol,
-                &state.query_token_indices,
-                &state.query_text_doc_token_ids,
-                &state.company_sequence_idx,
-            );
-
-            // Check if this combination has been seen before
-            if seen.insert(unique_key) {
+            if seen.insert(state.clone()) {
                 unique_states.push(state.clone());
             }
         }

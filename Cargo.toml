@@ -1,6 +1,6 @@
 [package]
 name = "ticker-sniffer"
-version = "0.1.0-alpha5"
+version = "0.1.0-alpha6"
 authors = ["Jeremy Harris <jeremy.harris@zenosmosis.com>"]
 edition = "2021"
 description = "A Rust crate for extracting multiple stock ticker symbols from a text document."
