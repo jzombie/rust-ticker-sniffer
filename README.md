@@ -63,8 +63,8 @@ fn main() {
                 results,
                 TickerSymbolFrequencyMap::from([
                     ("AMZN".to_string(), 6),
-                    ("WMT".to_string(), 1),
-                    ("DIA".to_string(), 1),
+                    ("WMT".to_string(), 2),
+                    ("DIA".to_string(), 4),
                     ("WBA".to_string(), 1),
                     ("UNH".to_string(), 1),
                 ])
