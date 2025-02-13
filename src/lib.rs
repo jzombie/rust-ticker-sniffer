@@ -5,12 +5,12 @@ pub mod config;
 pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub mod constants;
 pub mod structs;
-mod utils;
+pub mod utils;
 pub use structs::{
     CompanySymbolListPreprocessor, CompanyTokenMapper, CompanyTokenProcessor,
     CompanyTokenProcessorConfig, Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer,
 };
-
+pub use utils::sort_results;
 pub mod types;
 pub use types::{
     AlternateCompanyName, CompanyName, CompanySymbolList, TickerSymbol, TickerSymbolFrequencyMap,

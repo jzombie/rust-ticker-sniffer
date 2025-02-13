@@ -1,6 +1,6 @@
 use log::error;
 use std::io::{self, Read};
-use ticker_sniffer::extract_tickers_from_text;
+use ticker_sniffer::{extract_tickers_from_text, sort_results};
 
 fn main() {
     // Initialize the logger
@@ -19,14 +19,7 @@ fn main() {
     // Extract tickers from the input text
     match extract_tickers_from_text(&input, true) {
         Ok(results) => {
-            // Convert the HashMap into a Vec and sort it by frequency (descending),
-            // then by ticker symbol (ascending) for deterministic order.
-            let mut sorted_results: Vec<_> = results.iter().collect();
-            sorted_results.sort_by(|a, b| {
-                b.1.partial_cmp(a.1) // Sort by frequency (descending)
-                    .unwrap_or(std::cmp::Ordering::Equal) // Handle NaN gracefully
-                    .then_with(|| a.0.cmp(b.0)) // Secondary sort by ticker symbol (ascending)
-            });
+            let sorted_results = sort_results(results);
 
             for (ticker_symbol, frequency) in sorted_results {
                 println!("{}: {:.2}", ticker_symbol, frequency);
