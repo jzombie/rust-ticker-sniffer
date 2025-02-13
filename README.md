@@ -1,9 +1,10 @@
-[![crates.io](https://img.shields.io/crates/v/ticker-sniffer.svg)](https://crates.io/crates/ticker-sniffer)
-[![Documentation](https://docs.rs/ticker-sniffer/badge.svg)](https://docs.rs/ticker-sniffer)
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![CI Pipeline](https://github.com/jzombie/rust-ticker-sniffer/actions/workflows/ci.yml/badge.svg)](https://github.com/jzombie/rust-ticker-sniffer/actions/workflows/ci.yml)
-
 # Ticker Sniffer (Work in Progress)
+
+[![made-with-rust][rust-logo]][rust-src-page]
+[![crates.io][crates-badge]][crates-page]
+[![Documentation][docs-badge]][docs-page]
+[![MIT licensed][license-badge]][license-page]
+[![CI Pipeline][ci-badge]][ci-page]
 
 `Ticker Sniffer` is a Rust crate built to parse and extract ticker symbols from text documents. It specializes in analyzing text content to identify references to U.S. stock market ticker symbols and calculates their frequency counts, returning the results as a `HashMap`.
 
@@ -154,3 +155,18 @@ https://chatgpt.com/g/g-675e2b64d02c8191ab4819b971aeeded-stock-company-alternati
 ## License
 
 [MIT License](LICENSE) (c) 2025 Jeremy Harris.
+
+[rust-src-page]: https://www.rust-lang.org/
+[rust-logo]: https://img.shields.io/badge/Made%20with-Rust-black?&logo=Rust
+
+[crates-page]: https://crates.io/crates/ticker-sniffer
+[crates-badge]: https://img.shields.io/crates/v/ticker-sniffer.svg
+
+[docs-page]: https://docs.rs/ticker-sniffer
+[docs-badge]: https://docs.rs/ticker-sniffer/badge.svg
+
+[license-page]: ./LICENSE
+[license-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+
+[ci-page]: https://github.com/jzombie/rust-ticker-sniffer/actions/workflows/ci.yml
+[ci-badge]: https://github.com/jzombie/rust-ticker-sniffer/actions/workflows/ci.yml/badge.svg
