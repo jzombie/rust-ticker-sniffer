@@ -25,13 +25,13 @@ use ticker_sniffer::extract_tickers_from_text;
 use ticker_sniffer::types::TickerSymbolFrequencyMap;
 
 fn main() {
-    let text = "E-commerce giant Amazon.com Inc. (AMZN Quick QuoteAMZN - Free Report) joined \
+    let text = "E-commerce giant Amazon.com Inc. joined \
         the blue-chip index, Dow Jones Industrial Average, replacing drugstore operator \
-        Walgreens Boots Alliance (WBA Quick QuoteWBA - Free Report) on Feb 26. The reshuffle \
+        Walgreens Boots Alliance on Feb 26. The reshuffle \
         reflects the ongoing shift in economic power from traditional brick-and-mortar retail \
         to e-commerce and technology-driven companies. The inclusion of Amazon in the Dow marks \
         a significant milestone in the recognition of the e-commerce giant's influence and its role \
-        in the broader market. The shift was prompted by Walmart's (WMT Quick QuoteWMT - Free Report) \
+        in the broader market. The shift was prompted by Walmart's  \
         decision to execute a 3-to-1 stock split, which has reduced its stock's weighting in the index. \
         The Dow is a price-weighted index. So, stocks that fetch higher prices are given more weight. \
         Amazon's addition has increased consumer retail exposure within the index, alongside enhancing \
