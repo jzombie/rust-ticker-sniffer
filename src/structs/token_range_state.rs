@@ -292,59 +292,56 @@ impl TokenRangeState {
     /// * Returns an error if fetching maximum sequence lengths or ticker symbols fails.
     pub fn collect_token_range_states(
         company_token_mapper: &CompanyTokenMapper,
-        potential_token_id_sequences: &HashMap<
-            TickerSymbolTokenId,
-            Vec<(CompanySequenceIndex, Vec<TokenId>)>,
-        >,
         token_parity_states: &[TokenParityState],
     ) -> Result<Vec<TokenRangeState>, Error> {
         let mut token_range_states: Vec<TokenRangeState> = Vec::new();
 
-        for ticker_symbol_token_id in potential_token_id_sequences.keys() {
+        // Initialize state variables to track the last indices for continuity checks.
+        let mut last_company_sequence_idx = usize::MAX - 1;
+        let mut last_company_sequence_token_idx = usize::MAX - 1;
+        let mut last_query_token_idx = usize::MAX - 1;
+
+        // Indicates whether we are starting a new subsequence.
+        // A subsequence is a group of contiguous tokens from the query and company sequences
+        // that belong to the same ticker symbol and are aligned in both sequences.
+        let mut is_new_sub_sequence: bool;
+
+        // Current token range state being constructed.
+        let mut token_range_state: Option<TokenRangeState> = None;
+
+        for token_parity_state in token_parity_states {
+            let ticker_symbol_token_id = &token_parity_state.ticker_symbol_token_id;
+
             let ticker_symbol =
                 company_token_mapper.get_ticker_symbol_by_token_id(ticker_symbol_token_id)?;
 
-            // Initialize state variables to track the last indices for continuity checks.
-            let mut last_company_sequence_idx = usize::MAX - 1;
-            let mut last_company_sequence_token_idx = usize::MAX - 1;
-            let mut last_query_token_idx = usize::MAX - 1;
+            if token_parity_state.ticker_symbol_token_id != *ticker_symbol_token_id {
+                last_company_sequence_idx = usize::MAX - 1;
+                last_company_sequence_token_idx = usize::MAX - 1;
+                last_query_token_idx = usize::MAX - 1;
 
-            // Indicates whether we are starting a new subsequence.
-            // A subsequence is a group of contiguous tokens from the query and company sequences
-            // that belong to the same ticker symbol and are aligned in both sequences.
-            let mut is_new_sub_sequence: bool;
+                continue;
+            }
 
-            // Current token range state being constructed.
-            let mut token_range_state: Option<TokenRangeState> = None;
+            is_new_sub_sequence = token_parity_state.company_sequence_token_idx == 0
+                || last_company_sequence_idx != token_parity_state.company_sequence_idx
+                || token_parity_state.company_sequence_token_idx
+                    != last_company_sequence_token_idx + 1
+                || token_parity_state.query_token_idx != last_query_token_idx + 1;
 
-            for token_parity_state in token_parity_states {
-                if token_parity_state.ticker_symbol_token_id != *ticker_symbol_token_id {
-                    last_company_sequence_idx = usize::MAX - 1;
-                    last_company_sequence_token_idx = usize::MAX - 1;
-                    last_query_token_idx = usize::MAX - 1;
+            if is_new_sub_sequence {
+                // Finalize previous batch, if exists
+                if let Some(ref mut token_range_state) = token_range_state {
+                    if !token_range_state.is_collection_finalized {
+                        token_range_state.finalize_collection();
 
-                    continue;
-                }
-
-                is_new_sub_sequence = token_parity_state.company_sequence_token_idx == 0
-                    || last_company_sequence_idx != token_parity_state.company_sequence_idx
-                    || token_parity_state.company_sequence_token_idx
-                        != last_company_sequence_token_idx + 1
-                    || token_parity_state.query_token_idx != last_query_token_idx + 1;
-
-                if is_new_sub_sequence {
-                    // Finalize previous batch, if exists
-                    if let Some(ref mut token_range_state) = token_range_state {
-                        if !token_range_state.is_collection_finalized {
-                            token_range_state.finalize_collection();
-
-                            if !token_range_state.query_token_indices.is_empty() {
-                                token_range_states.push(token_range_state.clone());
-                            }
+                        if !token_range_state.query_token_indices.is_empty() {
+                            token_range_states.push(token_range_state.clone());
                         }
                     }
+                }
 
-                    token_range_state = Some(TokenRangeState::new(
+                token_range_state = Some(TokenRangeState::new(
                         ticker_symbol.to_string(),
                         *ticker_symbol_token_id,
                         token_parity_state.company_sequence_idx,
@@ -361,36 +358,34 @@ impl TokenRangeState {
                                 ))
                             })?,
                     ));
-                }
-
-                // Add partial state to the current token range state
-                if let Some(ref mut token_range_state) = token_range_state {
-                    // Only add the current token to the token range if:
-                    // - It's not a new subsequence, or
-                    // - It is the first token in the company sequence.
-                    if !(is_new_sub_sequence && token_parity_state.company_sequence_token_idx != 0)
-                    {
-                        token_range_state.add_partial_state(
-                            token_parity_state.query_token_idx,
-                            token_parity_state.query_token_id,
-                            token_parity_state.company_sequence_token_idx,
-                        );
-                    }
-                }
-
-                last_company_sequence_idx = token_parity_state.company_sequence_idx;
-                last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
-                last_query_token_idx = token_parity_state.query_token_idx;
             }
 
-            // Finalize previous batch, if exists
+            // Add partial state to the current token range state
             if let Some(ref mut token_range_state) = token_range_state {
-                if !token_range_state.is_collection_finalized {
-                    token_range_state.finalize_collection();
+                // Only add the current token to the token range if:
+                // - It's not a new subsequence, or
+                // - It is the first token in the company sequence.
+                if !(is_new_sub_sequence && token_parity_state.company_sequence_token_idx != 0) {
+                    token_range_state.add_partial_state(
+                        token_parity_state.query_token_idx,
+                        token_parity_state.query_token_id,
+                        token_parity_state.company_sequence_token_idx,
+                    );
+                }
+            }
 
-                    if !token_range_state.query_token_indices.is_empty() {
-                        token_range_states.push(token_range_state.clone());
-                    }
+            last_company_sequence_idx = token_parity_state.company_sequence_idx;
+            last_company_sequence_token_idx = token_parity_state.company_sequence_token_idx;
+            last_query_token_idx = token_parity_state.query_token_idx;
+        }
+
+        // Finalize previous batch, if exists
+        if let Some(ref mut token_range_state) = token_range_state {
+            if !token_range_state.is_collection_finalized {
+                token_range_state.finalize_collection();
+
+                if !token_range_state.query_token_indices.is_empty() {
+                    token_range_states.push(token_range_state.clone());
                 }
             }
         }
@@ -417,6 +412,7 @@ impl TokenRangeState {
             self.query_token_indices.len() as f32 / self.company_sequence_max_length as f32;
     }
 
+    // TODO: Refactor
     /// Filters and returns a vector of unique token range states by deduplication.
     ///
     /// # Arguments

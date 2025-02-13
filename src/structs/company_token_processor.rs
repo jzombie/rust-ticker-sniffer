@@ -89,7 +89,6 @@ impl<'a> CompanyTokenProcessor<'a> {
         info!("Collecting token range states...");
         let mut token_range_states = TokenRangeState::collect_token_range_states(
             &self.company_token_mapper,
-            &potential_token_id_sequences,
             &token_parity_states,
         )?;
 
