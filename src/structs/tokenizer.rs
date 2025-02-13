@@ -12,6 +12,12 @@ pub struct Tokenizer {
     /// The minimum ratio of uppercase letters required in a token, if applicable.
     min_uppercase_ratio: Option<f32>,
 
+    /// Determines whether the input string should be considered case sensitive.
+    /// Disabling this may cause a loss of precision (e.g., the noun "apple" will
+    /// match the company name "Apple"). This may cause some tests to fail but
+    /// could improve handling of certain input fields.
+    case_sensitive: bool,
+
     /// Preprocessed stop words for filtering tokens.
     pre_processed_stop_words: Option<HashSet<String>>,
 }
@@ -24,6 +30,7 @@ impl Tokenizer {
         Self {
             as_verbatim: false,
             min_uppercase_ratio: Some(0.9),
+            case_sensitive: false,
             pre_processed_stop_words: None,
         }
     }
@@ -31,11 +38,13 @@ impl Tokenizer {
     /// Creates a tokenizer configured for parsing arbitrary text documents.
     ///
     /// Normalizes text, filters stop words, and allows tokens with mixed case.
-    pub fn text_doc_parser() -> Self {
+    pub fn text_doc_parser(case_sensitive: bool) -> Self {
         Self {
             as_verbatim: false,
             min_uppercase_ratio: None,
+            case_sensitive,
             pre_processed_stop_words: Some(Self::preprocess_stop_words()),
+            // TODO: Make configurable
         }
     }
 
@@ -46,6 +55,7 @@ impl Tokenizer {
         Self {
             as_verbatim: true,
             min_uppercase_ratio: None,
+            case_sensitive: false,
             pre_processed_stop_words: None,
         }
     }
@@ -89,8 +99,11 @@ impl Tokenizer {
                     .min_uppercase_ratio
                     .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
 
-                let passes_any_caps_or_is_number =
-                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric());
+                let passes_any_caps_or_is_number = if self.case_sensitive {
+                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric())
+                } else {
+                    true
+                };
 
                 passes_uppercase_ratio && passes_any_caps_or_is_number
             })

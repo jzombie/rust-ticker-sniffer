@@ -21,14 +21,18 @@ impl CompanyTokenMapper {
     ///
     /// # Arguments
     /// * `company_symbol_list` - A reference to the list of company symbols.
+    /// * `case_sensitive` - Whether or not the text document should be filtered by case sensitivity.
     ///
     /// # Errors
     /// Returns an error if token ingestion fails.
-    pub fn new(company_symbol_list: &CompanySymbolList) -> Result<Self, Error> {
+    pub fn new(
+        company_symbol_list: &CompanySymbolList,
+        case_sensitive: bool,
+    ) -> Result<Self, Error> {
         let token_mapper = TokenMapper::new();
 
         let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
-        let text_doc_tokenizer = Tokenizer::text_doc_parser();
+        let text_doc_tokenizer = Tokenizer::text_doc_parser(case_sensitive);
 
         let mut instance = CompanyTokenMapper {
             token_mapper,
