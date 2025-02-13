@@ -1,9 +1,9 @@
 pub mod config;
 pub use config::DEFAULT_COMPANY_TOKEN_PROCESSOR_CONFIG;
 pub mod constants;
-pub mod models;
+pub mod structs;
 mod utils;
-pub use models::{
+pub use structs::{
     CompanySymbolListPreprocessor, CompanyTokenMapper, CompanyTokenProcessor,
     CompanyTokenProcessorConfig, Error, TokenMapper, TokenParityState, TokenRangeState, Tokenizer,
 };
