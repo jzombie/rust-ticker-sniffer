@@ -1,4 +1,4 @@
-apple and micrsoft and google and amazon
+apple and microsoft and google and amazon
 
 EXPECTED: AAPL
 EXPECTED: MSFT
