@@ -53,8 +53,8 @@ fn main() {
 
 
     // Setting this to false will increase false positives between nouns 
-    // (e.g., "apple") and company names (e.g., "Apple"), but might be useful 
-    // for certain use cases.
+    // (e.g., "apple") and company names (e.g., "Apple"), but might be better 
+    // suited for search query inputs
     let is_case_sensitive_doc_parsing = true;
 
     match extract_tickers_from_text(text, is_case_sensitive_doc_parsing) {
