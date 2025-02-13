@@ -151,8 +151,17 @@ mod ticker_symbol_tokenizer_tests {
     use super::*;
 
     #[test]
+    fn test_non_case_sensitive() {
+        let tokenizer = Tokenizer::text_doc_parser(false);
+
+        let text = "aapl msft tesla";
+        let tokens = tokenizer.tokenize(text);
+        assert_eq!(tokens, vec!["AAPL", "MSFT", "TESLA"]);
+    }
+
+    #[test]
     fn test_ticker_tokenize_with_uppercase_symbols() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "AAPL MSFT TSLA";
         let tokens = tokenizer.tokenize(text);
@@ -161,7 +170,7 @@ mod ticker_symbol_tokenizer_tests {
 
     #[test]
     fn test_ticker_tokenize_ignores_lowercase_words() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "aapl msft tsla";
         let tokens = tokenizer.tokenize(text);
@@ -170,7 +179,7 @@ mod ticker_symbol_tokenizer_tests {
 
     #[test]
     fn test_ticker_tokenize_with_mixed_case() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "AAPL msft TSLA Goog";
         let tokens = tokenizer.tokenize(text);
@@ -179,7 +188,7 @@ mod ticker_symbol_tokenizer_tests {
 
     #[test]
     fn test_ticker_tokenize_with_numbers() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "BRK.A BRK-B 12345";
         let tokens = tokenizer.tokenize(text);
@@ -188,7 +197,7 @@ mod ticker_symbol_tokenizer_tests {
 
     #[test]
     fn test_ticker_tokenize_with_stop_words() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "The AAPL and MSFT stocks are rising.";
         let tokens = tokenizer.tokenize(text);
@@ -197,7 +206,7 @@ mod ticker_symbol_tokenizer_tests {
 
     #[test]
     fn test_ticker_tokenize_with_punctuation() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "AAPL, MSFT; TSLA. BRK-A!";
         let tokens = tokenizer.tokenize(text);
@@ -206,7 +215,7 @@ mod ticker_symbol_tokenizer_tests {
 
     #[test]
     fn test_ticker_tokenize_empty_string() {
-        let tokenizer = Tokenizer::ticker_symbol_parser();
+        let tokenizer = Tokenizer::ticker_symbol_parser(true);
 
         let text = "";
         let tokens = tokenizer.tokenize(text);

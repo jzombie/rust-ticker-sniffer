@@ -31,7 +31,7 @@ impl CompanyTokenMapper {
     ) -> Result<Self, Error> {
         let token_mapper = TokenMapper::new();
 
-        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser();
+        let ticker_symbol_tokenizer = Tokenizer::ticker_symbol_parser(is_case_sensitive);
         let text_doc_tokenizer = Tokenizer::text_doc_parser(is_case_sensitive);
 
         let mut instance = CompanyTokenMapper {

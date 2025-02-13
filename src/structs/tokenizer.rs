@@ -26,11 +26,11 @@ impl Tokenizer {
     /// Creates a tokenizer configured for parsing ticker symbols.
     ///
     /// Enforces uppercase ratios and does not filter stop words.
-    pub fn ticker_symbol_parser() -> Self {
+    pub fn ticker_symbol_parser(is_case_sensitive: bool) -> Self {
         Self {
             as_verbatim: false,
             min_uppercase_ratio: Some(0.9),
-            is_case_sensitive: false,
+            is_case_sensitive,
             pre_processed_stop_words: None,
         }
     }
