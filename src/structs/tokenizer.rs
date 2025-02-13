@@ -94,18 +94,19 @@ impl Tokenizer {
                     .collect::<String>()
             })
             .filter(|word| {
-                // Apply uppercase ratio filter and any capital letter requirement
-                let passes_uppercase_ratio = self
-                    .min_uppercase_ratio
-                    .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
-
-                let passes_any_caps_or_is_number = if self.is_case_sensitive {
-                    word.chars().any(|c| c.is_uppercase()) || word.chars().all(|c| c.is_numeric())
-                } else {
+                if !self.is_case_sensitive {
                     true
-                };
+                } else {
+                    // Apply uppercase ratio filter and any capital letter requirement
+                    let passes_uppercase_ratio = self
+                        .min_uppercase_ratio
+                        .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
 
-                passes_uppercase_ratio && passes_any_caps_or_is_number
+                    let passes_any_caps_or_is_number = word.chars().any(|c| c.is_uppercase())
+                        || word.chars().all(|c| c.is_numeric());
+
+                    passes_uppercase_ratio && passes_any_caps_or_is_number
+                }
             })
             // Split hyphenated words into multiple words
             .flat_map(|word| {
