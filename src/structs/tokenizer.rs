@@ -98,9 +98,7 @@ impl Tokenizer {
                     true
                 } else {
                     // Apply uppercase ratio filter and any capital letter requirement
-                    let passes_uppercase_ratio = self
-                        .min_uppercase_ratio
-                        .map_or(true, |ratio| self.calc_uppercase_ratio(word) >= ratio);
+                    let passes_uppercase_ratio = self.min_uppercase_ratio.is_none_or(|ratio| self.calc_uppercase_ratio(word) >= ratio);
 
                     let passes_any_caps_or_is_number = word.chars().any(|c| c.is_uppercase())
                         || word.chars().all(|c| c.is_numeric());
@@ -133,7 +131,7 @@ impl Tokenizer {
                     .to_uppercase() // Convert to uppercase
             })
             // Skip empty words and stop words
-            .filter(|word| !word.is_empty() && stop_words.map_or(true, |sw| !sw.contains(word)))
+            .filter(|word| !word.is_empty() && stop_words.is_none_or(|sw| !sw.contains(word)))
             .collect()
     }
 

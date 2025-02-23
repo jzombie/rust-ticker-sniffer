@@ -1,5 +1,7 @@
 # Ticker Sniffer (Work in Progress)
 
+**This is a prototype; the documentation may not be correct, and the API is subject to change.**
+
 [![made-with-rust][rust-logo]][rust-src-page]
 [![crates.io][crates-badge]][crates-page]
 [![Documentation][docs-badge]][docs-page]

@@ -3,7 +3,7 @@ mod dev_shared;
 use dev_shared::constants::COMPANY_SYMBOL_CSV_FILE_PATH;
 
 use embed_resources::{Resource, ResourceContainer};
-use std::path::PathBuf;
+use std::path::Path;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Ensure that Cargo re-runs the build script if the input file changes
@@ -12,10 +12,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &*COMPANY_SYMBOL_CSV_FILE_PATH
     );
 
-    // Set the output directory for generated files
-    let output_rust_path = PathBuf::from("embed");
+    let storage_dir = Path::new("embedded_storage");
+    let struct_output_path = Path::new("src/structs/resource_container.rs"); // Struct file path
+    let struct_name = "ResourceContainer";
 
-    let mut resource_container = ResourceContainer::new(&output_rust_path);
+    let mut resource_container = ResourceContainer::new(storage_dir, struct_output_path, struct_name);
 
     resource_container.add_resource(
         "COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY",
@@ -29,8 +30,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     resource_container.embed_all()?;
-
-    println!("Files successfully written to {:?}", output_rust_path);
 
     Ok(())
 }
