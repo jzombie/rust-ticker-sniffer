@@ -21,3 +21,6 @@ pub use company_token_mapper::CompanyTokenMapper;
 
 pub mod company_symbol_list_preprocessor;
 pub use company_symbol_list_preprocessor::CompanySymbolListPreprocessor;
+
+pub mod resource_container;
+pub use resource_container::ResourceContainer;

@@ -128,9 +128,9 @@ checksum = "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c"
 
 [[package]]
 name = "bytes"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "325918d6fe32f23b19878fe4b34794ae41fc19ddbe53b10571a4874d44ffd39b"
+checksum = "f61dac84819c6588b558454b194026eb1f09c293b9036ae9b159e74e73ab6cf9"
 
 [[package]]
 name = "cast"
@@ -358,18 +358,18 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "embed-bytes"
-version = "0.1.0-alpha4"
+version = "0.1.0-alpha5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c86722edd0d920b1b71b038bf7cbc3def68c664a420bc031f433464785edf8ff"
+checksum = "c38403f0445bc6e8414d93ae6dc03fe820c33d6a817c4a35b7ee3f5779eca29f"
 dependencies = [
  "bytes",
 ]
 
 [[package]]
 name = "embed-resources"
-version = "0.1.0-alpha4"
+version = "0.1.0-alpha5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3042f5c7dab8d32abf3500a3f9af47b9142ef27f4abbedc50a28798bb412143"
+checksum = "d8ae6c07cd4984915f79d2381b64abb871b9f90251141bd00aca0f3e7198b4e3"
 dependencies = [
  "bytes",
  "embed-bytes",

@@ -20,7 +20,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
 
 [build-dependencies]
-embed-resources = "=0.1.0-alpha4"
+embed-resources = { version = "=0.1.0-alpha5" }
 
 [[bench]]
 name = "my_benchmark"
@@ -32,6 +32,8 @@ path = "src/main.rs"
 
 [features]
 logger-support = ["dep:env_logger"]
+embed-bytes = []   # Feature flag for embedding binaries
+default = ["embed-bytes"]  # Enables `embed-bytes` by default
 
 [workspace]
 members = [
@@ -39,3 +41,4 @@ members = [
     "dev",
     "test_utils"
 ]
+
