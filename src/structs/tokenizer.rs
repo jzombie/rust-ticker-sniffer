@@ -133,7 +133,7 @@ impl Tokenizer {
                     .to_uppercase() // Convert to uppercase
             })
             // Skip empty words and stop words
-            .filter(|word| !word.is_empty() && stop_words.map_or(true, |sw| !sw.contains(word)))
+            .filter(|word| !word.is_empty() && stop_words.is_none_or(|sw| !sw.contains(word)))
             .collect()
     }
 
