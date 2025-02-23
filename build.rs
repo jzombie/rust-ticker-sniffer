@@ -12,10 +12,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &*COMPANY_SYMBOL_CSV_FILE_PATH
     );
 
+    let storage_dir = Path::new("embedded_storage");
     let struct_output_path = Path::new("src/structs/resource_container.rs"); // Struct file path
     let struct_name = "ResourceContainer";
 
-    let mut resource_container = ResourceContainer::new(struct_output_path, struct_name);
+    let mut resource_container = ResourceContainer::new(storage_dir, struct_output_path, struct_name);
 
     resource_container.add_resource(
         "COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY",

@@ -6,7 +6,7 @@ edition = "2021"
 description = "A Rust crate for extracting multiple stock ticker symbols from a text document."
 repository = "https://github.com/jzombie/rust-ticker-sniffer"
 license = "MIT"
-include = ["data/company_symbol_list.csv", "README.md", "LICENSE", "embed.rs", "embed/*", "src/**/*"]
+include = ["README.md", "LICENSE", "src/**/*", "embedded_storage/*"]
 
 [dependencies]
 log = "0.4.22"
@@ -20,7 +20,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 test_utils = { path = "test_utils" }
 
 [build-dependencies]
-embed-resources = { version = "=0.1.0-alpha5" }
+embed-resources = { version = "=0.1.0-alpha6" }
 
 [[bench]]
 name = "my_benchmark"

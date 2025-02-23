@@ -4,12 +4,6 @@
 pub struct ResourceContainer;
 
 impl ResourceContainer {
-    #[cfg(feature = "embed-bytes")]
-    pub const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &'static [u8] =
-        include_bytes!(concat!(env!("OUT_DIR"), "/embed/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin"));
 
-    #[cfg(not(feature = "embed-bytes"))]
-    #[deprecated(note = "Feature flag not set, using empty array")]
-    pub const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &'static [u8] = &[];
-
+    pub const COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY: &'static [u8] = include_bytes!("../../embedded_storage/COMPRESSED_COMPANY_SYMBOL_LIST_BYTE_ARRAY.bin");
 }

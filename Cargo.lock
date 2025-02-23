@@ -358,18 +358,19 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
 name = "embed-bytes"
-version = "0.1.0-alpha5"
+version = "0.1.0-alpha6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c38403f0445bc6e8414d93ae6dc03fe820c33d6a817c4a35b7ee3f5779eca29f"
+checksum = "4967623293aa635b1a7314b004632d0f6fd77a0613dceaacb5662f8a4ceb564c"
 dependencies = [
  "bytes",
+ "pathdiff",
 ]
 
 [[package]]
 name = "embed-resources"
-version = "0.1.0-alpha5"
+version = "0.1.0-alpha6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8ae6c07cd4984915f79d2381b64abb871b9f90251141bd00aca0f3e7198b4e3"
+checksum = "0a8c1a765795c40199e3d0a76d6a226376abcf2f1b327020f10012f3ee31c70f"
 dependencies = [
  "bytes",
  "embed-bytes",
@@ -1053,6 +1054,12 @@ dependencies = [
  "pkg-config",
  "vcpkg",
 ]
+
+[[package]]
+name = "pathdiff"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
 
 [[package]]
 name = "percent-encoding"
